@@ -165,6 +165,56 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                 </div>
                             </div>
 
+                            <!-- Digital Product Settings -->
+                            <div class="border border-gray-200 rounded-md p-4 bg-gray-50 mt-4 mb-4" x-data="{ isDigital: <?php echo isset($product['digital_delivery']) && $product['digital_delivery'] ? 'true' : 'false'; ?> }">
+                                <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-3">
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900"><?php echo __('Digital Delivery'); ?></h3>
+                                        <p class="text-sm text-gray-500"><?php echo __('Enable if this product includes a downloadable file after purchase.'); ?></p>
+                                    </div>
+                                    <label class="flex items-center cursor-pointer">
+                                        <div class="relative">
+                                            <input type="checkbox" name="digital_delivery" value="1" class="sr-only" x-model="isDigital">
+                                            <div class="block bg-gray-300 w-10 h-6 rounded-full transition" :class="{'bg-indigo-600': isDigital}"></div>
+                                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform" :class="{'translate-x-4': isDigital}"></div>
+                                        </div>
+                                    </label>
+                                </div>
+                                
+                                <div x-show="isDigital" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2" style="display: none;">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('File URL'); ?></label>
+                                        <input type="text" name="file_url" value="<?php echo htmlspecialchars($product['file_url'] ?? ''); ?>" placeholder="<?php echo __('Remote URL (or upload below)'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3">
+                                        
+                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload Digital File (Max 25MB)'); ?></label>
+                                        <input type="file" name="digital_file" accept=".pdf,.zip,.mp4,.docx" class="mt-1 block w-full bg-white" data-filepond="digital-single">
+                                        <p class="mt-1 text-xs text-gray-500">Allowed: PDF, ZIP, MP4, DOCX.</p>
+                                    </div>
+                                    <div>
+                                        <div class="mb-4">
+                                            <label class="block text-sm font-medium text-gray-700"><?php echo __('Download Limit'); ?></label>
+                                            <input type="number" min="0" name="download_limit" value="<?php echo htmlspecialchars($product['download_limit'] ?? ''); ?>" placeholder="<?php echo __('Leave empty for unlimited'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700"><?php echo __('Expiry Days'); ?></label>
+                                            <input type="number" min="0" name="download_expiry_days" value="<?php echo htmlspecialchars($product['download_expiry_days'] ?? ''); ?>" placeholder="<?php echo __('Leave empty for no expiry'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                        </div>
+                                        
+                                        <!-- Widget Embed Code Box -->
+                                        <?php if(isset($product['slug']) && $product['slug']): ?>
+                                        <div class="mt-4 p-3 bg-gray-100 rounded border border-gray-300 text-xs">
+                                            <p class="font-bold mb-1 text-gray-800">Widget de Venda Externa (Embed)</p>
+                                            <p class="text-gray-500 mb-2">Copie e cole este código em qualquer site para exibir um botão de compra deste produto.</p>
+                                            <textarea readonly class="w-full bg-gray-800 text-green-400 p-2 rounded font-mono h-24" onclick="this.select()">&lt;!-- Botão de Compra --&gt;
+&lt;div data-checkout="<?php echo htmlspecialchars($product['slug']); ?>" data-color="#017737" data-text="Comprar agora"&gt;&lt;/div&gt;
+&lt;script src="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>/public/embed.js"&gt;&lt;/script&gt;</textarea>
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="type" x-bind:value="isDigital ? 'digital' : 'physical'">
+                            </div>
+
                             <div class="mb-12">
                                 <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Short Description'); ?></label>
                                 <input type="hidden" name="short_desc" id="short_desc_input">
@@ -306,6 +356,22 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                         labelIdle: 'Arraste e solte o PDF ou <span class="filepond--label-action">selecione o arquivo</span>',
                         labelFileTypeNotAllowed: 'Tipo de arquivo inválido',
                         fileValidateTypeLabelExpectedTypes: 'Use PDF',
+                        labelMaxFileSizeExceeded: 'Arquivo muito grande',
+                        labelMaxFileSize: 'Tamanho máximo: {filesize}'
+                    });
+                }
+
+                var digitalInput = document.querySelector('input[type="file"][data-filepond="digital-single"]');
+                if (digitalInput) {
+                    FilePond.create(digitalInput, {
+                        storeAsFile: true,
+                        credits: false,
+                        allowMultiple: false,
+                        acceptedFileTypes: ['application/pdf', 'application/zip', 'video/mp4', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+                        maxFileSize: '25MB',
+                        labelIdle: 'Arraste e solte o arquivo digital ou <span class="filepond--label-action">selecione o arquivo</span>',
+                        labelFileTypeNotAllowed: 'Tipo de arquivo inválido',
+                        fileValidateTypeLabelExpectedTypes: 'Use PDF, ZIP, MP4 ou DOCX',
                         labelMaxFileSizeExceeded: 'Arquivo muito grande',
                         labelMaxFileSize: 'Tamanho máximo: {filesize}'
                     });

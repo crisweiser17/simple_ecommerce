@@ -215,7 +215,7 @@ class MercadoPagoGateway implements PaymentGatewayInterface
             $raw = curl_exec($ch);
             $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
-            curl_close($ch);
+            // curl_close($ch); // Deprecated in PHP 8.0+
             if ($raw === false) {
                 return ['success' => false, 'error' => $error !== '' ? $error : 'HTTP request failed'];
             }

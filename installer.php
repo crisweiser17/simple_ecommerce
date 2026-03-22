@@ -50,6 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install'])) {
             long_desc TEXT,
             pdf_url TEXT,
             pdf_label TEXT,
+            type TEXT DEFAULT 'physical',
+            digital_delivery INTEGER DEFAULT 0,
+            download_limit INTEGER DEFAULT 0,
+            download_expiry_days INTEGER DEFAULT 0,
+            file_url TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )");
 
@@ -108,6 +113,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install'])) {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )");
         $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_events_provider_event_id ON payment_events(provider, event_id)");
+
+        // Digital Products Tables
+        $pdo->exec("CREATE TABLE IF NOT EXISTS order_digital_deliveries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            token TEXT NOT NULL UNIQUE,
+            download_count INTEGER DEFAULT 0,
+            max_downloads INTEGER DEFAULT 0,
+            expires_at DATETIME,
+            delivered_at DATETIME,
+            downloaded_at DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE,
+            FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+        )");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_order_digital_deliveries_token ON order_digital_deliveries(token)");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_order_digital_deliveries_order_id ON order_digital_deliveries(order_id)");
+
+        $pdo->exec("CREATE TABLE IF NOT EXISTS embed_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_token TEXT NOT NULL UNIQUE,
+            product_id INTEGER NOT NULL,
+            status TEXT DEFAULT 'active',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+        )");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_embed_sessions_token ON embed_sessions(session_token)");
 
         // Users Table
         $pdo->exec("CREATE TABLE IF NOT EXISTS users (
@@ -232,7 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install'])) {
                 ]
             ];
 
-            $stmtProd = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category, category_id, short_desc, long_desc, pdf_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmtProd = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category, category_id, short_desc, long_desc, pdf_url, type, digital_delivery, download_limit, download_expiry_days, file_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             foreach ($products as $product) {
                 $check = $pdo->prepare("SELECT id FROM products WHERE sku = ?");
                 $check->execute([$product['sku']]);
@@ -247,7 +280,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install'])) {
                         $peptidesCatId,
                         $product['short_desc'],
                         $product['long_desc'],
-                        $product['pdf_url']
+                        $product['pdf_url'],
+                        'physical',
+                        0,
+                        0,
+                        0,
+                        ''
                     ]);
                 }
             }

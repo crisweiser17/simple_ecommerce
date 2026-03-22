@@ -238,6 +238,27 @@ function markOrderAsPaidByPayment(array $payment, string $finalOrderStatus = 'pa
         }
 
         $pdo->commit();
+
+        // Process digital deliveries
+        if ($finalOrderStatus === 'paid') {
+            require_once __DIR__ . '/DeliveryManager.php';
+            require_once __DIR__ . '/EmailDigital.php';
+            
+            $deliveryManager = new DeliveryManager();
+            $deliveries = $deliveryManager->generateDeliveriesForOrder((int)$payment['order_id']);
+            
+            if (!empty($deliveries)) {
+                $order = getOrder((int)$payment['order_id']);
+                $emailDigital = new EmailDigital();
+                $emailResult = $emailDigital->sendDeliveryEmail($order, $deliveries);
+                
+                if ($emailResult['success']) {
+                    $deliveryIds = array_column($deliveries, 'id');
+                    $deliveryManager->markAsDelivered($deliveryIds);
+                }
+            }
+        }
+
         return true;
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {

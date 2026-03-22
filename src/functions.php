@@ -23,7 +23,7 @@ function getSetting($key, $default = '') {
     $stmt = $pdo->prepare("SELECT value FROM settings WHERE key = ?");
     $stmt->execute([$key]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $result ? $result['value'] : $default;
+    return ($result && $result['value'] !== null) ? $result['value'] : $default;
 }
 
 function updateSetting($key, $value) {

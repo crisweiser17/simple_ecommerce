@@ -13,10 +13,16 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS products (
     price REAL,
     image_url TEXT,
     category TEXT,
+    category_id INTEGER,
     short_desc TEXT,
     long_desc TEXT,
     pdf_url TEXT,
     pdf_label TEXT,
+    type TEXT DEFAULT 'physical',
+    digital_delivery INTEGER DEFAULT 0,
+    download_limit INTEGER DEFAULT 0,
+    download_expiry_days INTEGER DEFAULT 0,
+    file_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )");
 
@@ -87,6 +93,34 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS payment_events (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )");
 $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_events_provider_event_id ON payment_events(provider, event_id)");
+
+// Create Digital Products Tables
+$pdo->exec("CREATE TABLE IF NOT EXISTS order_digital_deliveries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    download_count INTEGER DEFAULT 0,
+    max_downloads INTEGER DEFAULT 0,
+    expires_at DATETIME,
+    delivered_at DATETIME,
+    downloaded_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+)");
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_order_digital_deliveries_token ON order_digital_deliveries(token)");
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_order_digital_deliveries_order_id ON order_digital_deliveries(order_id)");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS embed_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_token TEXT NOT NULL UNIQUE,
+    product_id INTEGER NOT NULL,
+    status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+)");
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_embed_sessions_token ON embed_sessions(session_token)");
 
 // Create Users Table (for Admin & Login Tokens)
 $pdo->exec("CREATE TABLE IF NOT EXISTS users (
@@ -162,7 +196,7 @@ $products = [
     ]
 ];
 
-$stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category, short_desc, long_desc, pdf_url, pdf_label) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category, short_desc, long_desc, pdf_url, pdf_label, type, digital_delivery, download_limit, download_expiry_days, file_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 foreach ($products as $product) {
     // Check if exists to avoid duplicates on re-run
@@ -179,7 +213,12 @@ foreach ($products as $product) {
             $product['short_desc'],
             $product['long_desc'],
             $product['pdf_url'],
-            ''
+            '', // pdf_label
+            'physical', // type
+            0, // digital_delivery
+            0, // download_limit
+            0, // download_expiry_days
+            '' // file_url
         ]);
         echo "Inserted: " . $product['name'] . "\n";
     }

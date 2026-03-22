@@ -330,7 +330,7 @@ function createProduct($data) {
     ensureProductsSchema();
     global $pdo;
     $slug = getUniqueProductSlug($data['slug'] ?? ($data['name'] ?? ''));
-    $stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category_id, short_desc, long_desc, pdf_url, pdf_label) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category_id, short_desc, long_desc, pdf_url, pdf_label, type, digital_delivery, download_limit, download_expiry_days, file_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     return $stmt->execute([
         trim((string)($data['name'] ?? '')),
         trim((string)($data['sku'] ?? '')),
@@ -341,7 +341,12 @@ function createProduct($data) {
         (string)($data['short_desc'] ?? ''),
         (string)($data['long_desc'] ?? ''),
         trim((string)($data['pdf_url'] ?? '')),
-        $data['pdf_label'] ?? ''
+        $data['pdf_label'] ?? '',
+        $data['type'] ?? 'physical',
+        isset($data['digital_delivery']) ? 1 : 0,
+        isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
+        isset($data['download_expiry_days']) && $data['download_expiry_days'] !== '' ? (int)$data['download_expiry_days'] : null,
+        trim((string)($data['file_url'] ?? ''))
     ]);
 }
 
@@ -357,7 +362,7 @@ function updateProduct($id, $data) {
     }
     $slug = getUniqueProductSlug($requestedSlug, (int)$id);
 
-    $stmt = $pdo->prepare("UPDATE products SET name=?, sku=?, slug=?, price=?, image_url=?, category_id=?, short_desc=?, long_desc=?, pdf_url=?, pdf_label=? WHERE id=?");
+    $stmt = $pdo->prepare("UPDATE products SET name=?, sku=?, slug=?, price=?, image_url=?, category_id=?, short_desc=?, long_desc=?, pdf_url=?, pdf_label=?, type=?, digital_delivery=?, download_limit=?, download_expiry_days=?, file_url=? WHERE id=?");
     return $stmt->execute([
         trim((string)($data['name'] ?? '')),
         trim((string)($data['sku'] ?? '')),
@@ -369,6 +374,11 @@ function updateProduct($id, $data) {
         (string)($data['long_desc'] ?? ''),
         trim((string)($data['pdf_url'] ?? '')),
         $data['pdf_label'] ?? '',
+        $data['type'] ?? 'physical',
+        isset($data['digital_delivery']) ? 1 : 0,
+        isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
+        isset($data['download_expiry_days']) && $data['download_expiry_days'] !== '' ? (int)$data['download_expiry_days'] : null,
+        trim((string)($data['file_url'] ?? '')),
         $id
     ]);
 }

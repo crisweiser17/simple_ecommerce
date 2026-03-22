@@ -55,6 +55,7 @@ require_once __DIR__ . '/src/contact.php';
 require_once __DIR__ . '/src/products_csv.php';
 require_once __DIR__ . '/src/payments.php';
 require_once __DIR__ . '/src/payment_engine.php';
+require_once __DIR__ . '/src/FileUploader.php';
 
 tryAutoLogin();
 ensurePaymentsSchema();
@@ -363,6 +364,84 @@ switch ($path) {
             'paid_at' => $order['paid_at'] ?? null
         ]);
         exit;
+        break;
+
+    case '/api/express-checkout':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json');
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!$input) $input = $_POST;
+
+            $productId = $input['product_id'] ?? null;
+            $name = $input['name'] ?? '';
+            $email = $input['email'] ?? '';
+            $whatsapp = $input['whatsapp'] ?? '';
+
+            if (!$productId || !$name || !$email) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit;
+            }
+
+            $product = getProduct($productId);
+            if (!$product) {
+                echo json_encode(['success' => false, 'message' => 'Product not found']);
+                exit;
+            }
+
+            $items = [
+                [
+                    'id' => $product['id'],
+                    'name' => $product['name'],
+                    'price' => $product['price'],
+                    'quantity' => 1
+                ]
+            ];
+            $total = floatval($product['price']);
+
+            $customer = [
+                'name' => $name,
+                'whatsapp' => $whatsapp,
+                'email' => $email,
+                'address' => 'Express Checkout',
+                'status' => 'pending_payment',
+                'payment_status' => 'pending'
+            ];
+
+            $engine = new PaymentEngine();
+            $checkoutProvider = $engine->getCheckoutProvider();
+            $customer['payment_provider'] = $checkoutProvider ?? '';
+            $orderId = createOrder($customer, $items, $total);
+            
+            if ($engine->hasEnabledProviders()) {
+                $chargeResult = $engine->createPixCharge([
+                    'order_id' => (int)$orderId,
+                    'total' => $total,
+                    'customer' => $customer,
+                    'items' => $items,
+                    'reference' => 'order_' . $orderId,
+                    'description' => 'Pedido #' . $orderId
+                ]);
+
+                if (!empty($chargeResult['success'])) {
+                    createPaymentForOrder((int)$orderId, $chargeResult['provider'] ?? ($checkoutProvider ?? ''), $total, $chargeResult);
+                    updateOrder((int)$orderId, [
+                        'payment_provider' => $chargeResult['provider'] ?? ($checkoutProvider ?? ''),
+                        'payment_status' => $chargeResult['status'] ?? 'pending'
+                    ]);
+                    echo json_encode([
+                        'success' => true,
+                        'order_id' => $orderId,
+                        'pix_qr_code' => $chargeResult['pix_qr_code'] ?? '',
+                        'pix_copy_paste' => $chargeResult['pix_copy_paste'] ?? ''
+                    ]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => $chargeResult['error'] ?? 'Failed to create charge']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No payment provider enabled']);
+            }
+            exit;
+        }
         break;
 
     case '/checkout':
@@ -810,6 +889,13 @@ switch ($path) {
             $data['pdf_url'] = $uploadedPdf;
         }
 
+        // Handle Digital File Upload
+        $fileUploader = new FileUploader();
+        $uploadedDigitalFile = $fileUploader->upload($_FILES['digital_file'] ?? null);
+        if ($uploadedDigitalFile !== '') {
+            $data['file_url'] = $uploadedDigitalFile;
+        }
+
         global $pdo;
         $productId = 0;
         if (empty($data['id'])) {
@@ -908,6 +994,25 @@ switch ($path) {
                 unset($input['items']);
             }
             if (updateOrder($input['id'], $input)) {
+                // If status is being updated to 'paid', trigger digital delivery
+                if (isset($input['status']) && $input['status'] === 'paid') {
+                    require_once __DIR__ . '/src/DeliveryManager.php';
+                    require_once __DIR__ . '/src/EmailDigital.php';
+                    
+                    $deliveryManager = new DeliveryManager();
+                    $deliveries = $deliveryManager->generateDeliveriesForOrder((int)$input['id']);
+                    
+                    if (!empty($deliveries)) {
+                        $order = getOrder((int)$input['id']);
+                        $emailDigital = new EmailDigital();
+                        $emailResult = $emailDigital->sendDeliveryEmail($order, $deliveries);
+                        
+                        if ($emailResult['success']) {
+                            $deliveryIds = array_column($deliveries, 'id');
+                            $deliveryManager->markAsDelivered($deliveryIds);
+                        }
+                    }
+                }
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Database update failed']);
@@ -984,12 +1089,29 @@ switch ($path) {
         }
         
         $orders = getOrdersByEmail($user['email']);
+        
+        require_once __DIR__ . '/src/DeliveryManager.php';
+        $deliveryManager = new DeliveryManager();
+        foreach ($orders as &$o) {
+            $o['digital_deliveries'] = $deliveryManager->getDeliveriesForOrder((int)$o['id']);
+        }
+        unset($o);
 
         $template = __DIR__ . '/templates/account.php';
         require __DIR__ . '/templates/layout.php';
         break;
 
     default:
+        if (strpos($path, '/download/') === 0) {
+            $token = trim(substr($path, strlen('/download/')), '/');
+            if ($token !== '') {
+                require_once __DIR__ . '/src/DownloadHandler.php';
+                $handler = new DownloadHandler();
+                $handler->processDownload($token);
+                exit;
+            }
+        }
+
         if (strpos($path, '/webhooks/payment/') === 0) {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 http_response_code(405);
@@ -1088,6 +1210,34 @@ switch ($path) {
                     exit;
                 }
             }
+        }
+
+        if (strpos($path, '/produto/') === 0 && substr($path, -7) === '/single') {
+            $slug = trim((string)substr($path, strlen('/produto/'), -7), '/');
+            if ($slug !== '') {
+                $product = getProductBySlug(rawurldecode($slug));
+                if ($product) {
+                    require __DIR__ . '/templates/public/product_single.php';
+                    break;
+                }
+            }
+            http_response_code(404);
+            echo __('Product not found');
+            break;
+        }
+
+        if (strpos($path, '/checkout/express/') === 0) {
+            $slug = trim((string)substr($path, strlen('/checkout/express/')), '/');
+            if ($slug !== '') {
+                $product = getProductBySlug(rawurldecode($slug));
+                if ($product) {
+                    require __DIR__ . '/templates/public/checkout_express.php';
+                    break;
+                }
+            }
+            http_response_code(404);
+            echo __('Product not found');
+            break;
         }
 
         if (strpos($path, '/product/') === 0) {

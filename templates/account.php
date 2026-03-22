@@ -121,6 +121,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Total'); ?></th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Status'); ?></th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Tracking'); ?></th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Downloads'); ?></th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -149,6 +150,59 @@
                                                     <span class="font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded"><?php echo htmlspecialchars($order['tracking_number']); ?></span>
                                                 <?php else: ?>
                                                     -
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-500">
+                                                <?php if (!empty($order['digital_deliveries'])): ?>
+                                                    <div class="flex flex-col gap-2 min-w-[200px]">
+                                                        <?php foreach ($order['digital_deliveries'] as $delivery): ?>
+                                                            <div class="border border-gray-200 rounded p-3 bg-gray-50">
+                                                                <p class="font-medium text-gray-900 mb-1 text-sm"><?php echo htmlspecialchars($delivery['product_name']); ?></p>
+                                                                
+                                                                <div class="flex justify-between items-center text-xs text-gray-500 mb-2">
+                                                                    <?php if ($delivery['max_downloads'] > 0): ?>
+                                                                        <span><?php echo __('Downloads:'); ?> <?php echo $delivery['download_count']; ?>/<?php echo $delivery['max_downloads']; ?></span>
+                                                                    <?php else: ?>
+                                                                        <span><?php echo __('Downloads: Unlimited'); ?></span>
+                                                                    <?php endif; ?>
+                                                                    
+                                                                    <?php if (!empty($delivery['expires_at'])): ?>
+                                                                        <?php 
+                                                                            $isExpired = strtotime($delivery['expires_at']) < time();
+                                                                        ?>
+                                                                        <span class="<?php echo $isExpired ? 'text-red-500' : 'text-gray-500'; ?>">
+                                                                            <?php echo __('Exp:'); ?> <?php echo date('d/m/Y', strtotime($delivery['expires_at'])); ?>
+                                                                        </span>
+                                                                    <?php endif; ?>
+                                                                </div>
+
+                                                                <?php 
+                                                                    $canDownload = true;
+                                                                    if ($delivery['max_downloads'] > 0 && $delivery['download_count'] >= $delivery['max_downloads']) {
+                                                                        $canDownload = false;
+                                                                    }
+                                                                    if (!empty($delivery['expires_at']) && strtotime($delivery['expires_at']) < time()) {
+                                                                        $canDownload = false;
+                                                                    }
+                                                                ?>
+
+                                                                <?php if ($canDownload): ?>
+                                                                    <a href="/download/<?php echo htmlspecialchars($delivery['token']); ?>" class="inline-flex items-center justify-center w-full px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                                                                        <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                                                        </svg>
+                                                                        <?php echo __('Download'); ?>
+                                                                    </a>
+                                                                <?php else: ?>
+                                                                    <button disabled class="inline-flex items-center justify-center w-full px-3 py-1.5 border border-transparent text-xs font-medium rounded text-gray-400 bg-gray-200 cursor-not-allowed">
+                                                                        <?php echo __('Unavailable'); ?>
+                                                                    </button>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <span class="text-gray-400">-</span>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>

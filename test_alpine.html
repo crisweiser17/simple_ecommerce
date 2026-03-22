@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+    <div x-data="{ qr_code: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' }">
+        <template x-if="qr_code && (qr_code.indexOf('data:image') === 0 || qr_code.indexOf('http') === 0)">
+            <img :src="qr_code" alt="QR Code PIX">
+        </template>
+        <template x-if="qr_code && qr_code.indexOf('data:image') !== 0 && qr_code.indexOf('http') !== 0">
+            <img :src="'data:image/png;base64,' + qr_code" alt="QR Code PIX">
+        </template>
+    </div>
+</body>
+</html>

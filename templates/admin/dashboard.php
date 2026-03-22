@@ -175,13 +175,14 @@
                             <?php if ($adminImageUrl === '') $adminImageUrl = 'https://placehold.co/100x100?text=No+Image'; ?>
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <img src="<?php echo htmlspecialchars($adminImageUrl); ?>" class="h-10 w-10 object-contain rounded">
+                                    <img src="<?php echo htmlspecialchars($adminImageUrl ?? ''); ?>" class="h-10 w-10 object-contain rounded">
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($p['name']); ?></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($p['sku']); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($p['name'] ?? ''); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($p['sku'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo formatMoney($p['price']); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($p['category_name'] ?? __('Uncategorized')); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="/produto/<?php echo $p['slug']; ?>/single" target="_blank" class="text-green-600 hover:text-green-900 mr-4" title="Página Única de Checkout">Single</a>
                                     <a href="/admin/product-form?id=<?php echo $p['id']; ?>" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></a>
                                     <a href="/admin/delete-product?id=<?php echo $p['id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('<?php echo __('Are you sure?'); ?>')"><?php echo __('Delete'); ?></a>
                                 </td>
@@ -211,8 +212,8 @@
                         <tbody class="divide-y divide-gray-200">
                             <?php foreach ($categories as $c): ?>
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($c['name']); ?></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($c['slug']); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($c['name'] ?? ''); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($c['slug'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <button @click="categoryModalOpen = true; editCategory = <?php echo htmlspecialchars(json_encode($c)); ?>" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></button>
                                     <a href="/admin/delete-category?id=<?php echo $c['id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('<?php echo __('Are you sure?'); ?>')"><?php echo __('Delete'); ?></a>
@@ -243,8 +244,8 @@
                         <tbody class="divide-y divide-gray-200">
                             <?php foreach ($pages as $pg): ?>
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($pg['title']); ?></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($pg['slug']); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($pg['title'] ?? ''); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($pg['slug'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <button @click="pageModalOpen = true; editPage = <?php echo htmlspecialchars(json_encode($pg)); ?>; setTimeout(() => { initQuill(); if(this.quill) this.quill.root.innerHTML = editPage.content || ''; }, 100);" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></button>
                                     <a href="/admin/delete-page?id=<?php echo $pg['id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('<?php echo __('Are you sure?'); ?>')"><?php echo __('Delete'); ?></a>
@@ -276,9 +277,18 @@
                             <tr>
                                 <td class="px-6 py-2 whitespace-nowrap text-gray-500 text-sm">#<?php echo $o['id']; ?></td>
                                 <td class="px-6 py-2">
-                                    <div class="text-sm font-medium text-gray-900 leading-tight"><?php echo htmlspecialchars($o['customer_name']); ?></div>
-                                    <div class="text-xs text-gray-500 leading-tight">
-                                        <?php echo htmlspecialchars($o['customer_email']); ?> • <?php echo htmlspecialchars($o['customer_whatsapp']); ?>
+                                    <div class="text-sm font-medium text-gray-900 leading-tight"><?php echo htmlspecialchars($o['customer_name'] ?? ''); ?></div>
+                                    <div class="text-xs text-gray-500 leading-tight mt-1 flex flex-col gap-1">
+                                        <span><?php echo htmlspecialchars($o['customer_email'] ?? ''); ?></span>
+                                        <?php if (!empty($o['customer_whatsapp'])): 
+                                            $wa_number = preg_replace('/\D/', '', $o['customer_whatsapp']);
+                                            $wa_link = 'https://wa.me/55' . $wa_number;
+                                        ?>
+                                            <a href="<?php echo $wa_link; ?>" target="_blank" class="text-green-600 hover:text-green-800 flex items-center gap-1 w-fit" title="Falar no WhatsApp">
+                                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                                                <?php echo htmlspecialchars($o['customer_whatsapp']); ?>
+                                            </a>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td class="px-6 py-2 whitespace-nowrap font-bold text-gray-900 text-sm"><?php echo formatMoney($o['total_amount']); ?></td>
@@ -345,7 +355,19 @@
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($customer['name'] ?? '—'); ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-gray-600"><?php echo htmlspecialchars($customer['email'] ?? '—'); ?></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-gray-600"><?php echo htmlspecialchars($customer['whatsapp'] ?? '—'); ?></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                                            <?php if (!empty($customer['whatsapp']) && $customer['whatsapp'] !== '—'): 
+                                                $wa_number = preg_replace('/\D/', '', $customer['whatsapp']);
+                                                $wa_link = 'https://wa.me/55' . $wa_number;
+                                            ?>
+                                                <a href="<?php echo $wa_link; ?>" target="_blank" class="text-green-600 hover:text-green-800 flex items-center gap-1 w-fit" title="Falar no WhatsApp">
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                                                    <?php echo htmlspecialchars($customer['whatsapp']); ?>
+                                                </a>
+                                            <?php else: ?>
+                                                —
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-gray-900 font-semibold"><?php echo (int)($customer['orders_count'] ?? 0); ?></td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <?php if (!empty($customer['has_orders'])): ?>
@@ -477,7 +499,7 @@
                                         Store WhatsApp Number
                                     </label>
                                     <p class="text-gray-500 text-xs mb-2">Number that will receive order summaries (include country code, e.g., 5511999999999)</p>
-                                    <input type="text" name="store_whatsapp" value="<?php echo htmlspecialchars(getSetting('store_whatsapp')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" oninput="maskPhone(event)">
+                                    <input type="text" name="store_whatsapp" value="<?php echo htmlspecialchars(getSetting('store_whatsapp', '')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" oninput="maskPhone(event)">
                                 </div>
                                 <div class="mb-4">
                                     <label class="flex items-center">
@@ -702,24 +724,24 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Primary Button Text</label>
-                                    <input type="text" name="banner_button_text" value="<?php echo htmlspecialchars(getSetting('banner_button_text')); ?>" placeholder="e.g. Shop Now" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <input type="text" name="banner_button_text" value="<?php echo htmlspecialchars(getSetting('banner_button_text', '')); ?>" placeholder="e.g. Shop Now" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                     <p class="text-gray-500 text-xs mt-1">Leave empty to hide button.</p>
                                 </div>
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Primary Button Link</label>
-                                    <input type="text" name="banner_button_link" value="<?php echo htmlspecialchars(getSetting('banner_button_link')); ?>" placeholder="e.g. /products" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <input type="text" name="banner_button_link" value="<?php echo htmlspecialchars(getSetting('banner_button_link', '')); ?>" placeholder="e.g. /products" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Secondary Button Text</label>
-                                    <input type="text" name="banner_button2_text" value="<?php echo htmlspecialchars(getSetting('banner_button2_text')); ?>" placeholder="e.g. View Plans" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <input type="text" name="banner_button2_text" value="<?php echo htmlspecialchars(getSetting('banner_button2_text', '')); ?>" placeholder="e.g. View Plans" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                     <p class="text-gray-500 text-xs mt-1">Leave empty to hide button.</p>
                                 </div>
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Secondary Button Link</label>
-                                    <input type="text" name="banner_button2_link" value="<?php echo htmlspecialchars(getSetting('banner_button2_link')); ?>" placeholder="e.g. /plans" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <input type="text" name="banner_button2_link" value="<?php echo htmlspecialchars(getSetting('banner_button2_link', '')); ?>" placeholder="e.g. /plans" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                 </div>
                             </div>
 
@@ -837,7 +859,7 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#<?php echo $admin['id']; ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?php echo htmlspecialchars($admin['name'] ?? '—'); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($admin['email']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($admin['email'] ?? ''); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo date('Y-m-d', strtotime($admin['created_at'])); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-data="{ editing: false, token: '<?php echo htmlspecialchars($admin['admin_bypass_token'] ?? ''); ?>' }">
                                         <div x-show="!editing" class="flex items-center gap-2">
