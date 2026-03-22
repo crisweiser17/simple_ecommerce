@@ -1,0 +1,6 @@
+- [x] Parâmetros obrigatórios do endpoint identificados corretamente
+- [x] Semântica de `currency_type` (sender/receiver) documentada sem ambiguidade
+- [x] Campo opcional `cover_fees` contemplado nas regras
+- [x] Requisitos de autenticação por cabeçalhos documentados
+- [x] Campos essenciais de resposta (`quote`, `wallet`, `token`) mapeados
+- [x] Critérios de sucesso para resposta HTTP 200 definidos

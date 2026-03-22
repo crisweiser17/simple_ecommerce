@@ -1,0 +1,322 @@
+<?php
+$productImages = isset($product['images']) && is_array($product['images']) ? $product['images'] : [];
+$currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['image_url'] ?? ''));
+?>
+<!DOCTYPE html>
+<html lang="<?php echo htmlspecialchars($_SESSION['lang'] ?? 'en'); ?>">
+<head>
+    <meta charset="UTF-8">
+    <title><?php echo isset($product['id']) ? __('Edit Product') : __('Add New Product'); ?> - <?php echo htmlspecialchars(getSetting('store_name', 'R2 Research Labs')); ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <!-- Quill CSS -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://unpkg.com/filepond/dist/filepond.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
+    <style>
+        .ql-editor {
+            min-height: 300px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans flex flex-col h-screen">
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-900 text-white flex flex-col">
+            <div class="p-4 text-xl font-bold border-b border-gray-800"><?php echo __('Admin Dashboard'); ?></div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="/" class="block w-full text-left px-4 py-2 text-xs text-gray-400 hover:text-white"><?php echo __('Back to Site'); ?></a>
+                <div class="border-t border-gray-800 my-1"></div>
+                <a href="/admin" onclick="localStorage.setItem('admin_tab','products')" class="block w-full text-left px-4 py-2 rounded bg-gray-800 text-white">
+                    <?php echo __('Products'); ?>
+                </a>
+                <a href="/admin" onclick="localStorage.setItem('admin_tab','categories')" class="block w-full text-left px-4 py-2 text-gray-400 hover:text-white rounded">
+                    <?php echo __('Categories'); ?>
+                </a>
+                <div class="border-t border-gray-800 my-1"></div>
+                <a href="/admin" onclick="localStorage.setItem('admin_tab','orders')" class="block w-full text-left px-4 py-2 text-gray-400 hover:text-white rounded">
+                    <?php echo __('Orders'); ?>
+                </a>
+                <a href="/admin" onclick="localStorage.setItem('admin_tab','customers')" class="block w-full text-left px-4 py-2 text-gray-400 hover:text-white rounded">
+                    <?php echo __('Customers'); ?>
+                </a>
+                <div class="border-t border-gray-800 my-1"></div>
+                <a href="/admin" onclick="localStorage.setItem('admin_tab','settings')" class="block w-full text-left px-4 py-2 text-gray-400 hover:text-white rounded">
+                    <?php echo __('Settings'); ?>
+                </a>
+                <a href="/logout" class="block w-full text-left px-4 py-2 text-red-400 hover:text-red-300 hover:bg-gray-800 rounded">
+                    <?php echo __('Logout'); ?>
+                </a>
+                
+                <div class="border-t border-gray-800 my-2"></div>
+                <div class="px-4 py-2">
+                    <span class="text-xs text-gray-500 uppercase tracking-wider block mb-2">Idioma / Language</span>
+                    <div class="flex gap-2">
+                        <a href="?lang=en" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">EN</a>
+                        <a href="?lang=pt" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'pt' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">PT</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-auto p-8">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold"><?php echo isset($product['id']) ? __('Edit Product') : __('Add New Product'); ?></h1>
+                    <a href="/admin" class="text-gray-600 hover:text-gray-900"><?php echo __('Back to Dashboard'); ?></a>
+                </div>
+
+                <div class="bg-white rounded shadow overflow-hidden p-6">
+                    <form action="/admin/save-product" method="POST" id="productForm" enctype="multipart/form-data">
+                        <?php if (isset($product['id'])): ?>
+                            <input type="hidden" name="id" value="<?php echo htmlspecialchars($product['id']); ?>">
+                        <?php endif; ?>
+
+                        <div class="grid grid-cols-1 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Name'); ?></label>
+                                <input type="text" name="name" value="<?php echo htmlspecialchars($product['name'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Slug'); ?></label>
+                                <input type="text" id="product_slug" name="slug" value="<?php echo htmlspecialchars($product['slug'] ?? ''); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="ex: bpc-157-10mg">
+                                <p class="mt-1 text-xs text-gray-500"><?php echo __('Used in product URL. If duplicated, a suffix is added automatically.'); ?></p>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('SKU'); ?></label>
+                                    <input type="text" name="sku" value="<?php echo htmlspecialchars($product['sku'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Price'); ?></label>
+                                    <input type="number" step="0.01" name="price" value="<?php echo htmlspecialchars($product['price'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Category'); ?></label>
+                                <select name="category_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                    <option value=""><?php echo __('Select Category'); ?></option>
+                                    <?php foreach ($categories as $cat): ?>
+                                        <option value="<?php echo $cat['id']; ?>" <?php echo (isset($product['category_id']) && $product['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($cat['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Image URL'); ?></label>
+                                <input type="text" name="image_url" value="<?php echo htmlspecialchars($product['image_url'] ?? ''); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                <?php $manualImageUrl = trim((string)($product['image_url'] ?? '')); ?>
+                                <?php if ($manualImageUrl !== ''): ?>
+                                    <label class="mt-2 inline-flex items-center text-sm text-gray-700">
+                                        <input type="radio" name="primary_image" value="<?php echo htmlspecialchars($manualImageUrl); ?>" <?php echo $currentPrimaryImage === $manualImageUrl ? 'checked' : ''; ?> class="mr-2">
+                                        <?php echo __('Use this URL as primary image'); ?>
+                                    </label>
+                                <?php endif; ?>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload Product Images'); ?></label>
+                                <input type="file" name="product_images[]" accept="image/*" multiple class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white" data-filepond="image-multi">
+                                <p class="mt-2 text-xs text-gray-500"><?php echo __('You can upload one or multiple images.'); ?></p>
+                            </div>
+
+                            <?php if (!empty($productImages)): ?>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3"><?php echo __('Current Images'); ?></label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <?php foreach ($productImages as $img): ?>
+                                            <?php $imgUrl = trim((string)($img['image_url'] ?? '')); ?>
+                                            <?php if ($imgUrl === '') continue; ?>
+                                            <div class="border rounded-md p-3 bg-gray-50">
+                                                <img src="<?php echo htmlspecialchars($imgUrl); ?>" alt="" class="h-28 w-full object-contain bg-white rounded border">
+                                                <input type="hidden" name="existing_images[]" value="<?php echo htmlspecialchars($imgUrl); ?>" class="existing-image-input">
+                                                <label class="mt-2 flex items-center text-sm text-gray-700">
+                                                    <input type="radio" name="primary_image" value="<?php echo htmlspecialchars($imgUrl); ?>" <?php echo $currentPrimaryImage === $imgUrl ? 'checked' : ''; ?> class="mr-2">
+                                                    <?php echo __('Primary image'); ?>
+                                                </label>
+                                                <label class="mt-2 flex items-center text-sm text-red-600">
+                                                    <input type="checkbox" class="remove-image-checkbox mr-2">
+                                                    <?php echo __('Remove image'); ?>
+                                                </label>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('PDF Report URL or File'); ?></label>
+                                    <input type="text" name="pdf_url" value="<?php echo htmlspecialchars($product['pdf_url'] ?? ''); ?>" placeholder="<?php echo __('External URL (or use upload below)'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3">
+                                    
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload PDF File'); ?></label>
+                                    <input type="file" name="pdf_file" accept="application/pdf" class="mt-1 block w-full bg-white" data-filepond="pdf-single">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('PDF Button Text'); ?></label>
+                                    <input type="text" name="pdf_label" value="<?php echo htmlspecialchars($product['pdf_label'] ?? ''); ?>" placeholder="<?php echo __('Ex: Download Analysis Report'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                            </div>
+
+                            <div class="mb-12">
+                                <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Short Description'); ?></label>
+                                <input type="hidden" name="short_desc" id="short_desc_input">
+                                <div id="short_desc_editor" class="bg-white">
+                                    <?php echo $product['short_desc'] ?? ''; ?>
+                                </div>
+                            </div>
+
+                            <div class="mb-12">
+                                <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Long Description'); ?></label>
+                                <input type="hidden" name="long_desc" id="long_desc_input">
+                                <div id="long_desc_editor" class="bg-white">
+                                    <?php echo $product['long_desc'] ?? ''; ?>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end pt-4">
+                                <a href="/admin" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none mr-3">
+                                    <?php echo __('Cancel'); ?>
+                                </a>
+                                <button type="submit" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none">
+                                    <?php echo __('Save Product'); ?>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quill JS -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.min.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-size/dist/filepond-plugin-file-validate-size.min.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.js"></script>
+    <script src="https://unpkg.com/filepond/dist/filepond.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Short Description Editor
+            var shortQuill = new Quill('#short_desc_editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // Initialize Long Description Editor
+            var longQuill = new Quill('#long_desc_editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // Form submission handler
+            var form = document.getElementById('productForm');
+            var nameInput = form ? form.querySelector('input[name="name"]') : null;
+            var slugInput = document.getElementById('product_slug');
+            var slugTouched = slugInput ? slugInput.value.trim() !== '' : false;
+
+            var slugify = function(value) {
+                return String(value || '')
+                    .toLowerCase()
+                    .replace(/[^a-z0-9-]+/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+            };
+
+            if (nameInput && slugInput) {
+                if (!slugTouched) {
+                    slugInput.value = slugify(nameInput.value);
+                }
+                nameInput.addEventListener('input', function() {
+                    if (slugTouched) return;
+                    slugInput.value = slugify(nameInput.value);
+                });
+                slugInput.addEventListener('input', function() {
+                    slugTouched = true;
+                });
+            }
+
+            form.addEventListener('submit', function(e) {
+                document.getElementById('short_desc_input').value = shortQuill.root.innerHTML;
+                document.getElementById('long_desc_input').value = longQuill.root.innerHTML;
+                var removeCheckboxes = document.querySelectorAll('.remove-image-checkbox');
+                removeCheckboxes.forEach(function(checkbox) {
+                    var wrapper = checkbox.closest('.border');
+                    if (!wrapper) return;
+                    var hiddenInput = wrapper.querySelector('.existing-image-input');
+                    if (!hiddenInput) return;
+                    hiddenInput.disabled = checkbox.checked;
+                });
+            });
+
+            if (typeof FilePond !== 'undefined') {
+                FilePond.registerPlugin(
+                    FilePondPluginFileValidateType,
+                    FilePondPluginFileValidateSize,
+                    FilePondPluginImagePreview
+                );
+
+                var productImagesInput = document.querySelector('input[type="file"][data-filepond="image-multi"]');
+                if (productImagesInput) {
+                    FilePond.create(productImagesInput, {
+                        storeAsFile: true,
+                        credits: false,
+                        allowReorder: true,
+                        allowMultiple: true,
+                        maxFiles: 12,
+                        acceptedFileTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
+                        maxFileSize: '5MB',
+                        labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione imagens</span>',
+                        labelFileTypeNotAllowed: 'Tipo de arquivo inválido',
+                        fileValidateTypeLabelExpectedTypes: 'Use PNG, JPG, WEBP ou GIF',
+                        labelMaxFileSizeExceeded: 'Arquivo muito grande',
+                        labelMaxFileSize: 'Tamanho máximo: {filesize}'
+                    });
+                }
+
+                var pdfInput = document.querySelector('input[type="file"][data-filepond="pdf-single"]');
+                if (pdfInput) {
+                    FilePond.create(pdfInput, {
+                        storeAsFile: true,
+                        credits: false,
+                        allowMultiple: false,
+                        acceptedFileTypes: ['application/pdf'],
+                        maxFileSize: '10MB',
+                        labelIdle: 'Arraste e solte o PDF ou <span class="filepond--label-action">selecione o arquivo</span>',
+                        labelFileTypeNotAllowed: 'Tipo de arquivo inválido',
+                        fileValidateTypeLabelExpectedTypes: 'Use PDF',
+                        labelMaxFileSizeExceeded: 'Arquivo muito grande',
+                        labelMaxFileSize: 'Tamanho máximo: {filesize}'
+                    });
+                }
+            }
+        });
+    </script>
+
+    <!-- Powered By -->
+    <div class="w-full bg-black h-[35px] flex items-center justify-center shrink-0">
+        <span class="text-white text-xs">Powered by LojaSimples</span>
+    </div>
+</body>
+</html>
