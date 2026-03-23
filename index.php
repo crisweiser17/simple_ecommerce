@@ -265,12 +265,26 @@ switch ($path) {
         }
 
         $payload = [
-            'name' => $_POST['name'] ?? '',
-            'email' => $_POST['email'] ?? '',
-            'phone' => $_POST['phone'] ?? '',
-            'subject' => $_POST['subject'] ?? '',
-            'message' => $_POST['message'] ?? '',
+            'name' => trim($_POST['name'] ?? ''),
+            'email' => trim($_POST['email'] ?? ''),
+            'phone' => trim($_POST['phone'] ?? ''),
+            'subject' => trim($_POST['subject'] ?? ''),
+            'message' => trim($_POST['message'] ?? ''),
         ];
+
+        if (empty($payload['name']) || empty($payload['email']) || empty($payload['subject']) || empty($payload['message'])) {
+            $_SESSION['contact_error_message'] = __('Please fill all required fields.');
+            $_SESSION['contact_old'] = $payload;
+            header('Location: /contact');
+            exit;
+        }
+
+        if (!filter_var($payload['email'], FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['contact_error_message'] = __('Invalid email format');
+            $_SESSION['contact_old'] = $payload;
+            header('Location: /contact');
+            exit;
+        }
 
         $sendResult = sendContactFormMessage($payload);
 
@@ -307,6 +321,11 @@ switch ($path) {
         $input = json_decode(file_get_contents('php://input'), true);
         if (isset($input['email'])) {
             $email = trim($input['email']);
+            
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                echo json_encode(['success' => false, 'message' => __('Invalid email format')]);
+                exit;
+            }
             
             $token = generateLoginToken($email);
             echo json_encode(['success' => true, 'message' => __('Login token sent to your email. Please enter the received code in the field below')]);
@@ -373,12 +392,17 @@ switch ($path) {
             if (!$input) $input = $_POST;
 
             $productId = $input['product_id'] ?? null;
-            $name = $input['name'] ?? '';
-            $email = $input['email'] ?? '';
-            $whatsapp = $input['whatsapp'] ?? '';
+            $name = trim($input['name'] ?? '');
+            $email = trim($input['email'] ?? '');
+            $whatsapp = trim($input['whatsapp'] ?? '');
 
             if (!$productId || !$name || !$email) {
                 echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit;
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                echo json_encode(['success' => false, 'message' => __('Invalid email format')]);
                 exit;
             }
 
@@ -451,6 +475,7 @@ switch ($path) {
                 $addressParts = [];
                 if (!empty($_POST['street'])) $addressParts[] = $_POST['street'];
                 if (!empty($_POST['number'])) $addressParts[] = $_POST['number'];
+                if (!empty($_POST['complement'])) $addressParts[] = $_POST['complement'];
                 if (!empty($_POST['neighborhood'])) $addressParts[] = $_POST['neighborhood'];
                 if (!empty($_POST['city'])) $addressParts[] = $_POST['city'];
                 if (!empty($_POST['state'])) $addressParts[] = $_POST['state'];
@@ -459,19 +484,27 @@ switch ($path) {
             }
 
             $customer = [
-                'name' => $_POST['name'],
-                'whatsapp' => $_POST['whatsapp'],
-                'email' => !empty($_POST['email']) ? $_POST['email'] : ($_SESSION['user_email'] ?? 'guest@example.com'), // Should be logged in
+                'name' => trim($_POST['name'] ?? ''),
+                'whatsapp' => trim($_POST['whatsapp'] ?? ''),
+                'email' => !empty($_POST['email']) ? trim($_POST['email']) : ($_SESSION['user_email'] ?? 'guest@example.com'), // Should be logged in
                 'address' => $address,
                 'cep' => $_POST['cep'] ?? '',
                 'street' => $_POST['street'] ?? '',
                 'number' => $_POST['number'] ?? '',
+                'complement' => $_POST['complement'] ?? '',
                 'neighborhood' => $_POST['neighborhood'] ?? '',
                 'city' => $_POST['city'] ?? '',
                 'state' => $_POST['state'] ?? '',
                 'status' => 'pending_payment',
                 'payment_status' => 'pending'
             ];
+
+            if ($customer['email'] !== 'guest@example.com' && !filter_var($customer['email'], FILTER_VALIDATE_EMAIL)) {
+                http_response_code(400);
+                echo __('Invalid email format');
+                exit;
+            }
+
             $items = json_decode($_POST['items'], true);
             if (!is_array($items)) {
                 $items = [];
@@ -745,7 +778,7 @@ switch ($path) {
         exit;
         break;
 
-    case '/admin/users/promote':
+    case '/admin/users/add':
         if (!isAdmin()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Access Denied']);
@@ -756,7 +789,11 @@ switch ($path) {
             echo json_encode(['success' => false, 'message' => __('Invalid email')]);
             exit;
         }
-        if (promoteUserToAdmin($input['email'])) {
+        
+        $name = $input['name'] ?? null;
+        $token = isset($input['token']) ? $input['token'] : null;
+        
+        if (promoteUserToAdmin($input['email'], $name, $token)) {
             echo json_encode(['success' => true]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to promote user']);
@@ -764,7 +801,7 @@ switch ($path) {
         exit;
         break;
 
-    case '/admin/users/revoke':
+    case '/admin/users/remove':
         if (!isAdmin()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Access Denied']);
@@ -787,7 +824,7 @@ switch ($path) {
         exit;
         break;
 
-    case '/admin/users/set-bypass-token':
+    case '/admin/users/update-key':
         if (!isAdmin()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Access Denied']);
@@ -1069,18 +1106,21 @@ switch ($path) {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
-                'name' => $_POST['name'] ?? '',
-                'whatsapp' => $_POST['whatsapp'] ?? '',
-                'email' => $_POST['email'] ?? '',
-                'cep' => $_POST['cep'] ?? '',
-                'street' => $_POST['street'] ?? '',
-                'number' => $_POST['number'] ?? '',
-                'neighborhood' => $_POST['neighborhood'] ?? '',
-                'city' => $_POST['city'] ?? '',
-                'state' => $_POST['state'] ?? ''
+                'name' => trim($_POST['name'] ?? ''),
+                'whatsapp' => trim($_POST['whatsapp'] ?? ''),
+                'email' => trim($_POST['email'] ?? ''),
+                'cep' => trim($_POST['cep'] ?? ''),
+                'street' => trim($_POST['street'] ?? ''),
+                'number' => trim($_POST['number'] ?? ''),
+                'complement' => trim($_POST['complement'] ?? ''),
+                'neighborhood' => trim($_POST['neighborhood'] ?? ''),
+                'city' => trim($_POST['city'] ?? ''),
+                'state' => trim($_POST['state'] ?? '')
             ];
 
-            if (updateUser($_SESSION['user_id'], $data)) {
+            if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $error_message = __('Invalid email format');
+            } else if (updateUser($_SESSION['user_id'], $data)) {
                 $user = getUser($_SESSION['user_id']); // Refresh data
                 $success_message = __('Profile updated successfully!');
             } else {
@@ -1195,6 +1235,33 @@ switch ($path) {
                      exit;
                  }
              }
+        }
+
+        if ($path === '/admin/customer/edit') {
+            if (!isAdmin()) {
+                header('Location: /login');
+                exit;
+            }
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $id = (int)($_POST['id'] ?? 0);
+                if ($id > 0) {
+                    $data = [
+                        'name' => trim($_POST['name'] ?? ''),
+                        'email' => trim($_POST['email'] ?? ''),
+                        'whatsapp' => trim($_POST['whatsapp'] ?? ''),
+                        'cep' => trim($_POST['cep'] ?? ''),
+                        'street' => trim($_POST['street'] ?? ''),
+                        'number' => trim($_POST['number'] ?? ''),
+                        'complement' => trim($_POST['complement'] ?? ''),
+                        'neighborhood' => trim($_POST['neighborhood'] ?? ''),
+                        'city' => trim($_POST['city'] ?? ''),
+                        'state' => trim($_POST['state'] ?? '')
+                    ];
+                    updateUser($id, $data);
+                }
+                header('Location: /admin/customer/' . $id);
+                exit;
+            }
         }
 
         if (strpos($path, '/admin/customer/') === 0) {

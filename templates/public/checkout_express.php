@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Checkout - <?php echo htmlspecialchars($product['name']); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/mask@3.x.x/dist/cdn.min.js"></script>
@@ -85,6 +85,16 @@
                                 Processando...
                             </span>
                         </button>
+
+                        <?php if (!empty($product['type']) && $product['type'] === 'digital'): ?>
+                            <div class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <p class="text-sm text-blue-800 leading-relaxed">
+                                    <strong class="font-semibold block mb-0.5">Entrega Imediata</strong>
+                                    Logo após a confirmação do pagamento, você receberá o link de acesso diretamente no seu e-mail e o download será liberado automaticamente nesta mesma tela.
+                                </p>
+                            </div>
+                        <?php endif; ?>
                         
                         <div class="text-center mt-4 text-xs text-gray-400 flex items-center justify-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
@@ -198,6 +208,10 @@
                 pollInterval: null,
 
                 submitCheckout() {
+                    if (!this.customer.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.customer.email)) {
+                        alert('<?php echo __('Invalid email format'); ?>');
+                        return;
+                    }
                     this.loading = true;
                     // Limpar os dados antigos do QR code para forçar a re-renderização
                     this.payment.qr_code = '';

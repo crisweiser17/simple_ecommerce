@@ -59,15 +59,15 @@ if ($primaryImage === '') {
             </div>
 
             <!-- Add to Cart Form -->
-            <div class="flex items-center gap-4 mb-8" x-data="{ qty: 1 }">
-                <div class="flex items-center border rounded">
-                    <button @click="qty > 1 ? qty-- : null" class="px-3 py-2 hover:bg-gray-100">-</button>
-                    <input type="number" x-model="qty" class="w-12 text-center border-none focus:ring-0" min="1">
-                    <button @click="qty++" class="px-3 py-2 hover:bg-gray-100">+</button>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8" x-data="{ qty: 1 }">
+                <div class="flex items-center border rounded w-full sm:w-auto justify-between sm:justify-start">
+                    <button @click="qty > 1 ? qty-- : null" class="px-4 py-3 hover:bg-gray-100">-</button>
+                    <input type="number" x-model="qty" class="w-16 text-center border-none focus:ring-0" min="1">
+                    <button @click="qty++" class="px-4 py-3 hover:bg-gray-100">+</button>
                 </div>
                 <button 
                     @click="$store.cart.add({ ...<?php echo htmlspecialchars(json_encode($product)); ?>, quantity: qty })"
-                    class="bg-orange-500 text-white px-8 py-3 rounded font-bold hover:bg-orange-600 transition-colors uppercase shadow-lg transform active:scale-95">
+                    class="w-full sm:w-auto bg-orange-500 text-white px-8 py-3 rounded font-bold hover:bg-orange-600 transition-colors uppercase shadow-lg transform active:scale-95 text-center">
                     <?php echo __('Add to cart'); ?>
                 </button>
             </div>

@@ -17,6 +17,11 @@
     },
     requestToken() {
         if(this.resendTimer > 0) return;
+        if (!this.loginEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.loginEmail)) {
+            this.modalMessage = '<?php echo __('Invalid email format'); ?>';
+            this.modalOpen = true;
+            return;
+        }
         fetch('/api/login-request.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -25,6 +30,7 @@
         .then(res => res.json())
         .then(data => {
             if(data.success) { 
+                this.loginToken = '';
                 this.tokenSent = true; 
                 this.modalMessage = data.message;
                 this.modalOpen = true;
@@ -108,13 +114,14 @@
                     <input @keydown.enter="verifyToken()" type="text" x-model="loginToken" placeholder="<?php echo __('Enter 6-digit code'); ?>" class="w-full border border-gray-300 rounded p-2 mb-2 focus:ring-1 focus:ring-orange-500 outline-none">
                     <button @click="verifyToken()" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition-colors mb-2"><?php echo __('Verify & Login'); ?></button>
                     
-                    <div class="mt-2 text-center">
+                    <div class="mt-2 text-center flex flex-col gap-2">
                         <button @click="resendTimer === 0 ? requestToken() : null" 
                                 :class="resendTimer > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-orange-500 hover:text-orange-600 hover:underline'"
                                 class="text-xs font-medium transition-colors">
                             <span x-show="resendTimer > 0"><?php echo __('Resend code in'); ?> <span x-text="resendTimer"></span>s</span>
                             <span x-show="resendTimer === 0"><?php echo __('Resend code'); ?></span>
                         </button>
+                        <button @click="tokenSent = false; loginToken = '';" class="w-full text-center text-xs text-gray-500 hover:text-gray-700 underline"><?php echo __('Back to Email'); ?></button>
                     </div>
                 </div>
             </div>
@@ -141,7 +148,7 @@
                     <div>
                         <label class="text-xs font-bold text-gray-500 uppercase"><?php echo __('Delivery Address'); ?></label>
                         <div class="space-y-3 mt-1">
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <input type="text" name="cep" id="cep" placeholder="<?php echo __('CEP'); ?>" 
                                         value="<?php echo htmlspecialchars($user['cep'] ?? ''); ?>" 
@@ -154,8 +161,8 @@
                                         class="w-full border border-gray-300 rounded p-2 focus:ring-1 focus:ring-orange-500 outline-none">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-3 gap-3">
-                                <div class="col-span-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="sm:col-span-2">
                                     <input type="text" name="street" id="street" placeholder="<?php echo __('Street'); ?>" 
                                         value="<?php echo htmlspecialchars($user['street'] ?? ''); ?>" 
                                         class="w-full border border-gray-300 rounded p-2 focus:ring-1 focus:ring-orange-500 outline-none">
@@ -166,12 +173,19 @@
                                         class="w-full border border-gray-300 rounded p-2 focus:ring-1 focus:ring-orange-500 outline-none">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <input type="text" name="complement" id="complement" placeholder="<?php echo __('Complement'); ?>" 
+                                        value="<?php echo htmlspecialchars($user['complement'] ?? ''); ?>" 
+                                        class="w-full border border-gray-300 rounded p-2 focus:ring-1 focus:ring-orange-500 outline-none">
+                                </div>
                                 <div>
                                     <input type="text" name="neighborhood" id="neighborhood" placeholder="<?php echo __('Neighborhood'); ?>" 
                                         value="<?php echo htmlspecialchars($user['neighborhood'] ?? ''); ?>" 
                                         class="w-full border border-gray-300 rounded p-2 focus:ring-1 focus:ring-orange-500 outline-none">
                                 </div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-3">
                                 <div>
                                     <input type="text" name="city" id="city" placeholder="<?php echo __('City'); ?>" 
                                         value="<?php echo htmlspecialchars($user['city'] ?? ''); ?>" 

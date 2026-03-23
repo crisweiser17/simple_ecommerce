@@ -48,7 +48,7 @@
                             </div>
                             <div class="mt-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Email Address'); ?></label>
-                                <input type="email" name="email" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>"
+                                <input type="email" name="email" required value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>"
                                     class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 border p-2">
                             </div>
                         </div>
@@ -78,7 +78,12 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Complement'); ?></label>
+                                        <input type="text" name="complement" id="complement" value="<?php echo htmlspecialchars($user['complement'] ?? ''); ?>"
+                                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 border p-2">
+                                    </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Neighborhood'); ?></label>
                                         <input type="text" name="neighborhood" id="neighborhood" value="<?php echo htmlspecialchars($user['neighborhood'] ?? ''); ?>"
@@ -112,7 +117,7 @@
                     <?php if (empty($orders)): ?>
                         <p class="text-gray-500 italic"><?php echo __('No orders found.'); ?></p>
                     <?php else: ?>
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto w-full">
                             <table class="min-w-full divide-y divide-gray-200 border rounded-lg">
                                 <thead class="bg-gray-50">
                                     <tr>

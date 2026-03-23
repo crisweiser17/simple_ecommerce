@@ -2,6 +2,7 @@
 <html lang="<?php echo htmlspecialchars($_SESSION['lang'] ?? 'en'); ?>">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title><?php echo __('Admin Dashboard'); ?> - <?php echo htmlspecialchars(getSetting('store_name', 'R2 Research Labs')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
@@ -34,6 +35,7 @@
     </script>
 </head>
 <body class="bg-gray-100 font-sans flex flex-col h-screen" x-data="{ 
+    sidebarOpen: false,
     tab: localStorage.getItem('admin_tab') || 'products', 
     categoryModalOpen: false,
     pageModalOpen: false,
@@ -77,32 +79,39 @@
     }
 }">
 
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="sidebarOpen" class="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden" @click="sidebarOpen = false" style="display: none;"></div>
+
         <!-- Sidebar -->
-        <div class="w-64 bg-gray-900 text-white flex flex-col">
-            <div class="p-4 text-xl font-bold border-b border-gray-800"><?php echo __('Admin Dashboard'); ?></div>
+        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed md:static inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col transition-transform duration-300 md:translate-x-0 h-full overflow-y-auto">
+            <div class="p-4 text-xl font-bold border-b border-gray-800 flex justify-between items-center">
+                <span><?php echo __('Admin Dashboard'); ?></span>
+                <button @click="sidebarOpen = false" class="md:hidden text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
             <nav class="flex-1 p-4 space-y-2">
                 <a href="/" class="block w-full text-left px-4 py-2 text-xs text-gray-400 hover:text-white"><?php echo __('Back to Site'); ?></a>
                 <div class="border-t border-gray-800 my-1"></div>
-                <button @click="tab = 'products'" :class="tab === 'products' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
+                <button @click="tab = 'products'; sidebarOpen = false;" :class="tab === 'products' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Products'); ?>
                 </button>
-                <button @click="tab = 'categories'" :class="tab === 'categories' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
+                <button @click="tab = 'categories'; sidebarOpen = false;" :class="tab === 'categories' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Categories'); ?>
                 </button>
                 <div class="border-t border-gray-800 my-1"></div>
-                <button @click="tab = 'orders'" :class="tab === 'orders' ? 'bg-gray-700 text-white font-semibold border border-gray-600' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
+                <button @click="tab = 'orders'; sidebarOpen = false;" :class="tab === 'orders' ? 'bg-gray-700 text-white font-semibold border border-gray-600' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Orders'); ?>
                 </button>
-                <div class="border-t border-gray-800 my-1"></div>
-                <button @click="tab = 'customers'" :class="tab === 'customers' ? 'bg-gray-700 text-white font-semibold border border-gray-600' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
+                <button @click="tab = 'customers'; sidebarOpen = false;" :class="tab === 'customers' ? 'bg-gray-700 text-white font-semibold border border-gray-600' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Customers'); ?>
                 </button>
                 <div class="border-t border-gray-800 my-1"></div>
-                <button @click="tab = 'settings'" :class="tab === 'settings' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
+                <button @click="tab = 'settings'; sidebarOpen = false;" :class="tab === 'settings' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Settings'); ?>
                 </button>
-                <button @click="tab = 'admins'" :class="tab === 'admins' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
+                <button @click="tab = 'admins'; sidebarOpen = false;" :class="tab === 'admins' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Admins'); ?>
                 </button>
                 <a href="/logout" class="block w-full text-left px-4 py-2 text-red-400 hover:text-red-300"><?php echo __('Logout'); ?></a>
@@ -119,22 +128,31 @@
         </div>
 
         <!-- Content -->
-        <div class="flex-1 overflow-auto p-8">
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Mobile Header -->
+            <div class="md:hidden bg-white border-b border-gray-200 flex items-center justify-between p-4 flex-shrink-0 shadow-sm z-10">
+                <span class="font-bold text-lg text-gray-800"><?php echo __('Admin Dashboard'); ?></span>
+                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 hover:text-gray-900 focus:outline-none p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-auto p-4 md:p-8">
             
             <!-- Products Tab -->
             <div x-show="tab === 'products'">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                     <h1 class="text-2xl font-bold"><?php echo __('Products'); ?></h1>
-                    <div class="flex items-center gap-2">
-                        <a href="/admin/products/csv-template" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">CSV Template</a>
-                        <a href="/admin/products/export-csv" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Export CSV</a>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a href="/admin/products/csv-template" class="bg-gray-700 text-white px-3 py-2 text-sm rounded hover:bg-gray-800">CSV Template</a>
+                        <a href="/admin/products/export-csv" class="bg-blue-600 text-white px-3 py-2 text-sm rounded hover:bg-blue-700">Export CSV</a>
                         
                         <form id="csvImportForm" action="/admin/products/import-csv" method="POST" enctype="multipart/form-data" class="hidden">
                             <input type="file" id="csvFileInput" name="products_csv" accept=".csv,text/csv" required onchange="document.getElementById('csvImportForm').submit()">
                         </form>
-                        <button type="button" onclick="document.getElementById('csvFileInput').value = ''; document.getElementById('csvFileInput').click()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Import CSV</button>
+                        <button type="button" onclick="document.getElementById('csvFileInput').value = ''; document.getElementById('csvFileInput').click()" class="bg-indigo-600 text-white px-3 py-2 text-sm rounded hover:bg-indigo-700">Import CSV</button>
                         
-                        <a href="/admin/product-form" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Add Product</a>
+                        <a href="/admin/product-form" class="bg-green-600 text-white px-3 py-2 text-sm rounded hover:bg-green-700">Add Product</a>
                     </div>
                 </div>
 
@@ -157,7 +175,7 @@
                     </div>
                 <?php endif; ?>
 
-                <div class="bg-white rounded shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
@@ -200,7 +218,7 @@
                     <button @click="categoryModalOpen = true; editCategory = {}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Category'); ?></button>
                 </div>
 
-                <div class="bg-white rounded shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
@@ -232,7 +250,7 @@
                     <button @click="pageModalOpen = true; editPage = {}; setTimeout(() => { initQuill(); if(this.quill) this.quill.root.innerHTML = ''; }, 100);" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Page'); ?></button>
                 </div>
 
-                <div class="bg-white rounded shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
@@ -260,7 +278,7 @@
             <!-- Orders Tab -->
             <div x-show="tab === 'orders'" style="display: none;">
                 <h1 class="text-2xl font-bold mb-6"><?php echo __('Orders'); ?></h1>
-                <div class="bg-white rounded shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
@@ -337,7 +355,7 @@
 
             <div x-show="tab === 'customers'" style="display: none;">
                 <h1 class="text-2xl font-bold mb-6"><?php echo __('Customers'); ?></h1>
-                <div class="bg-white rounded shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
@@ -406,7 +424,7 @@
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Nome da loja</label>
                                     <input type="text" name="store_name" value="<?php echo htmlspecialchars(getSetting('store_name', 'R2 Research Labs')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                 </div>
-                                <div class="mb-4 grid grid-cols-2 gap-4">
+                                <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Store Currency (Code)'); ?></label>
                                         <input type="text" name="store_currency" value="<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>" placeholder="e.g. BRL, USD" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
@@ -435,7 +453,7 @@
                                         </div>
                                     <?php endif; ?>
                                 </div>
-                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2">Largura do logo (px)</label>
                                         <input type="number" min="20" max="1200" name="brand_logo_width" value="<?php echo htmlspecialchars(getSetting('brand_logo_width', '160')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
@@ -524,7 +542,7 @@
                                         <span class="ml-2 text-gray-700 text-sm font-bold"><?php echo __('Enable email sending (Resend SMTP)'); ?></span>
                                     </label>
                                 </div>
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2">Host</label>
                                         <input type="text" name="smtp_host" value="<?php echo htmlspecialchars(getSetting('smtp_host', 'smtp.resend.com')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
@@ -534,7 +552,7 @@
                                         <input type="text" name="smtp_port" value="<?php echo htmlspecialchars(getSetting('smtp_port', '587')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-4 mt-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2">Usuário</label>
                                         <input type="text" name="smtp_username" value="<?php echo htmlspecialchars(getSetting('smtp_username', 'resend')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
@@ -547,7 +565,7 @@
                                         <p class="text-xs text-gray-500 mt-1">Para Resend, use a API Key como senha.</p>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-4 mt-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2">Criptografia</label>
                                         <?php $enc = getSetting('smtp_encryption', 'tls'); ?>
@@ -558,7 +576,7 @@
                                     </div>
                                     <div></div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-4 mt-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2">From Email</label>
                                         <input type="email" name="smtp_from_email" value="<?php echo htmlspecialchars(getSetting('smtp_from_email', '')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
@@ -721,7 +739,7 @@
                                 <textarea name="banner_subtitle" rows="2" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"><?php echo htmlspecialchars(getSetting('banner_subtitle', 'High purity research peptides for laboratory use only.')); ?></textarea>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Primary Button Text</label>
                                     <input type="text" name="banner_button_text" value="<?php echo htmlspecialchars(getSetting('banner_button_text', '')); ?>" placeholder="e.g. Shop Now" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
@@ -733,7 +751,7 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Secondary Button Text</label>
                                     <input type="text" name="banner_button2_text" value="<?php echo htmlspecialchars(getSetting('banner_button2_text', '')); ?>" placeholder="e.g. View Plans" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
@@ -753,7 +771,7 @@
                                 <input type="file" name="banner_right_image_file" accept="image/*" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" data-filepond="image-single">
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Overlay Color 1 (Left)</label>
                                         <div class="flex items-center gap-2">
@@ -801,16 +819,16 @@
                 </div>
 
                 <!-- Add New Admin -->
-                <div class="bg-white rounded shadow p-6 mb-8" x-data="{ newAdminEmail: '', loading: false, msg: '', success: false }">
+                <div class="bg-white rounded shadow p-6 mb-8" x-data="{ newAdminName: '', newAdminEmail: '', newAdminToken: '', loading: false, msg: '', success: false }">
                     <h2 class="text-lg font-semibold mb-4"><?php echo __('Add New Admin'); ?></h2>
                     <form @submit.prevent="
                         if(!newAdminEmail) return;
                         loading = true;
                         msg = '';
-                        fetch('/admin/users/promote', {
+                        fetch('/admin/users/add', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email: newAdminEmail })
+                            body: JSON.stringify({ name: newAdminName, email: newAdminEmail, token: newAdminToken })
                         })
                         .then(r => r.json())
                         .then(data => {
@@ -828,12 +846,20 @@
                             msg = 'Error: ' + err;
                         })
                         .finally(() => loading = false);
-                    " class="flex items-end gap-4 max-w-md">
+                    " class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Name'); ?></label>
+                            <input @keydown.enter="$event.preventDefault(); document.getElementById('add-admin-btn').click();" type="text" x-model="newAdminName" class="w-full border-gray-300 rounded-md shadow-sm p-2 border" placeholder="<?php echo __('Name'); ?>">
+                        </div>
                         <div class="flex-1">
                             <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('User Email'); ?></label>
                             <input @keydown.enter="$event.preventDefault(); document.getElementById('add-admin-btn').click();" type="email" x-model="newAdminEmail" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border" placeholder="admin@example.com">
                         </div>
-                        <button id="add-admin-btn" type="submit" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Bypass Token'); ?></label>
+                            <input @keydown.enter="$event.preventDefault(); document.getElementById('add-admin-btn').click();" type="text" x-model="newAdminToken" class="w-full border-gray-300 rounded-md shadow-sm p-2 border font-mono" placeholder="000000">
+                        </div>
+                        <button id="add-admin-btn" type="submit" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50 h-[42px]">
                             <span x-show="!loading"><?php echo __('Add Admin'); ?></span>
                             <span x-show="loading"><?php echo __('Adding...'); ?></span>
                         </button>
@@ -842,7 +868,7 @@
                 </div>
 
                 <!-- Admins List -->
-                <div class="bg-white rounded shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
@@ -869,7 +895,7 @@
                                         <div x-show="editing" class="flex items-center gap-2">
                                             <input @keydown.enter="$event.preventDefault(); document.getElementById('save-token-btn-<?php echo $admin['id']; ?>').click();" type="text" x-model="token" class="border rounded px-2 py-1 text-sm w-24 font-mono" placeholder="000000">
                                             <button id="save-token-btn-<?php echo $admin['id']; ?>" @click="
-                                                fetch('/admin/users/set-bypass-token', {
+                                                fetch('/admin/users/update-key', {
                                                     method: 'POST',
                                                     headers: { 'Content-Type': 'application/json' },
                                                     body: JSON.stringify({ id: <?php echo $admin['id']; ?>, token: token })
@@ -884,7 +910,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <?php if ($admin['id'] != 1 && $admin['id'] != $_SESSION['user_id']): ?>
                                             <button onclick="if(confirm('<?php echo __('Are you sure you want to revoke admin access for this user?'); ?>')) {
-                                                fetch('/admin/users/revoke', {
+                                                fetch('/admin/users/remove', {
                                                     method: 'POST',
                                                     headers: { 'Content-Type': 'application/json' },
                                                     body: JSON.stringify({ id: <?php echo $admin['id']; ?> })
@@ -904,6 +930,7 @@
             </div>
 
         </div>
+    </div>
     </div>
 
     <!-- Category Modal -->

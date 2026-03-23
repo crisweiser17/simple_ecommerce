@@ -58,12 +58,15 @@ function sendContactFormMessage(array $payload): array
     $safeSubject = htmlspecialchars($subjectLabel, ENT_QUOTES, 'UTF-8');
     $safeMessage = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
 
-    $html = '<h2>' . __('New contact message') . '</h2>'
-        . '<p><strong>' . __('Full Name') . ':</strong> ' . $safeName . '</p>'
-        . '<p><strong>' . __('Email') . ':</strong> ' . $safeEmail . '</p>'
-        . '<p><strong>' . __('Phone') . ':</strong> ' . $safePhone . '</p>'
-        . '<p><strong>' . __('Subject') . ':</strong> ' . $safeSubject . '</p>'
-        . '<p><strong>' . __('Message') . ':</strong><br>' . $safeMessage . '</p>';
+    $content = '<h2 style="margin: 0 0 16px 0; font-size: 18px; color: #111827;">' . __('New contact message') . '</h2>'
+        . '<p style="margin: 0 0 8px 0;"><strong>' . __('Full Name') . ':</strong> ' . $safeName . '</p>'
+        . '<p style="margin: 0 0 8px 0;"><strong>' . __('Email') . ':</strong> ' . $safeEmail . '</p>'
+        . '<p style="margin: 0 0 8px 0;"><strong>' . __('Phone') . ':</strong> ' . $safePhone . '</p>'
+        . '<p style="margin: 0 0 8px 0;"><strong>' . __('Subject') . ':</strong> ' . $safeSubject . '</p>'
+        . '<p style="margin: 16px 0 8px 0;"><strong>' . __('Message') . ':</strong><br></p>'
+        . '<div style="background: #fafafa; padding: 16px; border-radius: 6px; border: 1px solid #e5e7eb; color: #374151; font-size: 14px; line-height: 1.55;">' . $safeMessage . '</div>';
+
+    $html = renderEmailLayout('Contato - ' . $safeSubject, $content);
 
     $alt = __('New contact message') . PHP_EOL
         . __('Full Name') . ': ' . $name . PHP_EOL

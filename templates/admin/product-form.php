@@ -6,6 +6,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
 <html lang="<?php echo htmlspecialchars($_SESSION['lang'] ?? 'en'); ?>">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title><?php echo isset($product['id']) ? __('Edit Product') : __('Add New Product'); ?> - <?php echo htmlspecialchars(getSetting('store_name', 'R2 Research Labs')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
@@ -19,12 +20,20 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans flex flex-col h-screen">
+<body class="bg-gray-100 font-sans flex flex-col h-screen" x-data="{ sidebarOpen: false }">
 
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="sidebarOpen" class="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden" @click="sidebarOpen = false" style="display: none;"></div>
+
         <!-- Sidebar -->
-        <div class="w-64 bg-gray-900 text-white flex flex-col">
-            <div class="p-4 text-xl font-bold border-b border-gray-800"><?php echo __('Admin Dashboard'); ?></div>
+        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed md:static inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col transition-transform duration-300 md:translate-x-0 h-full overflow-y-auto">
+            <div class="p-4 text-xl font-bold border-b border-gray-800 flex justify-between items-center">
+                <span><?php echo __('Admin Dashboard'); ?></span>
+                <button @click="sidebarOpen = false" class="md:hidden text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
             <nav class="flex-1 p-4 space-y-2">
                 <a href="/" class="block w-full text-left px-4 py-2 text-xs text-gray-400 hover:text-white"><?php echo __('Back to Site'); ?></a>
                 <div class="border-t border-gray-800 my-1"></div>
@@ -61,14 +70,23 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
         </div>
 
         <!-- Content -->
-        <div class="flex-1 overflow-auto p-8">
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Mobile Header -->
+            <div class="md:hidden bg-white border-b border-gray-200 flex items-center justify-between p-4 flex-shrink-0 shadow-sm z-10">
+                <span class="font-bold text-lg text-gray-800 text-truncate overflow-hidden whitespace-nowrap"><?php echo isset($product['id']) ? __('Edit Product') : __('Add New Product'); ?></span>
+                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 hover:text-gray-900 focus:outline-none p-1 ml-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="max-w-4xl mx-auto">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-2xl font-bold"><?php echo isset($product['id']) ? __('Edit Product') : __('Add New Product'); ?></h1>
                     <a href="/admin" class="text-gray-600 hover:text-gray-900"><?php echo __('Back to Dashboard'); ?></a>
                 </div>
 
-                <div class="bg-white rounded shadow overflow-hidden p-6">
+                <div class="bg-white rounded shadow overflow-x-auto p-4 sm:p-6">
                     <form action="/admin/save-product" method="POST" id="productForm" enctype="multipart/form-data">
                         <?php if (isset($product['id'])): ?>
                             <input type="hidden" name="id" value="<?php echo htmlspecialchars($product['id']); ?>">
@@ -86,7 +104,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                 <p class="mt-1 text-xs text-gray-500"><?php echo __('Used in product URL. If duplicated, a suffix is added automatically.'); ?></p>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700"><?php echo __('SKU'); ?></label>
                                     <input type="text" name="sku" value="<?php echo htmlspecialchars($product['sku'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
@@ -151,7 +169,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                 </div>
                             <?php endif; ?>
 
-                            <div class="grid grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700"><?php echo __('PDF Report URL or File'); ?></label>
                                     <input type="text" name="pdf_url" value="<?php echo htmlspecialchars($product['pdf_url'] ?? ''); ?>" placeholder="<?php echo __('External URL (or use upload below)'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3">
@@ -244,6 +262,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Quill JS -->

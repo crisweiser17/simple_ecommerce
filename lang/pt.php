@@ -76,9 +76,11 @@ return [
     // Account Page
     'Personal Information' => 'Informações Pessoais',
     'Delivery Address' => 'Endereço de Entrega',
+    'Address Details' => 'Detalhes do Endereço',
     'CEP' => 'CEP',
     'Street' => 'Rua',
     'Number' => 'Número',
+    'Complement' => 'Complemento',
     'Neighborhood' => 'Bairro',
     'City' => 'Cidade',
     'State' => 'Estado',
@@ -86,6 +88,9 @@ return [
     'Loading...' => 'Carregando...',
     'CEP not found.' => 'CEP não encontrado.',
     'Error fetching address details.' => 'Erro ao buscar detalhes do endereço.',
+    'Full Address String (Legacy/Display)' => 'Endereço Completo (Exibição)',
+    'Copy' => 'Copiar',
+    'Copied!' => 'Copiado!',
 
     // Order Success
     'Order Received!' => 'Pedido Recebido!',
@@ -165,6 +170,7 @@ return [
     'None' => 'Nenhum',
     'Save' => 'Salvar',
     'Invalid email' => 'Endereço de e-mail inválido',
+    'Invalid email format' => 'Formato de e-mail inválido',
     'Cannot revoke your own access' => 'Não é possível revogar o próprio acesso',
     'Pages' => 'Páginas',
     'Settings' => 'Configurações',

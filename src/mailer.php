@@ -58,15 +58,19 @@ function sendMailSMTP(string $to, string $subject, string $html, string $altText
     }
 }
 
-function renderLoginTokenEmail(string $code): string {
+function renderEmailLayout(string $title, string $content): string {
     $brand = getSetting('store_name', 'R2 Research Labs');
-    $html = '
+    $headerBg = getSetting('theme_header_bg', '#0f1115');
+    // Using white text for header since it's typically dark, but could also make it dynamic if there's a theme_header_text setting.
+    $headerText = '#ffffff'; 
+
+    return '
     <!doctype html>
     <html>
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>' . htmlspecialchars($brand) . ' — Login Code</title>
+      <title>' . htmlspecialchars($brand) . ' — ' . htmlspecialchars($title) . '</title>
     </head>
     <body style="margin:0;padding:0;background-color:#f5f5f5;">
       <table role="presentation" style="width:100%;border-collapse:collapse;background-color:#f5f5f5;">
@@ -74,18 +78,13 @@ function renderLoginTokenEmail(string $code): string {
           <td align="center" style="padding:0;">
             <table role="presentation" style="width:100%;max-width:640px;border-collapse:collapse;margin:0 auto;">
               <tr>
-                <td style="background:#000;color:#fff;padding:24px 28px;font-family:Helvetica,Arial,sans-serif;font-size:22px;font-weight:bold;letter-spacing:.3px;">
+                <td style="background:' . htmlspecialchars($headerBg) . ';color:' . htmlspecialchars($headerText) . ';padding:24px 28px;font-family:Helvetica,Arial,sans-serif;font-size:22px;font-weight:bold;letter-spacing:.3px;">
                   ' . htmlspecialchars($brand) . '
                 </td>
               </tr>
               <tr>
                 <td style="background:#ffffff;padding:28px;font-family:Helvetica,Arial,sans-serif;color:#111827;">
-                  <h1 style="margin:0 0 12px 0;font-size:20px;color:#111827;">Seu código de login</h1>
-                  <p style="margin:0 0 16px 0;line-height:1.55;">Use o código abaixo para concluir seu acesso. Ele expira em 15 minutos.</p>
-                  <div style="margin:18px 0;padding:18px 22px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;display:inline-block;">
-                    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,\'Liberation Mono\',\'Courier New\',monospace;font-size:28px;letter-spacing:4px;color:#111827;">' . htmlspecialchars($code) . '</span>
-                  </div>
-                  <p style="margin:16px 0 0 0;line-height:1.55;font-size:14px;color:#4b5563;">Se você não solicitou este acesso, ignore este e-mail.</p>
+                  ' . $content . '
                 </td>
               </tr>
               <tr>
@@ -99,5 +98,16 @@ function renderLoginTokenEmail(string $code): string {
       </table>
     </body>
     </html>';
-    return $html;
+}
+
+function renderLoginTokenEmail(string $code): string {
+    $content = '
+      <h1 style="margin:0 0 12px 0;font-size:20px;color:#111827;">Seu código de login</h1>
+      <p style="margin:0 0 16px 0;line-height:1.55;">Use o código abaixo para concluir seu acesso. Ele expira em 15 minutos.</p>
+      <div style="margin:18px 0;padding:18px 22px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;display:inline-block;">
+        <span style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,\'Liberation Mono\',\'Courier New\',monospace;font-size:28px;letter-spacing:4px;color:#111827;">' . htmlspecialchars($code) . '</span>
+      </div>
+      <p style="margin:16px 0 0 0;line-height:1.55;font-size:14px;color:#4b5563;">Se você não solicitou este acesso, ignore este e-mail.</p>
+    ';
+    return renderEmailLayout('Login Code', $content);
 }

@@ -2,13 +2,24 @@
 <html lang="<?php echo htmlspecialchars($_SESSION['lang'] ?? 'en'); ?>">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title><?php echo __('Customer Details'); ?> - <?php echo htmlspecialchars($customer['email'] ?? ''); ?> - <?php echo htmlspecialchars(getSetting('store_name', 'R2 Research Labs')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
 </head>
-<body class="bg-gray-100 font-sans flex flex-col h-screen">
-    <div class="flex flex-1 overflow-hidden">
-        <div class="w-64 bg-gray-900 text-white flex flex-col">
-            <div class="p-4 text-xl font-bold border-b border-gray-800"><?php echo __('Admin Dashboard'); ?></div>
+<body class="bg-gray-100 font-sans flex flex-col h-screen" x-data="{ sidebarOpen: false, editMode: false }">
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="sidebarOpen" class="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden" @click="sidebarOpen = false" style="display: none;"></div>
+
+        <!-- Sidebar -->
+        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed md:static inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col transition-transform duration-300 md:translate-x-0 h-full overflow-y-auto">
+            <div class="p-4 text-xl font-bold border-b border-gray-800 flex justify-between items-center">
+                <span><?php echo __('Admin Dashboard'); ?></span>
+                <button @click="sidebarOpen = false" class="md:hidden text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
             <nav class="flex-1 p-4 space-y-2">
                 <a href="/admin" class="block w-full text-left px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded">
                     &larr; <?php echo __('Back to Dashboard'); ?>
@@ -30,11 +41,23 @@
                 </div>
             </nav>
         </div>
-        <div class="flex-1 overflow-auto p-8">
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Mobile Header -->
+            <div class="md:hidden bg-white border-b border-gray-200 flex items-center justify-between p-4 flex-shrink-0 shadow-sm z-10">
+                <span class="font-bold text-lg text-gray-800 text-truncate overflow-hidden whitespace-nowrap"><?php echo __('Customer Details'); ?></span>
+                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 hover:text-gray-900 focus:outline-none p-1 ml-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="max-w-4xl mx-auto">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold"><?php echo __('Customer Details'); ?></h1>
                     <div>
+                        <button @click="editMode = !editMode" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm font-medium mr-2" x-text="editMode ? '<?php echo __('Cancel'); ?>' : '<?php echo __('Edit'); ?>'"></button>
                         <?php if (!empty($customer['has_orders'])): ?>
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"><?php echo __('Has Orders'); ?></span>
                         <?php else: ?>
@@ -55,7 +78,7 @@
                             </p>
                         </div>
                     </div>
-                    <div>
+                    <div x-show="!editMode">
                         <h2 class="text-xl font-semibold mb-4 border-b pb-2"><?php echo __('Customer Information'); ?></h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -88,7 +111,7 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div x-show="!editMode">
                         <h2 class="text-xl font-semibold mb-4 border-b pb-2"><?php echo __('Address Details'); ?></h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
@@ -115,11 +138,80 @@
                                 <p class="text-sm text-gray-500"><?php echo __('State'); ?></p>
                                 <p class="text-gray-900 font-medium"><?php echo htmlspecialchars(($customer['state'] ?? '') !== '' ? $customer['state'] : '—'); ?></p>
                             </div>
+                            <div class="md:col-span-3">
+                                <p class="text-sm text-gray-500"><?php echo __('Complement'); ?></p>
+                                <p class="text-gray-900 font-medium"><?php echo htmlspecialchars(($customer['complement'] ?? '') !== '' ? $customer['complement'] : '—'); ?></p>
+                            </div>
                         </div>
+                    </div>
+                    
+                    <div x-show="editMode" style="display: none;">
+                        <form action="/admin/customer/edit" method="POST" class="space-y-6">
+                            <input type="hidden" name="id" value="<?php echo (int)$customer['id']; ?>">
+                            
+                            <div>
+                                <h2 class="text-xl font-semibold mb-4 border-b pb-2"><?php echo __('Customer Information'); ?></h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Name'); ?></label>
+                                        <input type="text" name="name" value="<?php echo htmlspecialchars($customer['name'] ?? ''); ?>" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Email'); ?></label>
+                                        <input type="email" name="email" value="<?php echo htmlspecialchars($customer['email'] ?? ''); ?>" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('WhatsApp'); ?></label>
+                                        <input type="text" name="whatsapp" value="<?php echo htmlspecialchars($customer['whatsapp'] ?? ''); ?>" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h2 class="text-xl font-semibold mb-4 border-b pb-2"><?php echo __('Address Details'); ?></h2>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('CEP'); ?></label>
+                                        <input type="text" name="cep" value="<?php echo htmlspecialchars($customer['cep'] ?? ''); ?>" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Street'); ?></label>
+                                        <input type="text" name="street" value="<?php echo htmlspecialchars($customer['street'] ?? ''); ?>" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Number'); ?></label>
+                                        <input type="text" name="number" value="<?php echo htmlspecialchars($customer['number'] ?? ''); ?>" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Complement'); ?></label>
+                                        <input type="text" name="complement" value="<?php echo htmlspecialchars($customer['complement'] ?? ''); ?>" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('Neighborhood'); ?></label>
+                                        <input type="text" name="neighborhood" value="<?php echo htmlspecialchars($customer['neighborhood'] ?? ''); ?>" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('City'); ?></label>
+                                        <input type="text" name="city" value="<?php echo htmlspecialchars($customer['city'] ?? ''); ?>" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo __('State'); ?></label>
+                                        <input type="text" name="state" value="<?php echo htmlspecialchars($customer['state'] ?? ''); ?>" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end pt-4">
+                                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 font-medium shadow-sm">
+                                    <?php echo __('Save Changes'); ?>
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Powered By -->

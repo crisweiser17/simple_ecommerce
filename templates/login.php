@@ -15,6 +15,11 @@
     },
     requestToken() {
         if(this.resendTimer > 0) return;
+        if (!this.loginEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.loginEmail)) {
+            this.modalMessage = '<?php echo __('Invalid email format'); ?>';
+            this.modalOpen = true;
+            return;
+        }
         fetch('/api/login-request.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -23,6 +28,7 @@
         .then(res => res.json())
         .then(data => {
             if(data.success) { 
+                this.loginToken = '';
                 this.tokenSent = true; 
                 this.modalMessage = data.message;
                 this.modalOpen = true;
@@ -83,7 +89,7 @@
                         <span x-show="resendTimer > 0"><?php echo __('Resend code in'); ?> <span x-text="resendTimer"></span>s</span>
                         <span x-show="resendTimer === 0"><?php echo __('Resend code'); ?></span>
                     </button>
-                    <button @click="tokenSent = false" class="w-full text-center text-sm text-gray-500 hover:text-gray-700"><?php echo __('Back to Email'); ?></button>
+                    <button @click="tokenSent = false; loginToken = '';" class="w-full text-center text-sm text-gray-500 hover:text-gray-700 underline"><?php echo __('Back to Email'); ?></button>
                 </div>
             </div>
         </div>

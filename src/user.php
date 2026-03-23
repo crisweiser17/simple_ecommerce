@@ -64,7 +64,7 @@ function updateUser($id, $data) {
     global $pdo;
     
     // Whitelist allowed fields
-    $allowed = ['name', 'whatsapp', 'email', 'cep', 'street', 'number', 'neighborhood', 'city', 'state'];
+    $allowed = ['name', 'whatsapp', 'email', 'cep', 'street', 'number', 'complement', 'neighborhood', 'city', 'state'];
     $updates = [];
     $params = [];
     
@@ -92,7 +92,7 @@ function getAdminUsers() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function promoteUserToAdmin($email) {
+function promoteUserToAdmin($email, $name = null, $token = null) {
     global $pdo;
     
     // First check if user exists
@@ -100,13 +100,50 @@ function promoteUserToAdmin($email) {
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
+    $tokenValue = trim((string)$token) === '' ? null : trim((string)$token);
+    
     if ($user) {
-        $updateStmt = $pdo->prepare("UPDATE users SET is_admin = 1 WHERE id = ?");
-        return $updateStmt->execute([$user['id']]);
+        $updateQuery = "UPDATE users SET is_admin = 1";
+        $params = [];
+        
+        if (!empty($name)) {
+            $updateQuery .= ", name = ?";
+            $params[] = $name;
+        }
+        
+        if ($tokenValue !== null || isset($token)) { // allow setting null token
+            $updateQuery .= ", admin_bypass_token = ?";
+            $params[] = $tokenValue;
+        }
+        
+        $updateQuery .= " WHERE id = ?";
+        $params[] = $user['id'];
+        
+        $updateStmt = $pdo->prepare($updateQuery);
+        return $updateStmt->execute($params);
     } else {
         // Create new user as admin
-        $insertStmt = $pdo->prepare("INSERT INTO users (email, is_admin) VALUES (?, 1)");
-        return $insertStmt->execute([$email]);
+        $insertQuery = "INSERT INTO users (email, is_admin";
+        $valuesQuery = "VALUES (?, 1";
+        $params = [$email];
+        
+        if (!empty($name)) {
+            $insertQuery .= ", name";
+            $valuesQuery .= ", ?";
+            $params[] = $name;
+        }
+        
+        if ($tokenValue !== null) {
+            $insertQuery .= ", admin_bypass_token";
+            $valuesQuery .= ", ?";
+            $params[] = $tokenValue;
+        }
+        
+        $insertQuery .= ") ";
+        $valuesQuery .= ")";
+        
+        $insertStmt = $pdo->prepare($insertQuery . $valuesQuery);
+        return $insertStmt->execute($params);
     }
 }
 

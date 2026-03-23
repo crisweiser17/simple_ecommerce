@@ -53,13 +53,13 @@
                 <?php endif; ?>
                 
                 <div class="absolute inset-0 flex items-center">
-                    <div class="container mx-auto px-12 flex justify-between items-center">
+                    <div class="container mx-auto px-6 md:px-12 flex justify-between items-center">
                         <div class="max-w-lg z-10">
                             <?php 
                             $bannerTitle = getSetting('banner_title', 'Lab-Grade Peptides & Peptide Blends');
                             if (!empty($bannerTitle)): 
                             ?>
-                            <h1 class="text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
+                            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
                                 <?php echo __($bannerTitle); ?>
                             </h1>
                             <?php endif; ?>
@@ -73,13 +73,13 @@
                             </p>
                             <?php endif; ?>
 
-                            <div class="flex gap-4">
+                            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                                 <?php 
                                 $btn1Text = getSetting('banner_button_text');
                                 $btn1Link = getSetting('banner_button_link');
                                 if (!empty($btn1Text)):
                                 ?>
-                                <a href="<?php echo htmlspecialchars($btn1Link); ?>" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded shadow-lg transition-transform transform hover:scale-105 uppercase text-sm">
+                                <a href="<?php echo htmlspecialchars($btn1Link); ?>" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 sm:px-8 rounded shadow-lg transition-transform transform hover:scale-105 uppercase text-sm text-center">
                                     <?php echo __($btn1Text); ?>
                                 </a>
                                 <?php endif; ?>
@@ -89,7 +89,7 @@
                                 $btn2Link = getSetting('banner_button2_link');
                                 if (!empty($btn2Text)):
                                 ?>
-                                <a href="<?php echo htmlspecialchars($btn2Link); ?>" class="bg-transparent border border-gray-500 hover:border-white text-white font-bold py-3 px-8 rounded transition-colors uppercase text-sm">
+                                <a href="<?php echo htmlspecialchars($btn2Link); ?>" class="bg-transparent border border-gray-500 hover:border-white text-white font-bold py-3 px-6 sm:px-8 rounded transition-colors uppercase text-sm text-center">
                                     <?php echo __($btn2Text); ?>
                                 </a>
                                 <?php endif; ?>
@@ -109,8 +109,8 @@
                 </div>
             </div>
 
-            <!-- Section Title -->
-            <div class="mb-6 border-b pb-4 border-gray-300">
+            <!-- Section Title & Mobile Categories -->
+            <div class="mb-6 border-b pb-4 border-gray-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 class="text-2xl font-bold text-gray-800">
                     <?php 
                     if ($searchQuery !== '') {
@@ -128,6 +128,23 @@
                     }
                     ?>
                 </h2>
+                
+                <!-- Mobile Category Selector -->
+                <div class="md:hidden">
+                    <select onchange="window.location.href=this.value" class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm bg-white focus:ring-orange-500 focus:border-orange-500">
+                        <option value="/"><?php echo __('All Products'); ?></option>
+                        <?php 
+                        if (function_exists('getAllCategories')) {
+                            foreach ($sidebarCategories as $cat) {
+                                $isActive = isset($_GET['category']) && $_GET['category'] === $cat['slug'];
+                                $url = '/?category=' . htmlspecialchars($cat['slug']) . ($searchQuery !== '' ? '&q=' . urlencode($searchQuery) : '');
+                                $selected = $isActive ? 'selected' : '';
+                                echo "<option value=\"$url\" $selected>" . htmlspecialchars(__($cat['name'])) . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
             </div>
 
             <!-- Product Grid -->

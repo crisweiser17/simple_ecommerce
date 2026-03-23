@@ -55,43 +55,12 @@ class EmailDigital
             $textLinks .= "\n";
         }
 
-        $html = '
-        <!doctype html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>' . htmlspecialchars($brand) . ' — Entrega de Produto Digital</title>
-        </head>
-        <body style="margin:0;padding:0;background-color:#f5f5f5;">
-          <table role="presentation" style="width:100%;border-collapse:collapse;background-color:#f5f5f5;">
-            <tr>
-              <td align="center" style="padding:0;">
-                <table role="presentation" style="width:100%;max-width:640px;border-collapse:collapse;margin:0 auto;">
-                  <tr>
-                    <td style="background:#000;color:#fff;padding:24px 28px;font-family:Helvetica,Arial,sans-serif;font-size:22px;font-weight:bold;letter-spacing:.3px;">
-                      ' . htmlspecialchars($brand) . '
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="background:#ffffff;padding:28px;font-family:Helvetica,Arial,sans-serif;color:#111827;">
-                      <h1 style="margin:0 0 12px 0;font-size:20px;color:#111827;">Olá, ' . htmlspecialchars($customerName) . '!</h1>
-                      <p style="margin:0 0 16px 0;line-height:1.55;">Obrigado por sua compra. Seus produtos digitais já estão disponíveis para download.</p>
-                      ' . $htmlLinks . '
-                      <p style="margin:16px 0 0 0;line-height:1.55;font-size:14px;color:#4b5563;">Caso tenha qualquer dúvida ou problema com o download, por favor entre em contato respondendo a este e-mail.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="background:#ffffff;border-top:1px solid #e5e7eb;padding:18px 28px;font-family:Helvetica,Arial,sans-serif;color:#6b7280;font-size:12px;">
-                      Para pesquisa científica somente. Não destinado ao consumo humano.
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>';
+        $content = '<h1 style="margin: 0 0 16px 0; font-size: 20px; color: #111827;">Olá, ' . htmlspecialchars($customerName) . '!</h1>';
+        $content .= '<p style="margin: 0 0 16px 0; line-height: 1.55;">Obrigado por sua compra! Seus produtos digitais do pedido <strong>#' . htmlspecialchars($order['id'] ?? '') . '</strong> já estão disponíveis para download.</p>';
+        $content .= $htmlLinks;
+        $content .= '<p style="margin: 24px 0 0 0; line-height: 1.55; font-size: 14px; color: #4b5563;">Caso tenha qualquer dúvida ou problema com o download, por favor entre em contato respondendo a este e-mail.</p>';
+
+        $html = renderEmailLayout('Produtos Digitais', $content);
 
         $altText = "Olá, " . $customerName . "!\n\n";
         $altText .= "Obrigado por sua compra. Seus produtos digitais já estão disponíveis para download.\n\n";

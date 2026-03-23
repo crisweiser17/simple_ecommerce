@@ -48,6 +48,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS orders (
     customer_cep TEXT,
     customer_street TEXT,
     customer_number TEXT,
+    customer_complement TEXT,
     customer_neighborhood TEXT,
     customer_city TEXT,
     customer_state TEXT,
@@ -139,6 +140,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS users (
     cep TEXT,
     street TEXT,
     number TEXT,
+    complement TEXT,
     neighborhood TEXT,
     city TEXT,
     state TEXT

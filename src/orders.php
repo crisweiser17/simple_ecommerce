@@ -6,7 +6,7 @@ function createOrder($customerData, $items, $total) {
     $status = $customerData['status'] ?? 'pending_payment';
     $paymentStatus = $customerData['payment_status'] ?? 'pending';
     $paymentProvider = $customerData['payment_provider'] ?? null;
-    $stmt = $pdo->prepare("INSERT INTO orders (customer_name, customer_whatsapp, customer_email, customer_address, customer_cep, customer_street, customer_number, customer_neighborhood, customer_city, customer_state, items_json, total_amount, status, payment_status, payment_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO orders (customer_name, customer_whatsapp, customer_email, customer_address, customer_cep, customer_street, customer_number, customer_complement, customer_neighborhood, customer_city, customer_state, items_json, total_amount, status, payment_status, payment_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
         $customerData['name'],
         $customerData['whatsapp'],
@@ -15,6 +15,7 @@ function createOrder($customerData, $items, $total) {
         $customerData['cep'] ?? '',
         $customerData['street'] ?? '',
         $customerData['number'] ?? '',
+        $customerData['complement'] ?? '',
         $customerData['neighborhood'] ?? '',
         $customerData['city'] ?? '',
         $customerData['state'] ?? '',
@@ -24,7 +25,18 @@ function createOrder($customerData, $items, $total) {
         $paymentStatus,
         $paymentProvider
     ]);
-    return $pdo->lastInsertId();
+    
+    $orderId = (int)$pdo->lastInsertId();
+
+    // Send Order Created Email
+    require_once __DIR__ . '/EmailOrder.php';
+    $emailOrder = new EmailOrder();
+    $orderData = getOrder($orderId);
+    if ($orderData) {
+        $emailOrder->sendOrderCreatedEmail($orderData, $items, $total);
+    }
+
+    return $orderId;
 }
 
 function getAllOrders() {
@@ -43,6 +55,9 @@ function getOrder($id) {
 function updateOrder($id, $data) {
     global $pdo;
     
+    // Fetch old order to compare status
+    $oldOrder = getOrder($id);
+
     // Build query dynamically based on provided data
     $fields = [];
     $values = [];
@@ -74,6 +89,10 @@ function updateOrder($id, $data) {
     if (isset($data['customer_number'])) {
         $fields[] = "customer_number = ?";
         $values[] = $data['customer_number'];
+    }
+    if (isset($data['customer_complement'])) {
+        $fields[] = "customer_complement = ?";
+        $values[] = $data['customer_complement'];
     }
     if (isset($data['customer_neighborhood'])) {
         $fields[] = "customer_neighborhood = ?";
@@ -124,7 +143,20 @@ function updateOrder($id, $data) {
     $sql = "UPDATE orders SET " . implode(', ', $fields) . " WHERE id = ?";
     
     $stmt = $pdo->prepare($sql);
-    return $stmt->execute($values);
+    $result = $stmt->execute($values);
+
+    if ($result && isset($data['status']) && $oldOrder && $oldOrder['status'] !== $data['status']) {
+        // Status has changed, send email
+        require_once __DIR__ . '/EmailOrder.php';
+        $emailOrder = new EmailOrder();
+        // Use updated order data for the email
+        $updatedOrder = getOrder($id);
+        if ($updatedOrder) {
+            $emailOrder->sendOrderStatusEmail($updatedOrder, $data['status']);
+        }
+    }
+
+    return $result;
 }
 
 function deleteOrder($id) {
