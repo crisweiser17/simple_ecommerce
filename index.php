@@ -1034,14 +1034,15 @@ switch ($path) {
                     $allImages[] = $uploadedImage;
                 }
             }
-            if ($manualImageUrl !== '' && !in_array($manualImageUrl, $allImages, true)) {
-                $allImages[] = $manualImageUrl;
-            }
 
-            $primaryImageUrl = trim((string)($_POST['primary_image'] ?? ''));
-            if ($primaryImageUrl === '' && !empty($allImages)) {
+            // O campo 'image_url' (manualImageUrl) foi descontinuado na nova interface do product-form
+            // Não devemos forçar a adição dele se ele não estiver mais presente no array $allImages
+            // A imagem primária agora é apenas a primeira imagem do array resultante
+            $primaryImageUrl = '';
+            if (!empty($allImages)) {
                 $primaryImageUrl = $allImages[0];
             }
+
             $primaryImageUrl = saveProductImages($productId, $allImages, $primaryImageUrl);
             updateProductImageUrl($productId, $primaryImageUrl);
         }
