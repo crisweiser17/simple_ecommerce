@@ -204,7 +204,7 @@
                     <?php endif; ?>
 
                     <button type="submit" class="w-full bg-orange-500 text-white font-bold py-3 rounded mt-4 hover:bg-orange-600 transition-colors uppercase shadow-lg">
-                        <?php echo $storeMode === 'catalog' ? __('Salvar PDF e Enviar Orçamento') : __('Finalize Order'); ?>
+                        <?php echo $storeMode === 'catalog' ? __('Salvar Meu Pedido em PDF') : __('Finalize Order'); ?>
                     </button>
                 </form>
             </div>
