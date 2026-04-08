@@ -52,13 +52,16 @@ if ($primaryImage === '') {
             <div class="text-sm text-gray-500 mb-2">SKU: <?php echo htmlspecialchars($product['sku']); ?></div>
             <h1 class="text-3xl font-bold text-gray-900 mb-4"><?php echo htmlspecialchars($product['name']); ?></h1>
             
+            <?php if ($storeMode === 'ecommerce'): ?>
             <div class="text-2xl font-bold text-orange-600 mb-6"><?php echo formatMoney($product['price']); ?></div>
+            <?php endif; ?>
 
             <div class="prose text-gray-600 mb-8">
                 <?php echo $product['short_desc']; ?>
             </div>
 
             <!-- Add to Cart Form -->
+            <?php if ($storeMode !== 'informational'): ?>
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8" x-data="{ qty: 1 }">
                 <div class="flex items-center border rounded w-full sm:w-auto justify-between sm:justify-start">
                     <button @click="qty > 1 ? qty-- : null" class="px-4 py-3 hover:bg-gray-100">-</button>
@@ -68,9 +71,10 @@ if ($primaryImage === '') {
                 <button 
                     @click="$store.cart.add({ ...<?php echo htmlspecialchars(json_encode($product)); ?>, quantity: qty })"
                     class="w-full sm:w-auto bg-orange-500 text-white px-8 py-3 rounded font-bold hover:bg-orange-600 transition-colors uppercase shadow-lg transform active:scale-95 text-center">
-                    <?php echo __('Add to cart'); ?>
+                    <?php echo $storeMode === 'catalog' ? __('Adicionar à lista') : __('Add to cart'); ?>
                 </button>
             </div>
+            <?php endif; ?>
 
             <div class="flex items-center gap-4 text-sm text-gray-500">
                 <span><?php echo __('Category'); ?>: <?php echo htmlspecialchars($categoryLabel); ?></span>

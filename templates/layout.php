@@ -13,6 +13,7 @@
     $themePageBg = getSetting('theme_page_bg', '#f3f4f6');
     $themeTextColor = getSetting('theme_text_color', '#1f2937');
     $isMultilangEnabled = getSetting('i18n_multilang_enabled', '1') === '1';
+    $storeMode = getSetting('store_mode', 'ecommerce');
     ?>
     <title><?php echo htmlspecialchars($storeName); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -89,13 +90,21 @@
                         </a>
                     <?php endif; ?>
 
+                    <?php if ($storeMode !== 'informational'): ?>
                     <a href="/cart" class="relative hover:text-orange-500 transition-colors flex items-center gap-1 md:gap-2 p-1">
                         <div class="relative">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            <?php if ($storeMode === 'catalog'): ?>
+                                <!-- Clipboard / List Icon -->
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                            <?php else: ?>
+                                <!-- Cart Icon -->
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            <?php endif; ?>
                             <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center" x-text="$store.cart.count" x-show="$store.cart.count > 0">0</span>
                         </div>
-                        <span class="hidden sm:inline"><?php echo __('Cart'); ?></span>
+                        <span class="hidden sm:inline"><?php echo $storeMode === 'catalog' ? __('My List') : __('Cart'); ?></span>
                     </a>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -161,11 +170,11 @@
     <div x-cloak x-show="$store.cartFeedbackModal.open" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-4" @keydown.escape.window="$store.cartFeedbackModal.close()">
         <div class="absolute inset-0 bg-black/50" @click="$store.cartFeedbackModal.close()"></div>
         <div class="relative w-full max-w-md rounded-lg bg-white shadow-xl p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-3">Produto adicionado ao carrinho</h3>
-            <p class="text-gray-700 mb-6" x-text="`O produto ${$store.cartFeedbackModal.productName} foi adicionado ao carrinho.`"></p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-3"><?php echo $storeMode === 'catalog' ? __('Produto adicionado à sua lista') : __('Produto adicionado ao carrinho'); ?></h3>
+            <p class="text-gray-700 mb-6" x-text="`O produto ${$store.cartFeedbackModal.productName} foi adicionado ${'<?php echo $storeMode === 'catalog' ? 'à sua lista' : 'ao carrinho'; ?>'}.`"></p>
             <div class="flex flex-col sm:flex-row gap-3">
-                <button type="button" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors" @click="$store.cartFeedbackModal.close()">Continuar comprando</button>
-                <button type="button" class="w-full sm:w-auto px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors" @click="$store.cartFeedbackModal.goToCheckout()">Finalizar compra</button>
+                <button type="button" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors" @click="$store.cartFeedbackModal.close()"><?php echo $storeMode === 'catalog' ? __('Continuar vendo') : __('Continuar comprando'); ?></button>
+                <button type="button" class="w-full sm:w-auto px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors" @click="$store.cartFeedbackModal.goToCheckout()"><?php echo $storeMode === 'catalog' ? __('Ver minha lista') : __('Finalizar compra'); ?></button>
             </div>
         </div>
     </div>

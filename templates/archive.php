@@ -184,19 +184,28 @@
                             <p class="text-xs text-gray-500 mb-3"><?php echo __('Best-in-class Bioavail.'); ?></p>
                             
                             <!-- Price -->
+                            <?php if ($storeMode === 'ecommerce'): ?>
                             <div class="font-bold text-xl text-gray-900 mb-4 border-t border-gray-100 pt-2">
                                 <?php echo formatMoney($product['price']); ?>
                             </div>
+                            <?php else: ?>
+                            <div class="mb-4 border-t border-gray-100 pt-2"></div>
+                            <?php endif; ?>
 
                             <!-- Actions -->
                             <div class="flex flex-col gap-2" x-data="{ qty: 1 }">
                                 <!-- Add to Cart -->
+                                <?php if ($storeMode !== 'informational'): ?>
                                 <div class="flex items-center gap-2">
                                     <button 
                                         @click="$store.cart.add({ ...<?php echo htmlspecialchars(json_encode($product)); ?>, quantity: qty })"
                                         class="flex-1 bg-orange-500 text-white py-2.5 rounded text-sm font-bold hover:bg-orange-600 transition-colors shadow-md hover:shadow-lg flex justify-center items-center gap-2">
-                                        <span><?php echo __('Add to Cart'); ?></span>
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                        <span><?php echo $storeMode === 'catalog' ? __('Adicionar à lista') : __('Add to Cart'); ?></span>
+                                        <?php if ($storeMode === 'catalog'): ?>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                        <?php else: ?>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                        <?php endif; ?>
                                     </button>
                                     <input 
                                         type="number"
@@ -206,6 +215,7 @@
                                         class="w-16 border border-gray-300 rounded py-2.5 px-2 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300"
                                     >
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Learn More -->
                                 <a 

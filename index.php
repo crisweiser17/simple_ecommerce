@@ -226,6 +226,11 @@ switch ($path) {
         break;
 
     case '/cart':
+        $storeMode = getSetting('store_mode', 'ecommerce');
+        if ($storeMode === 'informational') {
+            header('Location: /', true, 302);
+            exit;
+        }
         $user = [];
         if (isLoggedIn()) {
              $user = getUser($_SESSION['user_id']) ?: [];
@@ -466,6 +471,78 @@ switch ($path) {
             }
             exit;
         }
+        break;
+
+    case '/checkout/quote':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $name = trim((string)($_POST['name'] ?? ''));
+            $email = trim((string)($_POST['email'] ?? ''));
+            $whatsapp = trim((string)($_POST['whatsapp'] ?? ''));
+            $itemsJson = (string)($_POST['items'] ?? '[]');
+            $items = json_decode($itemsJson, true);
+
+            if (!is_array($items) || empty($items)) {
+                $_SESSION['checkout_error'] = __('Sua lista está vazia.');
+                header('Location: /cart', true, 302);
+                exit;
+            }
+
+            $userId = $_SESSION['user_id'] ?? null;
+            if (!$userId) {
+                // If not logged in via token, try to find or create user by email
+                require_once __DIR__ . '/src/db.php';
+                global $pdo;
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+                $stmt->execute([$email]);
+                $existingUser = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($existingUser) {
+                    $userId = $existingUser['id'];
+                    updateUser($userId, ['name' => $name, 'whatsapp' => $whatsapp]);
+                } else {
+                    $stmt = $pdo->prepare("INSERT INTO users (email, name, whatsapp) VALUES (?, ?, ?)");
+                    $stmt->execute([$email, $name, $whatsapp]);
+                    $userId = $pdo->lastInsertId();
+                }
+            } else {
+                updateUser($userId, ['name' => $name, 'whatsapp' => $whatsapp]);
+            }
+
+            $customerData = [
+                'name' => $name,
+                'email' => $email,
+                'whatsapp' => $whatsapp,
+                'address' => '',
+                'cep' => '',
+                'street' => '',
+                'number' => '',
+                'complement' => '',
+                'neighborhood' => '',
+                'city' => '',
+                'state' => '',
+                'status' => 'quote',
+                'payment_status' => 'none',
+                'payment_provider' => 'none'
+            ];
+
+            // Create Order as 'quote'
+            $orderId = createOrder($customerData, $items, 0);
+
+            header("Location: /quote-success?id={$orderId}", true, 302);
+            exit;
+        }
+        header('Location: /cart', true, 302);
+        break;
+
+    case '/quote-success':
+        $orderId = (int)($_GET['id'] ?? 0);
+        $order = getOrder($orderId);
+        if (!$order || $order['status'] !== 'quote') {
+            header('Location: /', true, 302);
+            exit;
+        }
+        $template = __DIR__ . '/templates/quote-success.php';
+        require __DIR__ . '/templates/layout.php';
         break;
 
     case '/checkout':

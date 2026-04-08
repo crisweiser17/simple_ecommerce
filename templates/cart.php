@@ -62,11 +62,11 @@
     }
 }">
     
-    <h1 class="text-3xl font-bold mb-8"><?php echo __('Shopping Cart'); ?></h1>
+    <h1 class="text-3xl font-bold mb-8"><?php echo $storeMode === 'catalog' ? __('Minha Lista') : __('Shopping Cart'); ?></h1>
 
     <!-- Empty Cart State -->
     <div x-show="$store.cart.count === 0" class="text-center py-12 bg-white rounded shadow-sm border">
-        <p class="text-gray-500 mb-4"><?php echo __('Your cart is currently empty.'); ?></p>
+        <p class="text-gray-500 mb-4"><?php echo $storeMode === 'catalog' ? __('Sua lista está vazia.') : __('Your cart is currently empty.'); ?></p>
         <a href="/" class="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 shadow-md transition-colors"><?php echo __('Return to Shop'); ?></a>
     </div>
 
@@ -79,7 +79,9 @@
                     <img :src="item.image_url" class="w-20 h-20 object-contain rounded border">
                     <div class="flex-1">
                         <h3 class="font-bold text-gray-900" x-text="item.name"></h3>
+                        <?php if ($storeMode === 'ecommerce'): ?>
                         <p class="text-sm text-gray-500" x-text="'<?php echo getSetting('store_currency_symbol', 'R$'); ?> ' + item.price.toFixed(2)"></p>
+                        <?php endif; ?>
                     </div>
                     <div class="flex items-center border rounded">
                         <button @click="$store.cart.updateQuantity(item.id, item.quantity - 1)" class="px-2 py-1 hover:bg-gray-100">-</button>
@@ -95,12 +97,15 @@
 
         <!-- Checkout Sidebar -->
         <div class="bg-white p-6 rounded border shadow-sm h-fit sticky top-24">
-            <h2 class="text-xl font-bold mb-4 text-gray-800"><?php echo __('Order Summary'); ?></h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-800"><?php echo $storeMode === 'catalog' ? __('Solicitar Orçamento') : __('Order Summary'); ?></h2>
+            
+            <?php if ($storeMode === 'ecommerce'): ?>
             <div class="flex justify-between mb-2 text-gray-700">
                 <span><?php echo __('Subtotal'); ?></span>
                 <span class="font-bold" x-text="'<?php echo getSetting('store_currency_symbol', 'R$'); ?> ' + $store.cart.total.toFixed(2)"></span>
             </div>
             <div class="border-t border-gray-100 my-4"></div>
+            <?php endif; ?>
             
             <!-- Auth Step -->
             <div x-show="!isLoggedIn && step === 1">
@@ -129,7 +134,7 @@
             <!-- Customer Details Step -->
             <div x-show="isLoggedIn || step === 2">
                 <h3 class="font-bold mb-2 text-gray-800"><?php echo __('Customer Details'); ?></h3>
-                <form action="/checkout" method="POST" class="space-y-3">
+                <form action="<?php echo $storeMode === 'catalog' ? '/checkout/quote' : '/checkout'; ?>" method="POST" class="space-y-3">
                     <input type="hidden" name="items" :value="JSON.stringify($store.cart.items)">
                     <input type="hidden" name="total" :value="$store.cart.total">
                     
@@ -145,6 +150,8 @@
                         <label class="text-xs font-bold text-gray-500 uppercase"><?php echo __('WhatsApp'); ?></label>
                         <input type="text" name="whatsapp" value="<?php echo htmlspecialchars($user['whatsapp'] ?? ''); ?>" required class="w-full border border-gray-300 rounded p-2 focus:ring-1 focus:ring-orange-500 outline-none" oninput="maskPhone(event)">
                     </div>
+
+                    <?php if ($storeMode === 'ecommerce'): ?>
                     <div>
                         <label class="text-xs font-bold text-gray-500 uppercase"><?php echo __('Delivery Address'); ?></label>
                         <div class="space-y-3 mt-1">
@@ -194,9 +201,10 @@
                             </div>
                         </div>
                     </div>
+                    <?php endif; ?>
 
                     <button type="submit" class="w-full bg-orange-500 text-white font-bold py-3 rounded mt-4 hover:bg-orange-600 transition-colors uppercase shadow-lg">
-                        <?php echo __('Finalize Order'); ?>
+                        <?php echo $storeMode === 'catalog' ? __('Salvar PDF e Enviar Orçamento') : __('Finalize Order'); ?>
                     </button>
                 </form>
             </div>

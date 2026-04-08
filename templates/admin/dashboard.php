@@ -469,6 +469,23 @@
                             </div>
 
                             <div class="border-b pb-4 mb-4">
+                                <h3 class="text-lg font-semibold mb-3">Modo de Operação da Loja</h3>
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">Selecione o modo</label>
+                                    <select name="store_mode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                        <option value="ecommerce" <?php echo getSetting('store_mode', 'ecommerce') === 'ecommerce' ? 'selected' : ''; ?>>E-commerce Completo (Carrinho, Preços, Checkout)</option>
+                                        <option value="catalog" <?php echo getSetting('store_mode', 'ecommerce') === 'catalog' ? 'selected' : ''; ?>>Modo Catálogo (Sem preços, Lista de Desejos, Orçamento em PDF)</option>
+                                        <option value="informational" <?php echo getSetting('store_mode', 'ecommerce') === 'informational' ? 'selected' : ''; ?>>Modo Informativo (Sem preços, Sem carrinho, Apenas vitrine)</option>
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        <strong>E-commerce:</strong> Fluxo normal de vendas com pagamento.<br>
+                                        <strong>Catálogo:</strong> Oculta preços, troca "Carrinho" por "Lista", finaliza em um pedido de Orçamento em PDF.<br>
+                                        <strong>Informativo:</strong> Oculta preços e botões de compra. O site serve apenas para exibir produtos.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="border-b pb-4 mb-4">
                                 <h3 class="text-lg font-semibold mb-3"><?php echo __('Store Theme'); ?></h3>
                                 <div class="grid grid-cols-1 gap-3">
                                     <div>

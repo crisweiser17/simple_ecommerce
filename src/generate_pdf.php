@@ -5,6 +5,10 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 function generateOrderPDF($orderId, $customer, $items, $total) {
+    require_once __DIR__ . '/orders.php';
+    $order = getOrder($orderId);
+    $isQuote = ($order && $order['status'] === 'quote');
+
     $storeName = getSetting('store_name', 'R2 Research Labs');
     // Configure Dompdf
     $options = new Options();
@@ -30,7 +34,7 @@ function generateOrderPDF($orderId, $customer, $items, $total) {
     <body>
         <div class="header">
             <div class="logo">' . htmlspecialchars(strtoupper($storeName)) . '</div>
-            <p>Order #' . $orderId . '</p>
+            <p>' . ($isQuote ? __('Orçamento / Lista de Desejos') : 'Order #' . $orderId) . '</p>
             <p>' . __('Date') . ': ' . date('Y-m-d') . '</p>
         </div>
 
@@ -61,10 +65,18 @@ function generateOrderPDF($orderId, $customer, $items, $total) {
             <thead>
                 <tr>
                     <th>' . __('Product') . '</th>
-                    <th>' . __('SKU') . '</th>
-                    <th>' . __('Price') . '</th>
-                    <th>' . __('Qty') . '</th>
-                    <th>' . __('Total') . '</th>
+                    <th>' . __('SKU') . '</th>';
+    if (!$isQuote) {
+        $html .= '
+                    <th>' . __('Price') . '</th>';
+    }
+    $html .= '
+                    <th>' . __('Qty') . '</th>';
+    if (!$isQuote) {
+        $html .= '
+                    <th>' . __('Total') . '</th>';
+    }
+    $html .= '
                 </tr>
             </thead>
             <tbody>';
@@ -74,21 +86,33 @@ function generateOrderPDF($orderId, $customer, $items, $total) {
         $html .= '
                 <tr>
                     <td>' . htmlspecialchars($item['name']) . '</td>
-                    <td>' . htmlspecialchars($item['sku']) . '</td>
-                    <td>' . formatMoney($item['price']) . '</td>
-                    <td>' . $item['quantity'] . '</td>
-                    <td>' . formatMoney($itemTotal) . '</td>
+                    <td>' . htmlspecialchars($item['sku']) . '</td>';
+        if (!$isQuote) {
+            $html .= '
+                    <td>' . formatMoney($item['price']) . '</td>';
+        }
+        $html .= '
+                    <td>' . $item['quantity'] . '</td>';
+        if (!$isQuote) {
+            $html .= '
+                    <td>' . formatMoney($itemTotal) . '</td>';
+        }
+        $html .= '
                 </tr>';
     }
 
     $html .= '
             </tbody>
-        </table>
+        </table>';
 
+    if (!$isQuote) {
+        $html .= '
         <div class="total">
             ' . __('Total Amount') . ': ' . formatMoney($total) . '
-        </div>
+        </div>';
+    }
 
+    $html .= '
         <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #777;">
             <p>' . __('Thank you for your business!') . '</p>
             <p>' . __('For research use only. Not for human consumption.') . '</p>
