@@ -40,16 +40,20 @@
             $overlayColor2 = getSetting('banner_overlay_color2', '#1f2937');
             $overlayEnabled = getSetting('banner_overlay_enabled', '1');
             ?>
-            <div class="relative w-full h-[350px] rounded-lg overflow-hidden mb-8 shadow-lg" style="background: linear-gradient(to right, <?php echo $overlayColor1; ?>, <?php echo $overlayColor2; ?>);">
-                <!-- Background Image Overlay -->
+            <div class="relative w-full h-[350px] rounded-lg overflow-hidden mb-8 shadow-lg bg-gray-900">
+                <!-- Fallback Background Color -->
+                <div class="absolute inset-0" style="background: linear-gradient(to right, <?php echo $overlayColor1; ?>, <?php echo $overlayColor2; ?>);"></div>
+
+                <!-- Background Image -->
+                <div class="absolute inset-0 bg-[url('<?php echo htmlspecialchars(getSetting('banner_image_url', 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')); ?>')] bg-cover bg-center"></div>
+                
+                <!-- Overlay Gradient -->
+                <?php if ($overlayEnabled): ?>
                 <?php 
                 $opacityValue = (int)getSetting('banner_overlay_opacity', '30');
                 $opacityDecimal = $opacityValue / 100;
                 ?>
-                <div class="absolute inset-0 bg-[url('<?php echo htmlspecialchars(getSetting('banner_image_url', 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')); ?>')] bg-cover bg-center mix-blend-overlay" style="opacity: <?php echo $opacityDecimal; ?>;"></div>
-                
-                <?php if ($overlayEnabled): ?>
-                <div class="absolute inset-0" style="background: linear-gradient(to right, <?php echo $overlayColor1; ?>, transparent);"></div>
+                <div class="absolute inset-0" style="background: linear-gradient(to right, <?php echo $overlayColor1; ?>, <?php echo $overlayColor2; ?>); opacity: <?php echo $opacityDecimal; ?>;"></div>
                 <?php endif; ?>
                 
                 <div class="absolute inset-0 flex items-center">
