@@ -815,6 +815,12 @@ switch ($path) {
         $enable_whatsapp = isset($_POST['enable_whatsapp_button']) ? '1' : '0';
         updateSetting('enable_whatsapp_button', $enable_whatsapp);
         
+        $storeMode = $_POST['store_mode'] ?? 'ecommerce';
+        if (!in_array($storeMode, ['ecommerce', 'catalog', 'informational'])) {
+            $storeMode = 'ecommerce';
+        }
+        updateSetting('store_mode', $storeMode);
+        
         // Email/SMTP settings
         $smtp_enabled = isset($_POST['smtp_enabled']) ? '1' : '0';
         updateSetting('smtp_enabled', $smtp_enabled);
