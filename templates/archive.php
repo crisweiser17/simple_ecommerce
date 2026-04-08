@@ -158,6 +158,10 @@
                     <?php $cardImageUrl = getProductPrimaryImageUrl($product); ?>
                     <?php $productUrl = getProductUrl($product); ?>
                     <?php if ($cardImageUrl === '') $cardImageUrl = 'https://placehold.co/400x400?text=No+Image'; ?>
+                    <?php 
+                        $arWidth = getSetting('product_card_aspect_width', '1');
+                        $arHeight = getSetting('product_card_aspect_height', '1');
+                    ?>
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-xl border border-gray-200 p-4 flex flex-col items-center text-center group transition-all duration-300">
                         
                         <!-- Labels -->
@@ -166,7 +170,9 @@
                         </div>
 
                         <!-- Image -->
-                        <a href="<?php echo htmlspecialchars($productUrl); ?>" class="block mb-4 w-full h-48 flex items-center justify-center bg-gray-50 rounded-md p-2 group-hover:bg-white transition-colors">
+                        <a href="<?php echo htmlspecialchars($productUrl); ?>" 
+                           class="block mb-4 w-full flex items-center justify-center bg-gray-50 rounded-md p-2 group-hover:bg-white transition-colors"
+                           style="aspect-ratio: <?php echo htmlspecialchars($arWidth); ?> / <?php echo htmlspecialchars($arHeight); ?>;">
                             <img src="<?php echo htmlspecialchars($cardImageUrl); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300">
                         </a>
 

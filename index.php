@@ -753,6 +753,9 @@ switch ($path) {
         updateSetting('smtp_reply_to', $_POST['smtp_reply_to'] ?? '');
         updateSetting('contact_receive_email', $_POST['contact_receive_email'] ?? '');
         
+        updateSetting('product_card_aspect_width', $_POST['product_card_aspect_width'] ?? '1');
+        updateSetting('product_card_aspect_height', $_POST['product_card_aspect_height'] ?? '1');
+
         header('Location: /admin');
         exit;
         break;

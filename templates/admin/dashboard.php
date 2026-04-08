@@ -6,6 +6,8 @@
     <title><?php echo __('Admin Dashboard'); ?> - <?php echo htmlspecialchars(getSetting('store_name', 'R2 Research Labs')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Quill CSS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link href="https://unpkg.com/filepond/dist/filepond.min.css" rel="stylesheet">
@@ -200,6 +202,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo formatMoney($p['price']); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($p['category_name'] ?? __('Uncategorized')); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="/product/<?php echo $p['slug']; ?>" target="_blank" class="text-blue-600 hover:text-blue-900 mr-4" title="<?php echo __('View Product'); ?>"><i class="fa-solid fa-up-right-from-square"></i></a>
                                     <a href="/produto/<?php echo $p['slug']; ?>/single" target="_blank" class="text-green-600 hover:text-green-900 mr-4" title="Página Única de Checkout">Single</a>
                                     <a href="/admin/product-form?id=<?php echo $p['id']; ?>" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></a>
                                     <a href="/admin/delete-product?id=<?php echo $p['id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('<?php echo __('Are you sure?'); ?>')"><?php echo __('Delete'); ?></a>
@@ -488,6 +491,20 @@
                                             <input type="color" name="theme_text_color" value="<?php echo htmlspecialchars(getSetting('theme_text_color', '#1f2937')); ?>" class="h-10 w-10 p-0 border rounded">
                                             <input type="text" name="theme_text_color_text" value="<?php echo htmlspecialchars(getSetting('theme_text_color', '#1f2937')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" oninput="this.previousElementSibling.value = this.value">
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-b pb-4 mb-4">
+                                <h3 class="text-lg font-semibold mb-3">Layout do Produto</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">Proporção da Imagem - Largura (Aspect Ratio)</label>
+                                        <input type="number" min="1" name="product_card_aspect_width" value="<?php echo htmlspecialchars(getSetting('product_card_aspect_width', '1')); ?>" placeholder="Ex: 363" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">Proporção da Imagem - Altura (Aspect Ratio)</label>
+                                        <input type="number" min="1" name="product_card_aspect_height" value="<?php echo htmlspecialchars(getSetting('product_card_aspect_height', '1')); ?>" placeholder="Ex: 493" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                     </div>
                                 </div>
                             </div>

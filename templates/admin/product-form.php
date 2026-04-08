@@ -128,46 +128,49 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Image URL'); ?></label>
-                                <input type="text" name="image_url" value="<?php echo htmlspecialchars($product['image_url'] ?? ''); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                <?php $manualImageUrl = trim((string)($product['image_url'] ?? '')); ?>
-                                <?php if ($manualImageUrl !== ''): ?>
-                                    <label class="mt-2 inline-flex items-center text-sm text-gray-700">
-                                        <input type="radio" name="primary_image" value="<?php echo htmlspecialchars($manualImageUrl); ?>" <?php echo $currentPrimaryImage === $manualImageUrl ? 'checked' : ''; ?> class="mr-2">
-                                        <?php echo __('Use this URL as primary image'); ?>
-                                    </label>
-                                <?php endif; ?>
-                            </div>
-
-                            <div>
                                 <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload Product Images'); ?></label>
                                 <input type="file" name="product_images[]" accept="image/*" multiple class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white" data-filepond="image-multi">
                                 <p class="mt-2 text-xs text-gray-500"><?php echo __('You can upload one or multiple images.'); ?></p>
                             </div>
 
-                            <?php if (!empty($productImages)): ?>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-3"><?php echo __('Current Images'); ?></label>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        <?php foreach ($productImages as $img): ?>
-                                            <?php $imgUrl = trim((string)($img['image_url'] ?? '')); ?>
-                                            <?php if ($imgUrl === '') continue; ?>
-                                            <div class="border rounded-md p-3 bg-gray-50">
-                                                <img src="<?php echo htmlspecialchars($imgUrl); ?>" alt="" class="h-28 w-full object-contain bg-white rounded border">
-                                                <input type="hidden" name="existing_images[]" value="<?php echo htmlspecialchars($imgUrl); ?>" class="existing-image-input">
-                                                <label class="mt-2 flex items-center text-sm text-gray-700">
-                                                    <input type="radio" name="primary_image" value="<?php echo htmlspecialchars($imgUrl); ?>" <?php echo $currentPrimaryImage === $imgUrl ? 'checked' : ''; ?> class="mr-2">
-                                                    <?php echo __('Primary image'); ?>
-                                                </label>
-                                                <label class="mt-2 flex items-center text-sm text-red-600">
-                                                    <input type="checkbox" class="remove-image-checkbox mr-2">
-                                                    <?php echo __('Remove image'); ?>
-                                                </label>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-3"><?php echo __('Product Images'); ?></label>
+                                <div id="image-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    <?php
+                                    $combinedImages = [];
+                                    if (!empty($product['image_url'])) {
+                                        $combinedImages[] = $product['image_url'];
+                                    }
+                                    if (!empty($productImages)) {
+                                        foreach ($productImages as $img) {
+                                            if (!empty($img['image_url']) && !in_array($img['image_url'], $combinedImages)) {
+                                                $combinedImages[] = $img['image_url'];
+                                            }
+                                        }
+                                    }
+                                    foreach ($combinedImages as $index => $imgUrl):
+                                        $imgUrl = trim((string)$imgUrl);
+                                        if ($imgUrl === '') continue;
+                                    ?>
+                                        <div class="relative border rounded-md p-2 bg-white shadow-sm cursor-move group">
+                                            <img src="<?php echo htmlspecialchars($imgUrl); ?>" class="h-32 w-full object-contain rounded">
+                                            <input type="hidden" name="existing_images[]" value="<?php echo htmlspecialchars($imgUrl); ?>" class="existing-image-input">
+                                            <!-- Primary Badge -->
+                                            <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
+                                            <!-- Remove Button -->
+                                            <button type="button" onclick="this.closest('.relative').remove();" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    <?php endforeach; ?>
                                 </div>
-                            <?php endif; ?>
+                                <p class="mt-2 text-xs text-gray-500">Arraste e solte para reordenar. A primeira imagem sempre será a principal (capa). Clique no X vermelho para excluir imagens (inclusive placeholders indesejados).</p>
+                                
+                                <div class="mt-4 flex gap-2 max-w-lg">
+                                    <input type="text" id="new_image_url" placeholder="Adicionar imagem via URL..." class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm">
+                                    <button type="button" onclick="addImageFromUrl()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-bold hover:bg-gray-300 transition-colors">Adicionar URL</button>
+                                </div>
+                            </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
@@ -267,6 +270,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
 
     <!-- Quill JS -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.min.js"></script>
     <script src="https://unpkg.com/filepond-plugin-file-validate-size/dist/filepond-plugin-file-validate-size.min.js"></script>
     <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.js"></script>
@@ -329,15 +333,36 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
             form.addEventListener('submit', function(e) {
                 document.getElementById('short_desc_input').value = shortQuill.root.innerHTML;
                 document.getElementById('long_desc_input').value = longQuill.root.innerHTML;
-                var removeCheckboxes = document.querySelectorAll('.remove-image-checkbox');
-                removeCheckboxes.forEach(function(checkbox) {
-                    var wrapper = checkbox.closest('.border');
-                    if (!wrapper) return;
-                    var hiddenInput = wrapper.querySelector('.existing-image-input');
-                    if (!hiddenInput) return;
-                    hiddenInput.disabled = checkbox.checked;
-                });
             });
+
+            // Initialize Sortable for image grid
+            var grid = document.getElementById('image-grid');
+            if (grid) {
+                new Sortable(grid, {
+                    animation: 150,
+                    ghostClass: 'opacity-50',
+                    cursor: 'move'
+                });
+            }
+
+            window.addImageFromUrl = function() {
+                const input = document.getElementById('new_image_url');
+                const url = input.value.trim();
+                if (!url) return;
+                
+                const div = document.createElement('div');
+                div.className = 'relative border rounded-md p-2 bg-white shadow-sm cursor-move group';
+                div.innerHTML = `
+                    <img src="${url}" class="h-32 w-full object-contain rounded">
+                    <input type="hidden" name="existing_images[]" value="${url}">
+                    <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
+                    <button type="button" onclick="this.closest('.relative').remove();" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                `;
+                document.getElementById('image-grid').appendChild(div);
+                input.value = '';
+            };
 
             if (typeof FilePond !== 'undefined') {
                 FilePond.registerPlugin(
