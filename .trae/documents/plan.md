@@ -1,30 +1,28 @@
-# Plano de Implementação
+# Plano de Implementação: Correção da Visibilidade da Imagem do Banner
 
-## 1. Listagem de Produtos no Admin (`dashboard.php`)
-- **Ação:** Adicionar um link externo na tabela de produtos para visualizar a página do produto no front-end.
-- **Detalhes:** 
-  - Incluir o ícone `<i class="fa-solid fa-up-right-from-square"></i>`.
-  - Garantir que o FontAwesome esteja carregado no `<head>` do `dashboard.php`.
-  - O link abrirá em uma nova aba (`target="_blank"`) apontando para `/product/{slug}` ou similar (atualmente já existe um link "Single", vamos adicionar o link padrão para a loja e melhorar a interface visual com o ícone).
+## 1. Resumo
+O objetivo é garantir que a imagem de fundo do banner apareça totalmente visível (sem a camada azul cobrindo-a ou a deixando opaca), alterando a estrutura de camadas do banner na página inicial (`templates/archive.php`). A única exceção será quando o "overlay" estiver ativado, onde uma camada de gradiente com opacidade configurável será sobreposta à imagem.
 
-## 2. Aspect Ratio das Imagens na Homepage (`dashboard.php` e `archive.php`)
-- **Ação:** Permitir a configuração das dimensões da miniatura do produto (Aspect Ratio) no painel Admin e refletir isso na Homepage.
-- **Detalhes:**
-  - **Admin Settings:** Adicionar dois novos campos no `dashboard.php` (aba Settings > Store Theme): "Proporção da Imagem - Largura" e "Proporção da Imagem - Altura".
-  - **Backend (`index.php`):** Salvar esses novos campos (`product_card_aspect_width` e `product_card_aspect_height`) na rota `/admin/save-settings`.
-  - **Frontend (`archive.php`):** Substituir a classe fixa `h-48` no contêiner da imagem do produto por um estilo inline `style="aspect-ratio: {width} / {height};"`, permitindo que o contêiner respeite perfeitamente proporções como `363/493`.
+## 2. Análise do Estado Atual
+Atualmente, no arquivo `templates/archive.php`, o contêiner do banner possui um gradiente de fundo (`background: linear-gradient(...)`). A imagem do banner é renderizada **sobre** esse fundo com a classe CSS `mix-blend-overlay` e uma opacidade baseada na configuração `banner_overlay_opacity`. Isso faz com que a imagem se misture com a cor de fundo (a camada azul relatada) e pareça estar "atrás" de uma cor. 
+Além disso, há uma segunda div de overlay gerada quando o `$overlayEnabled` é verdadeiro, que aplica um gradiente para o transparente sem respeitar a opacidade do painel.
 
-## 3. Gerenciamento de Imagens no Formulário de Produto (`product-form.php`)
-- **Ação:** Refatorar a interface de gerenciamento de imagens para usar Drag & Drop, botão de remover (X) e remover a geração automática indesejada.
-- **Detalhes:**
-  - **Unificação:** Ocultar/remover o campo de texto manual "Image URL" para evitar confusão, e consolidar todas as imagens (a principal e as da galeria) em um único grid visual de miniaturas.
-  - **Remoção de Imagens (O "X"):** Substituir os checkboxes de "Remover imagem" por um botão "X" no canto superior direito de cada miniatura. Ao clicar no "X", o elemento da imagem será removido do DOM (e, consequentemente, não será enviado no POST `existing_images[]`, o que faz o backend deletá-la naturalmente). Isso permite que o usuário apague facilmente imagens `placehold.co` antigas.
-  - **Drag & Drop (Ordenação):** Integrar a biblioteca `SortableJS` via CDN para permitir que o usuário arraste e solte as miniaturas para reordená-las.
-  - **Badge "Primary":** Remover os *radio buttons* de seleção de imagem principal. Adicionar uma regra visual (CSS `group-first:block`) que exibe um selo "Primary" automaticamente na primeira imagem do grid (a da esquerda). O backend já está programado para definir a primeira imagem enviada no array como principal.
-  - **Imagens Padrão (Placeholder):** Como não haverá mais inserção via Seed para novos produtos, se um produto não tiver imagens, o frontend e o admin já possuem o fallback seguro e limpo para `https://placehold.co/...text=No+Image` de forma dinâmica (sem gravar no banco de dados com "iniciais").
+## 3. Mudanças Propostas
 
-## 4. Testes e Verificação
-- Verificar se a listagem do admin carrega o ícone e abre a página correta.
-- Salvar uma proporção de 363/493 no painel e verificar se a homepage (`archive.php`) adapta o formato dos cards.
-- Editar o produto ID 2, remover a imagem gerada (placeholder com as iniciais), reordenar as novas imagens com Drag & Drop e salvar.
-- Validar se a imagem primária é definida corretamente como a primeira da lista.
+### Arquivo: `templates/archive.php`
+- **O que será feito:** 
+  1. Alterar a ordem das camadas (z-index natural).
+  2. Remover as classes `mix-blend-overlay` e `opacity` da div da imagem do banner, tornando-a a camada base, 100% visível e opaca.
+  3. Mover a lógica de opacidade (`banner_overlay_opacity`) para a div de overlay condicional.
+  4. Quando o overlay estiver ativado (`$overlayEnabled`), renderizar uma div sobre a imagem contendo o gradiente configurado (`Overlay Color 1` até `Overlay Color 2`) aplicando a opacidade do painel a esta camada.
+- **Por que:** Isso alinhará o comportamento com a expectativa do usuário e com as descrições no painel Admin. A imagem sempre será protagonista e totalmente nítida, a não ser que o usuário opte explicitamente por aplicar uma camada translúcida por cima para melhorar a leitura dos textos.
+
+## 4. Suposições e Decisões
+- O gradiente base (usado como fallback) será mantido atrás da imagem caso a imagem possua partes transparentes ou demore a carregar.
+- O overlay, quando ativado, usará um gradiente linear da cor 1 para a cor 2, e sua opacidade será controlada pelo valor definido no painel admin (ex: 30%), o que garantirá que a imagem seja vista por baixo do overlay.
+
+## 5. Passos de Verificação
+- Salvar as modificações no código.
+- Visualizar o site e verificar se a imagem do banner aparece clara e sem o tom azul forçado.
+- Acessar o Painel Admin > "Settings" > "Layout do Produto" (ou Banner) e ativar o overlay com 50% de opacidade, salvando as alterações.
+- Recarregar a página inicial para confirmar se o overlay foi aplicado corretamente **sobre** a imagem.
