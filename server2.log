@@ -1,0 +1,10 @@
+[Wed Apr  8 19:16:23 2026] PHP 8.5.1 Development Server (http://localhost:8081) started
+[Wed Apr  8 19:16:24 2026] [::1]:57021 Accepted
+[Wed Apr  8 19:16:24 2026] [::1]:57021 [302]: HEAD /admin
+[Wed Apr  8 19:16:24 2026] [::1]:57021 Closing
+[Wed Apr  8 19:17:55 2026] [::1]:57065 Accepted
+[Wed Apr  8 19:17:55 2026] [::1]:57065 [200]: HEAD /
+[Wed Apr  8 19:17:55 2026] [::1]:57065 Closing
+[Wed Apr  8 19:18:02 2026] [::1]:57067 Accepted
+[Wed Apr  8 19:18:02 2026] [::1]:57067 [404]: HEAD /product/1
+[Wed Apr  8 19:18:02 2026] [::1]:57067 Closing

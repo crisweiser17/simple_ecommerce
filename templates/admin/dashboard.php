@@ -41,8 +41,10 @@
     tab: localStorage.getItem('admin_tab') || 'products', 
     categoryModalOpen: false,
     pageModalOpen: false,
+    variationModalOpen: false,
     editCategory: {},
     editPage: {},
+    editVariation: { name: '', options: [] },
     testEmail: 'e@crisweiser.com',
     smtpTesting: false,
     smtpTestMessage: '',
@@ -99,6 +101,9 @@
                 <button @click="tab = 'products'; sidebarOpen = false;" :class="tab === 'products' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Products'); ?>
                 </button>
+                <button @click="tab = 'variations'; sidebarOpen = false;" :class="tab === 'variations' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
+                    <?php echo __('Variations'); ?>
+                </button>
                 <button @click="tab = 'categories'; sidebarOpen = false;" :class="tab === 'categories' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Categories'); ?>
                 </button>
@@ -146,15 +151,15 @@
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                     <h1 class="text-2xl font-bold"><?php echo __('Products'); ?></h1>
                     <div class="flex flex-wrap items-center gap-2">
-                        <a href="/admin/products/csv-template" class="bg-gray-700 text-white px-3 py-2 text-sm rounded hover:bg-gray-800">CSV Template</a>
-                        <a href="/admin/products/export-csv" class="bg-blue-600 text-white px-3 py-2 text-sm rounded hover:bg-blue-700">Export CSV</a>
+                        <a href="/admin/products/csv-template" class="bg-gray-700 text-white px-3 py-2 text-sm rounded hover:bg-gray-800"><?php echo __('CSV Template'); ?></a>
+                        <a href="/admin/products/export-csv" class="bg-blue-600 text-white px-3 py-2 text-sm rounded hover:bg-blue-700"><?php echo __('Export CSV'); ?></a>
                         
                         <form id="csvImportForm" action="/admin/products/import-csv" method="POST" enctype="multipart/form-data" class="hidden">
                             <input type="file" id="csvFileInput" name="products_csv" accept=".csv,text/csv" required onchange="document.getElementById('csvImportForm').submit()">
                         </form>
-                        <button type="button" onclick="document.getElementById('csvFileInput').value = ''; document.getElementById('csvFileInput').click()" class="bg-indigo-600 text-white px-3 py-2 text-sm rounded hover:bg-indigo-700">Import CSV</button>
+                        <button type="button" onclick="document.getElementById('csvFileInput').value = ''; document.getElementById('csvFileInput').click()" class="bg-indigo-600 text-white px-3 py-2 text-sm rounded hover:bg-indigo-700"><?php echo __('Import CSV'); ?></button>
                         
-                        <a href="/admin/product-form" class="bg-green-600 text-white px-3 py-2 text-sm rounded hover:bg-green-700">Add Product</a>
+                        <a href="/admin/product-form" class="bg-green-600 text-white px-3 py-2 text-sm rounded hover:bg-green-700"><?php echo __('Add Product'); ?></a>
                     </div>
                 </div>
 
@@ -200,9 +205,9 @@
                                 <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
                                     <div class="flex items-center gap-2">
                                         <?php if (!empty($p['digital_delivery'])): ?>
-                                            <i class="fa-solid fa-cloud-arrow-down text-blue-500" title="Produto Digital"></i>
+                                            <i class="fa-solid fa-cloud-arrow-down text-blue-500" title="<?php echo __('Produto Digital'); ?>"></i>
                                         <?php else: ?>
-                                            <i class="fa-solid fa-box text-gray-400" title="Produto Físico"></i>
+                                            <i class="fa-solid fa-box text-gray-400" title="<?php echo __('Produto Físico'); ?>"></i>
                                         <?php endif; ?>
                                         <span><?php echo htmlspecialchars($p['name'] ?? ''); ?></span>
                                     </div>
@@ -247,6 +252,43 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <button @click="categoryModalOpen = true; editCategory = <?php echo htmlspecialchars(json_encode($c)); ?>" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></button>
                                     <a href="/admin/delete-category?id=<?php echo $c['id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('<?php echo __('Are you sure?'); ?>')"><?php echo __('Delete'); ?></a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Variations Tab -->
+            <div x-show="tab === 'variations'" style="display: none;">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold"><?php echo __('Variations'); ?></h1>
+                    <button @click="variationModalOpen = true; editVariation = {name: '', options: []}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Variation'); ?></button>
+                </div>
+
+                <div class="bg-white rounded shadow overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Name'); ?></th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Options'); ?></th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Actions'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <?php foreach ($global_variations as $v): ?>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($v['name'] ?? ''); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                                    <?php 
+                                        $opts = array_column($v['options'] ?? [], 'name');
+                                        echo htmlspecialchars(implode(', ', $opts));
+                                    ?>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button @click="variationModalOpen = true; editVariation = <?php echo htmlspecialchars(json_encode($v)); ?>" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></button>
+                                    <a href="/admin/delete-global-variation?id=<?php echo $v['id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('<?php echo __('Are you sure?'); ?>')"><?php echo __('Delete'); ?></a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -1004,6 +1046,56 @@
                         </button>
                         <button type="submit" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none">
                             Save Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variation Modal -->
+    <div x-show="variationModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75" @click="variationModalOpen = false"></div>
+            </div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+                <form action="/admin/save-global-variation" method="POST" class="p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" x-text="editVariation.id ? '<?php echo __('Edit Variation'); ?>' : '<?php echo __('Add New Variation'); ?>'"></h3>
+                    
+                    <input type="hidden" name="id" :value="editVariation.id">
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700"><?php echo __('Name'); ?></label>
+                            <input type="text" name="name" x-model="editVariation.name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="e.g. Tamanho">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Options'); ?></label>
+                            <template x-for="(opt, index) in editVariation.options" :key="index">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <input type="text" :name="`options[${index}][name]`" x-model="opt.name" required class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Nome da opção (ex: Grande)">
+                                    <button type="button" @click="editVariation.options.splice(index, 1)" class="text-red-500 hover:text-red-700 p-2">
+                                        <i class="fa-solid fa-times"></i>
+                                    </button>
+                                </div>
+                            </template>
+                            <button type="button" @click="editVariation.options.push({name: '', price_modifier: 0})" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> <?php echo __('Add Option'); ?>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 sm:mt-6 flex gap-3 justify-end">
+                        <button type="button" @click="variationModalOpen = false" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
+                            <?php echo __('Cancel'); ?>
+                        </button>
+                        <button type="submit" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none">
+                            <?php echo __('Save Variation'); ?>
                         </button>
                     </div>
                 </form>

@@ -51,6 +51,11 @@ $message .= "Address: {$order['customer_address']}\n\n";
 $message .= "*Items:*\n";
 foreach ($items as $item) {
     $message .= "- {$item['quantity']}x {$item['name']} (SKU: {$item['sku']})\n";
+    if (!empty($item['selected_variations']) && is_array($item['selected_variations'])) {
+        foreach ($item['selected_variations'] as $k => $v) {
+            $message .= "  ↳ $k: $v\n";
+        }
+    }
 }
 $message .= "\n*Total: " . formatMoney($order['total_amount']) . "*";
 

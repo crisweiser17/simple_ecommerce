@@ -1,0 +1,108 @@
+<div class="container mx-auto px-4 py-6">
+    <div class="flex flex-col md:flex-row gap-6">
+        
+        <!-- Sidebar -->
+        <aside class="hidden md:block w-64 flex-shrink-0 space-y-8">
+            <!-- Categories -->
+            <div class="bg-[#1a1d21] rounded-lg overflow-hidden text-gray-300">
+                <div class="p-4 bg-[#23272b] border-b border-gray-700">
+                    <h2 class="font-bold text-white uppercase text-sm tracking-wider">Categories</h2>
+                </div>
+                <ul class="text-sm">
+                                    </ul>
+            </div>
+        </aside>
+
+        <!-- Main Column -->
+        <div class="flex-1">
+            
+            <!-- Hero Banner -->
+                        <div class="relative w-full h-[350px] rounded-lg overflow-hidden mb-8 shadow-lg bg-gray-900">
+                <!-- Fallback Background Color -->
+                <div class="absolute inset-0" style="background: linear-gradient(to right, #111827, #1f2937);"></div>
+
+                <!-- Background Image -->
+                <div class="absolute inset-0 bg-[url('/public/uploads/banners/banner.jpg')] bg-cover bg-center"></div>
+                
+                <!-- Overlay Gradient -->
+                                                <div class="absolute inset-0" style="background: linear-gradient(to right, #111827, #1f2937); opacity: 0.6;"></div>
+                                
+                <div class="absolute inset-0 flex items-center">
+                    <div class="container mx-auto px-6 md:px-12 flex justify-between items-center">
+                        <div class="max-w-lg z-10">
+                                                        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
+                                Lab-Grade Peptides & Peptide Blends                            </h1>
+                            
+                                                        <p class="text-gray-300 mb-8 text-sm md:text-base max-w-md">
+                                High purity research peptides for laboratory use only.                            </p>
+                            
+                            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                                
+                                                            </div>
+                        </div>
+                        
+                        <!-- Hero Image (Right) -->
+                                            </div>
+                </div>
+            </div>
+
+            <!-- Section Title & Mobile Categories -->
+            <div class="mb-6 border-b pb-4 border-gray-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    Popular Peptides                </h2>
+                
+                <!-- Mobile Category Selector -->
+                <div class="md:hidden">
+                    <select onchange="window.location.href=this.value" class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm bg-white focus:ring-orange-500 focus:border-orange-500">
+                        <option value="/">All Products</option>
+                                            </select>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                                                                                        <div class="bg-white rounded-lg shadow-sm hover:shadow-xl border border-gray-200 p-4 flex flex-col items-center text-center group transition-all duration-300">
+                        
+                        <!-- Labels -->
+                        <div class="w-full flex justify-between items-start mb-2">
+                            <span class="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">New</span>
+                        </div>
+
+                        <!-- Image -->
+                        <a href="/product/product-1" 
+                           class="block mb-4 w-full flex items-center justify-center bg-gray-50 rounded-md p-2 group-hover:bg-white transition-colors"
+                           style="aspect-ratio: 8 / 10;">
+                            <img src="https://placehold.co/400x400?text=No+Image" alt="Product 1" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300">
+                        </a>
+
+                        <!-- Content -->
+                        <div class="w-full text-left">
+                            <h3 class="font-bold text-gray-900 text-lg leading-tight mb-1">
+                                <a href="/product/product-1" class="hover:text-orange-600 transition-colors">Product 1</a>
+                            </h3>
+                            <p class="text-xs text-gray-500 mb-3">Best-in-class Bioavail.</p>
+                            
+                            <!-- Price -->
+                                                        <div class="mb-4 border-t border-gray-100 pt-2"></div>
+                            
+                            <!-- Actions -->
+                            <div class="flex flex-col gap-2" x-data="{ qty: 1 }">
+                                <!-- Add to Cart -->
+                                
+                                <!-- Learn More -->
+                                <a 
+                                    href="/product/product-1"
+                                    class="w-full bg-white text-gray-700 border border-gray-300 py-2.5 rounded text-sm font-bold hover:bg-gray-50 transition-colors flex justify-center items-center gap-2">
+                                    <span>Learn More</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                                    </div>
+            
+            <!-- Pagination -->
+            
+        </div>
+    </div>
+</div>

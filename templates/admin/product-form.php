@@ -94,7 +94,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
 
                         <!-- Seção 1: Informações Básicas -->
                         <div class="border border-gray-200 rounded-md p-5 bg-white shadow-sm mb-6">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2"><?php echo __('Informações Básicas'); ?></h3>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2"><?php echo __('Basic Information'); ?></h3>
                             <div class="grid grid-cols-1 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700"><?php echo __('Name'); ?></label>
@@ -134,7 +134,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
 
                         <!-- Seção 2: Mídia e Uploads -->
                         <div class="border border-gray-200 rounded-md p-5 bg-white shadow-sm mb-6">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2"><?php echo __('Imagens e Arquivos (Uploads)'); ?></h3>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2"><?php echo __('Images & Files (Uploads)'); ?></h3>
                             <div class="grid grid-cols-1 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload Product Images'); ?></label>
@@ -176,8 +176,8 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                     <p class="mt-2 text-xs text-gray-500">Arraste e solte para reordenar. A primeira imagem sempre será a principal (capa). Clique no X vermelho para excluir imagens (inclusive placeholders indesejados).</p>
                                     
                                     <div class="mt-4 flex gap-2 max-w-lg">
-                                        <input type="text" id="new_image_url" placeholder="Adicionar imagem via URL..." class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm">
-                                        <button type="button" onclick="addImageFromUrl()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-bold hover:bg-gray-300 transition-colors">Adicionar URL</button>
+                                        <input type="text" id="new_image_url" placeholder="<?php echo __('Add URL'); ?>..." class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm">
+                                        <button type="button" onclick="addImageFromUrl()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-bold hover:bg-gray-300 transition-colors"><?php echo __('Add URL'); ?></button>
                                     </div>
                                 </div>
 
@@ -197,11 +197,73 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                             </div>
                         </div>
 
+                        <!-- Seção: Variações -->
+                        <div class="border border-purple-200 rounded-md p-5 bg-purple-50 mb-6" x-data="productVariations()">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b border-purple-200 pb-2"><?php echo __('Product Variations'); ?></h3>
+                            <input type="hidden" name="variations_json" :value="JSON.stringify(variations)">
+                            
+                            <div class="space-y-4">
+                                <template x-for="(variation, vIndex) in variations" :key="vIndex">
+                                    <div class="bg-white p-4 rounded border border-gray-200 shadow-sm relative">
+                                        <button type="button" @click="variations.splice(vIndex, 1)" class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Variation Name'); ?></label>
+                                                <input type="text" x-model="variation.name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="ex: Tamanho">
+                                            </div>
+                                            <div class="flex items-center pt-6">
+                                                <label class="flex items-center cursor-pointer">
+                                                    <input type="checkbox" x-model="variation.save_global" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                                    <span class="ml-2 text-sm text-gray-600"><?php echo __('Save variation for future use'); ?></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Options and Prices'); ?></label>
+                                            <template x-for="(opt, oIndex) in variation.options" :key="oIndex">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <input type="text" x-model="opt.name" class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Option (ex: Pequeno)">
+                                                    <div class="flex items-center gap-1">
+                                                        <span class="text-sm text-gray-500">+ <?php echo htmlspecialchars(getSetting('store_currency_symbol', 'R$')); ?></span>
+                                                        <input type="number" step="0.01" x-model="opt.price_modifier" class="w-24 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="0.00">
+                                                    </div>
+                                                    <button type="button" @click="variation.options.splice(oIndex, 1)" class="text-red-500 hover:text-red-700 p-2">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                            <button type="button" @click="variation.options.push({name: '', price_modifier: 0})" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                                                + <?php echo __('Add Option'); ?>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                                
+                                <div class="flex flex-wrap gap-2 items-center">
+                                    <button type="button" @click="variations.push({name: '', options: [], save_global: false})" class="bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700">
+                                        <?php echo __('Add Custom Variation'); ?>
+                                    </button>
+                                    
+                                    <?php if (!empty($global_variations)): ?>
+                                    <select @change="if($event.target.value !== '') { addGlobalVariation($event.target.value); $event.target.value = ''; }" class="border border-gray-300 rounded-md shadow-sm p-2 text-sm">
+                                        <option value=""><?php echo __('Or select an existing one...'); ?></option>
+                                        <?php foreach ($global_variations as $gv): ?>
+                                            <option value="<?php echo htmlspecialchars(json_encode($gv)); ?>"><?php echo htmlspecialchars($gv['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Digital Product Settings -->
                         <div class="border border-blue-200 rounded-md p-5 bg-blue-50 mb-6" x-data="{ isDigital: <?php echo isset($product['digital_delivery']) && $product['digital_delivery'] ? 'true' : 'false'; ?> }">
                             <div class="flex items-center justify-between mb-4 border-b border-blue-200 pb-3">
                                 <div>
-                                    <h3 class="text-lg font-medium text-gray-900"><?php echo __('Entrega Digital'); ?></h3>
+                                    <h3 class="text-lg font-medium text-gray-900"><?php echo __('Digital Delivery'); ?></h3>
                                     <p class="text-sm text-gray-500"><?php echo __('Ative se este produto incluir um arquivo para download após a compra.'); ?></p>
                                 </div>
                                 <label class="flex items-center cursor-pointer">
@@ -249,7 +311,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
 
                         <!-- Seção 3: Descrições -->
                         <div class="border border-gray-200 rounded-md p-5 bg-white shadow-sm mb-6">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2"><?php echo __('Descrições'); ?></h3>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2"><?php echo __('Descriptions'); ?></h3>
                             <div class="grid grid-cols-1 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Short Description'); ?></label>
@@ -438,6 +500,26 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                 }
             }
         });
+
+        function productVariations() {
+            return {
+                variations: <?php echo empty($product['variations_json']) ? '[]' : $product['variations_json']; ?>,
+                addGlobalVariation(jsonStr) {
+                    try {
+                        const gv = JSON.parse(jsonStr);
+                        const opts = gv.options.map(o => ({
+                            name: o.name,
+                            price_modifier: 0
+                        }));
+                        this.variations.push({
+                            name: gv.name,
+                            options: opts,
+                            save_global: false
+                        });
+                    } catch(e) {}
+                }
+            }
+        }
     </script>
 
     <!-- Powered By -->

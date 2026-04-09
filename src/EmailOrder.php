@@ -34,8 +34,19 @@ class EmailOrder
             $price = (float)($item['price'] ?? 0);
             $itemTotal = number_format($qty * $price, 2, ',', '.');
             
+            $variationsHtml = '';
+            if (!empty($item['selected_variations']) && is_array($item['selected_variations'])) {
+                $variationsHtml .= '<br><span style="font-size: 12px; color: #6b7280;">';
+                $vars = [];
+                foreach ($item['selected_variations'] as $k => $v) {
+                    $vars[] = htmlspecialchars($k) . ': <strong>' . htmlspecialchars($v) . '</strong>';
+                }
+                $variationsHtml .= implode(', ', $vars);
+                $variationsHtml .= '</span>';
+            }
+            
             $content .= '<tr>';
-            $content .= '<td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #374151;">' . $qty . 'x ' . $name . '</td>';
+            $content .= '<td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #374151;">' . $qty . 'x ' . $name . $variationsHtml . '</td>';
             $content .= '<td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; text-align: right; color: #374151;">' . $currencySymbol . ' ' . $itemTotal . '</td>';
             $content .= '</tr>';
         }

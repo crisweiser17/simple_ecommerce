@@ -52,29 +52,86 @@ if ($primaryImage === '') {
             <div class="text-sm text-gray-500 mb-2">SKU: <?php echo htmlspecialchars($product['sku']); ?></div>
             <h1 class="text-3xl font-bold text-gray-900 mb-4"><?php echo htmlspecialchars($product['name']); ?></h1>
             
-            <?php if ($storeMode === 'ecommerce'): ?>
-            <div class="text-2xl font-bold text-orange-600 mb-6"><?php echo formatMoney($product['price']); ?></div>
-            <?php endif; ?>
+            <?php $variations = json_decode($product['variations_json'] ?? '[]', true) ?: []; ?>
+            <div x-data="{ 
+                qty: 1, 
+                basePrice: <?php echo (float)($product['price'] ?? 0); ?>,
+                variations: <?php echo htmlspecialchars(json_encode($variations)); ?>,
+                selectedOptions: {},
+                get currentPrice() {
+                    let total = this.basePrice;
+                    for (const v of this.variations) {
+                        if (this.selectedOptions[v.name]) {
+                            const opt = v.options.find(o => o.name === this.selectedOptions[v.name]);
+                            if (opt) total += parseFloat(opt.price_modifier || 0);
+                        }
+                    }
+                    return total;
+                },
+                formatMoney(amount) {
+                    return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(amount);
+                },
+                addToCart() {
+                    for (const v of this.variations) {
+                        if (!this.selectedOptions[v.name]) {
+                            alert('<?php echo __('Please select all options before adding to cart'); ?>: ' + v.name);
+                            return;
+                        }
+                    }
+                    
+                    const productData = <?php echo htmlspecialchars(json_encode($product)); ?>;
+                    productData.price = this.currentPrice;
+                    productData.selected_variations = this.selectedOptions;
+                    
+                    $store.cart.add({ ...productData, quantity: this.qty });
+                },
+                init() {
+                    for (const v of this.variations) {
+                        if (v.options && v.options.length > 0) {
+                            this.selectedOptions[v.name] = v.options[0].name;
+                        }
+                    }
+                }
+            }">
+                <?php if ($storeMode === 'ecommerce'): ?>
+                <div class="text-2xl font-bold text-orange-600 mb-6" x-text="formatMoney(currentPrice)"><?php echo formatMoney($product['price']); ?></div>
+                <?php endif; ?>
 
-            <div class="prose text-gray-600 mb-8">
-                <?php echo $product['short_desc']; ?>
-            </div>
-
-            <!-- Add to Cart Form -->
-            <?php if ($storeMode !== 'informational'): ?>
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8" x-data="{ qty: 1 }">
-                <div class="flex items-center border rounded w-full sm:w-auto justify-between sm:justify-start">
-                    <button @click="qty > 1 ? qty-- : null" class="px-4 py-3 hover:bg-gray-100">-</button>
-                    <input type="number" x-model="qty" class="w-16 text-center border-none focus:ring-0" min="1">
-                    <button @click="qty++" class="px-4 py-3 hover:bg-gray-100">+</button>
+                <div class="prose text-gray-600 mb-8">
+                    <?php echo $product['short_desc']; ?>
                 </div>
-                <button 
-                    @click="$store.cart.add({ ...<?php echo htmlspecialchars(json_encode($product)); ?>, quantity: qty })"
-                    class="w-full sm:w-auto bg-orange-500 text-white px-8 py-3 rounded font-bold hover:bg-orange-600 transition-colors uppercase shadow-lg transform active:scale-95 text-center">
-                    <?php echo $storeMode === 'catalog' ? __('Adicionar à lista') : __('Add to cart'); ?>
-                </button>
+
+                <template x-if="variations.length > 0">
+                    <div class="mb-6 space-y-4">
+                        <template x-for="v in variations" :key="v.name">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1" x-text="v.name"></label>
+                                <select x-model="selectedOptions[v.name]" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md border">
+                                    <template x-for="opt in v.options" :key="opt.name">
+                                        <option :value="opt.name" x-text="opt.name + (parseFloat(opt.price_modifier) > 0 ? ' (+ ' + formatMoney(parseFloat(opt.price_modifier)) + ')' : '')"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Add to Cart Form -->
+                <?php if ($storeMode !== 'informational'): ?>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+                    <div class="flex items-center border rounded w-full sm:w-auto justify-between sm:justify-start">
+                        <button @click="qty > 1 ? qty-- : null" class="px-4 py-3 hover:bg-gray-100">-</button>
+                        <input type="number" x-model="qty" class="w-16 text-center border-none focus:ring-0" min="1">
+                        <button @click="qty++" class="px-4 py-3 hover:bg-gray-100">+</button>
+                    </div>
+                    <button 
+                        @click="addToCart()"
+                        class="w-full sm:w-auto bg-orange-500 text-white px-8 py-3 rounded font-bold hover:bg-orange-600 transition-colors uppercase shadow-lg transform active:scale-95 text-center">
+                        <?php echo $storeMode === 'catalog' ? __('Adicionar à lista') : __('Add to cart'); ?>
+                    </button>
+                </div>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
 
             <div class="flex items-center gap-4 text-sm text-gray-500">
                 <span><?php echo __('Category'); ?>: <?php echo htmlspecialchars($categoryLabel); ?></span>

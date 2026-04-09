@@ -325,28 +325,41 @@
                     return this.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
                 },
 
+                _generateCartItemId(product) {
+                    let id = String(product.id);
+                    if (product.selected_variations) {
+                        const keys = Object.keys(product.selected_variations).sort();
+                        if (keys.length > 0) {
+                            id += '|' + keys.map(k => `${k}:${product.selected_variations[k]}`).join('|');
+                        }
+                    }
+                    return id;
+                },
+
                 add(product) {
                     const quantityToAdd = Number.isFinite(parseInt(product.quantity)) && parseInt(product.quantity) > 0 ? parseInt(product.quantity) : 1;
-                    const existing = this.items.find(i => i.id === product.id);
+                    const cartItemId = this._generateCartItemId(product);
+                    const existing = this.items.find(i => this._generateCartItemId(i) === cartItemId);
+                    
                     if (existing) {
                         existing.quantity += quantityToAdd;
                     } else {
-                        this.items.push({ ...product, quantity: quantityToAdd });
+                        this.items.push({ ...product, quantity: quantityToAdd, cartItemId: cartItemId });
                     }
                     this.save();
                     Alpine.store('cartFeedbackModal').show(product.name || 'produto');
                 },
 
-                remove(id) {
-                    this.items = this.items.filter(i => i.id !== id);
+                remove(cartItemId) {
+                    this.items = this.items.filter(i => (i.cartItemId || this._generateCartItemId(i)) !== cartItemId);
                     this.save();
                 },
 
-                updateQuantity(id, qty) {
-                    const item = this.items.find(i => i.id === id);
+                updateQuantity(cartItemId, qty) {
+                    const item = this.items.find(i => (i.cartItemId || this._generateCartItemId(i)) === cartItemId);
                     if (item) {
                         item.quantity = parseInt(qty);
-                        if (item.quantity <= 0) this.remove(id);
+                        if (item.quantity <= 0) this.remove(cartItemId);
                         this.save();
                     }
                 },

@@ -83,10 +83,22 @@ function generateOrderPDF($orderId, $customer, $items, $total) {
     
     foreach ($items as $item) {
         $itemTotal = $item['price'] * $item['quantity'];
+        
+        $variationsHtml = '';
+        if (!empty($item['selected_variations']) && is_array($item['selected_variations'])) {
+            $variationsHtml .= '<br><span style="font-size: 11px; color: #666;">';
+            $vars = [];
+            foreach ($item['selected_variations'] as $k => $v) {
+                $vars[] = htmlspecialchars($k) . ': <strong>' . htmlspecialchars($v) . '</strong>';
+            }
+            $variationsHtml .= implode(', ', $vars);
+            $variationsHtml .= '</span>';
+        }
+        
         $html .= '
                 <tr>
-                    <td>' . htmlspecialchars($item['name']) . '</td>
-                    <td>' . htmlspecialchars($item['sku']) . '</td>';
+                    <td>' . htmlspecialchars($item['name']) . $variationsHtml . '</td>
+                    <td>' . htmlspecialchars($item['sku'] ?? '') . '</td>';
         if (!$isQuote) {
             $html .= '
                     <td>' . formatMoney($item['price']) . '</td>';

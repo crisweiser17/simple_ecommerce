@@ -71,6 +71,10 @@ function ensureProductsSchema() {
         $pdo->exec("ALTER TABLE products ADD COLUMN slug TEXT");
     }
 
+    if (!in_array('variations_json', $columns, true)) {
+        $pdo->exec("ALTER TABLE products ADD COLUMN variations_json TEXT");
+    }
+
     $rows = $pdo->query("SELECT id, name, sku, slug FROM products ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
     $usedSlugs = [];
     $updateSlugStmt = $pdo->prepare("UPDATE products SET slug = ? WHERE id = ?");
@@ -330,39 +334,7 @@ function createProduct($data) {
     ensureProductsSchema();
     global $pdo;
     $slug = getUniqueProductSlug($data['slug'] ?? ($data['name'] ?? ''));
-    $stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category_id, short_desc, long_desc, pdf_url, pdf_label, type, digital_delivery, download_limit, download_expiry_days, file_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    return $stmt->execute([
-        trim((string)($data['name'] ?? '')),
-        trim((string)($data['sku'] ?? '')),
-        $slug,
-        ($data['price'] === '' || !isset($data['price'])) ? null : (float)$data['price'],
-        trim((string)($data['image_url'] ?? '')),
-        ($data['category_id'] === '' || !isset($data['category_id'])) ? null : (int)$data['category_id'],
-        (string)($data['short_desc'] ?? ''),
-        (string)($data['long_desc'] ?? ''),
-        trim((string)($data['pdf_url'] ?? '')),
-        $data['pdf_label'] ?? '',
-        $data['type'] ?? 'physical',
-        isset($data['digital_delivery']) ? 1 : 0,
-        isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
-        isset($data['download_expiry_days']) && $data['download_expiry_days'] !== '' ? (int)$data['download_expiry_days'] : null,
-        trim((string)($data['file_url'] ?? ''))
-    ]);
-}
-
-function updateProduct($id, $data) {
-    ensureProductsSchema();
-    global $pdo;
-    $existingSlugStmt = $pdo->prepare("SELECT slug FROM products WHERE id = ? LIMIT 1");
-    $existingSlugStmt->execute([(int)$id]);
-    $existingSlug = (string)($existingSlugStmt->fetchColumn() ?: '');
-    $requestedSlug = array_key_exists('slug', $data) ? (string)$data['slug'] : $existingSlug;
-    if (trim($requestedSlug) === '') {
-        $requestedSlug = (string)($data['name'] ?? '');
-    }
-    $slug = getUniqueProductSlug($requestedSlug, (int)$id);
-
-    $stmt = $pdo->prepare("UPDATE products SET name=?, sku=?, slug=?, price=?, image_url=?, category_id=?, short_desc=?, long_desc=?, pdf_url=?, pdf_label=?, type=?, digital_delivery=?, download_limit=?, download_expiry_days=?, file_url=? WHERE id=?");
+    $stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category_id, short_desc, long_desc, pdf_url, pdf_label, type, digital_delivery, download_limit, download_expiry_days, file_url, variations_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     return $stmt->execute([
         trim((string)($data['name'] ?? '')),
         trim((string)($data['sku'] ?? '')),
@@ -379,6 +351,40 @@ function updateProduct($id, $data) {
         isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
         isset($data['download_expiry_days']) && $data['download_expiry_days'] !== '' ? (int)$data['download_expiry_days'] : null,
         trim((string)($data['file_url'] ?? '')),
+        trim((string)($data['variations_json'] ?? '[]'))
+    ]);
+}
+
+function updateProduct($id, $data) {
+    ensureProductsSchema();
+    global $pdo;
+    $existingSlugStmt = $pdo->prepare("SELECT slug FROM products WHERE id = ? LIMIT 1");
+    $existingSlugStmt->execute([(int)$id]);
+    $existingSlug = (string)($existingSlugStmt->fetchColumn() ?: '');
+    $requestedSlug = array_key_exists('slug', $data) ? (string)$data['slug'] : $existingSlug;
+    if (trim($requestedSlug) === '') {
+        $requestedSlug = (string)($data['name'] ?? '');
+    }
+    $slug = getUniqueProductSlug($requestedSlug, (int)$id);
+
+    $stmt = $pdo->prepare("UPDATE products SET name=?, sku=?, slug=?, price=?, image_url=?, category_id=?, short_desc=?, long_desc=?, pdf_url=?, pdf_label=?, type=?, digital_delivery=?, download_limit=?, download_expiry_days=?, file_url=?, variations_json=? WHERE id=?");
+    return $stmt->execute([
+        trim((string)($data['name'] ?? '')),
+        trim((string)($data['sku'] ?? '')),
+        $slug,
+        ($data['price'] === '' || !isset($data['price'])) ? null : (float)$data['price'],
+        trim((string)($data['image_url'] ?? '')),
+        ($data['category_id'] === '' || !isset($data['category_id'])) ? null : (int)$data['category_id'],
+        (string)($data['short_desc'] ?? ''),
+        (string)($data['long_desc'] ?? ''),
+        trim((string)($data['pdf_url'] ?? '')),
+        $data['pdf_label'] ?? '',
+        $data['type'] ?? 'physical',
+        isset($data['digital_delivery']) ? 1 : 0,
+        isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
+        isset($data['download_expiry_days']) && $data['download_expiry_days'] !== '' ? (int)$data['download_expiry_days'] : null,
+        trim((string)($data['file_url'] ?? '')),
+        trim((string)($data['variations_json'] ?? '[]')),
         $id
     ]);
 }
@@ -397,6 +403,54 @@ function deleteProduct($id) {
     $stmtImages->execute([$id]);
     $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
     return $stmt->execute([$id]);
+}
+
+// === Global Variations Logic ===
+
+function getGlobalVariations() {
+    global $pdo;
+    $stmt = $pdo->query("SELECT * FROM global_variations ORDER BY name ASC");
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($results as &$row) {
+        $row['options'] = json_decode($row['options_json'] ?? '[]', true);
+    }
+    return $results;
+}
+
+function getGlobalVariation($id) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM global_variations WHERE id = ?");
+    $stmt->execute([$id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+        $row['options'] = json_decode($row['options_json'] ?? '[]', true);
+    }
+    return $row;
+}
+
+function saveGlobalVariation($id, $name, $options) {
+    global $pdo;
+    $optionsJson = json_encode($options);
+    
+    if (empty($id)) {
+        // Create
+        $stmt = $pdo->prepare("INSERT INTO global_variations (name, options_json) VALUES (?, ?)");
+        try {
+            $stmt->execute([$name, $optionsJson]);
+        } catch (PDOException $e) {
+            // Ignore unique constraint error
+        }
+    } else {
+        // Update
+        $stmt = $pdo->prepare("UPDATE global_variations SET name = ?, options_json = ? WHERE id = ?");
+        $stmt->execute([$name, $optionsJson, $id]);
+    }
+}
+
+function deleteGlobalVariation($id) {
+    global $pdo;
+    $stmt = $pdo->prepare("DELETE FROM global_variations WHERE id = ?");
+    $stmt->execute([$id]);
 }
 
 function getProductBySku($sku) {

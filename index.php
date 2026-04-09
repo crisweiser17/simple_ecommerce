@@ -413,19 +413,37 @@ switch ($path) {
 
             $product = getProduct($productId);
             if (!$product) {
-                echo json_encode(['success' => false, 'message' => 'Product not found']);
+                echo json_encode(['success' => false, 'message' => __('Product not found')]);
                 exit;
+            }
+
+            // Calculate final price based on selected variations
+            $finalPrice = floatval($product['price']);
+            $selectedVariations = $input['variations'] ?? [];
+            $productVariations = json_decode($product['variations_json'] ?? '[]', true) ?: [];
+            
+            foreach ($productVariations as $v) {
+                if (isset($selectedVariations[$v['name']])) {
+                    $selectedOptName = $selectedVariations[$v['name']];
+                    foreach ($v['options'] as $opt) {
+                        if ($opt['name'] === $selectedOptName) {
+                            $finalPrice += floatval($opt['price_modifier'] ?? 0);
+                            break;
+                        }
+                    }
+                }
             }
 
             $items = [
                 [
                     'id' => $product['id'],
                     'name' => $product['name'],
-                    'price' => $product['price'],
-                    'quantity' => 1
+                    'price' => $finalPrice,
+                    'quantity' => 1,
+                    'selected_variations' => $selectedVariations
                 ]
             ];
-            $total = floatval($product['price']);
+            $total = $finalPrice;
 
             $customer = [
                 'name' => $name,
@@ -684,9 +702,13 @@ switch ($path) {
         $customers = getAdminCustomers();
         $categories = getAllCategories();
         $pages = getAllPages();
+        $categories = getAllCategories();
         $adminUsers = getAdminUsers();
+        $global_variations = getGlobalVariations();
+        
         $productsCsvReport = $_SESSION['products_csv_report'] ?? null;
         unset($_SESSION['products_csv_report']);
+        
         require __DIR__ . '/templates/admin/dashboard.php';
         break;
 
@@ -755,11 +777,12 @@ switch ($path) {
             }
         }
         $categories = getAllCategories();
+        $global_variations = getGlobalVariations();
         require __DIR__ . '/templates/admin/product-form.php';
         break;
 
     case '/admin/save-settings':
-        if (!isAdmin()) die("Access Denied");
+        if (!isAdmin()) die(__('Access Denied'));
         $whatsapp = $_POST['store_whatsapp'] ?? '';
         updateSetting('store_whatsapp', $whatsapp);
 
@@ -844,7 +867,7 @@ switch ($path) {
         break;
 
     case '/admin/save-payment-settings':
-        if (!isAdmin()) die("Access Denied");
+        if (!isAdmin()) die(__('Access Denied'));
         updateSetting('payment_provider_active', $_POST['payment_provider_active'] ?? 'mercadopago');
         $paymentModules = $_POST['payment_provider_modules'] ?? [];
         if (!is_array($paymentModules)) {
@@ -951,7 +974,7 @@ switch ($path) {
         break;
 
     case '/admin/save-banner-settings':
-        if (!isAdmin()) die("Access Denied");
+        if (!isAdmin()) die(__('Access Denied'));
         
         // Handle Banner Image Upload
         $bannerImageUrl = $_POST['banner_image_url'] ?? '';
@@ -995,7 +1018,7 @@ switch ($path) {
         break;
 
     case '/admin/save-product':
-        if (!isAdmin()) die("Access Denied");
+        if (!isAdmin()) die(__('Access Denied'));
         $data = $_POST;
         
         // Handle PDF Upload
@@ -1017,6 +1040,22 @@ switch ($path) {
         $uploadedDigitalFile = $fileUploader->upload($_FILES['digital_file'] ?? null);
         if ($uploadedDigitalFile !== '') {
             $data['file_url'] = $uploadedDigitalFile;
+        }
+
+        // Handle variations
+        $variations = json_decode($data['variations_json'] ?? '[]', true) ?: [];
+        $data['variations_json'] = json_encode($variations);
+
+        // Save custom variations to global if requested
+        foreach ($variations as $var) {
+            if (!empty($var['save_global'])) {
+                // Ensure options are formatted correctly for global
+                $globalOpts = [];
+                foreach ($var['options'] as $opt) {
+                    $globalOpts[] = ['name' => $opt['name'], 'price_modifier' => 0];
+                }
+                saveGlobalVariation(null, $var['name'], $globalOpts);
+            }
         }
 
         global $pdo;
@@ -1058,7 +1097,7 @@ switch ($path) {
         break;
 
     case '/admin/delete-product':
-        if (!isAdmin()) die("Access Denied");
+        if (!isAdmin()) die(__('Access Denied'));
         $id = $_GET['id'];
         deleteProduct($id);
         header('Location: /admin');
@@ -1066,7 +1105,7 @@ switch ($path) {
         break;
 
     case '/admin/save-category':
-        if (!isAdmin()) die("Access Denied");
+        if (!isAdmin()) die(__('Access Denied'));
         $data = $_POST;
         if (empty($data['id'])) {
             createCategory($data);
@@ -1078,15 +1117,49 @@ switch ($path) {
         break;
 
     case '/admin/delete-category':
-        if (!isAdmin()) die("Access Denied");
+        if (!isAdmin()) die(__('Access Denied'));
         $id = $_GET['id'];
         deleteCategory($id);
         header('Location: /admin');
         exit;
         break;
 
+    case '/admin/save-global-variation':
+        if (!isAdmin()) die(__('Access Denied'));
+        $id = $_POST['id'] ?? null;
+        $name = trim($_POST['name'] ?? '');
+        
+        $options = [];
+        if (isset($_POST['options']) && is_array($_POST['options'])) {
+            foreach ($_POST['options'] as $opt) {
+                $optName = trim($opt['name'] ?? '');
+                if ($optName !== '') {
+                    $options[] = [
+                        'name' => $optName,
+                        'price_modifier' => (float)($opt['price_modifier'] ?? 0)
+                    ];
+                }
+            }
+        }
+        
+        if ($name !== '') {
+            saveGlobalVariation($id, $name, $options);
+        }
+        
+        header('Location: /admin');
+        exit;
+        break;
+
+    case '/admin/delete-global-variation':
+        if (!isAdmin()) die(__('Access Denied'));
+        $id = $_GET['id'];
+        deleteGlobalVariation($id);
+        header('Location: /admin');
+        exit;
+        break;
+
     case '/admin/save-page':
-        if (!isAdmin()) die("Access Denied");
+        if (!isAdmin()) die(__('Access Denied'));
         $data = $_POST;
         if (empty($data['id'])) {
             createPage($data);
@@ -1098,7 +1171,7 @@ switch ($path) {
         break;
 
     case '/admin/delete-page':
-        if (!isAdmin()) die("Access Denied");
+        if (!isAdmin()) die(__('Access Denied'));
         $id = $_GET['id'];
         deletePage($id);
         header('Location: /admin');

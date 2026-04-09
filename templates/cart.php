@@ -74,21 +74,28 @@
         
         <!-- Cart Items -->
         <div class="lg:col-span-2 space-y-4">
-            <template x-for="item in $store.cart.items" :key="item.id">
+            <template x-for="item in $store.cart.items" :key="item.cartItemId || $store.cart._generateCartItemId(item)">
                 <div class="flex items-center gap-4 bg-white p-4 rounded border shadow-sm">
-                    <img :src="item.image_url" class="w-20 h-20 object-contain rounded border">
+                    <img :src="item.primary_image_url || item.image_url" class="w-20 h-20 object-contain rounded border">
                     <div class="flex-1">
                         <h3 class="font-bold text-gray-900" x-text="item.name"></h3>
+                        <template x-if="item.selected_variations">
+                            <div class="text-xs text-gray-500 mt-1">
+                                <template x-for="[vName, vOpt] in Object.entries(item.selected_variations)" :key="vName">
+                                    <span class="mr-2 bg-gray-100 px-2 py-0.5 rounded text-gray-600 border"><span x-text="vName"></span>: <strong x-text="vOpt"></strong></span>
+                                </template>
+                            </div>
+                        </template>
                         <?php if ($storeMode === 'ecommerce'): ?>
-                        <p class="text-sm text-gray-500" x-text="'<?php echo getSetting('store_currency_symbol', 'R$'); ?> ' + item.price.toFixed(2)"></p>
+                        <p class="text-sm text-gray-500 mt-1" x-text="'<?php echo getSetting('store_currency_symbol', 'R$'); ?> ' + item.price.toFixed(2)"></p>
                         <?php endif; ?>
                     </div>
                     <div class="flex items-center border rounded">
-                        <button @click="$store.cart.updateQuantity(item.id, item.quantity - 1)" class="px-2 py-1 hover:bg-gray-100">-</button>
+                        <button @click="$store.cart.updateQuantity(item.cartItemId || $store.cart._generateCartItemId(item), item.quantity - 1)" class="px-2 py-1 hover:bg-gray-100">-</button>
                         <span class="px-2" x-text="item.quantity"></span>
-                        <button @click="$store.cart.updateQuantity(item.id, item.quantity + 1)" class="px-2 py-1 hover:bg-gray-100">+</button>
+                        <button @click="$store.cart.updateQuantity(item.cartItemId || $store.cart._generateCartItemId(item), item.quantity + 1)" class="px-2 py-1 hover:bg-gray-100">+</button>
                     </div>
-                    <button @click="$store.cart.remove(item.id)" class="text-red-500 hover:text-red-700">
+                    <button @click="$store.cart.remove(item.cartItemId || $store.cart._generateCartItemId(item))" class="text-red-500 hover:text-red-700 ml-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16z"></path></svg>
                     </button>
                 </div>

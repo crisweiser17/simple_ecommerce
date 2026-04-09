@@ -118,6 +118,13 @@
                                         <tr>
                                             <td class="px-4 py-2">
                                                 <input type="text" x-model="item.name" class="w-full border-gray-300 rounded-sm p-1 text-sm border">
+                                                <template x-if="item.selected_variations">
+                                                    <div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-1">
+                                                        <template x-for="[vName, vOpt] in Object.entries(item.selected_variations)" :key="vName">
+                                                            <span class="bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200"><span x-text="vName"></span>: <strong x-text="vOpt"></strong></span>
+                                                        </template>
+                                                    </div>
+                                                </template>
                                             </td>
                                             <td class="px-4 py-2">
                                                 <input type="number" x-model.number="item.quantity" @input="calculateTotal" min="1" class="w-full border-gray-300 rounded-sm p-1 text-sm border">

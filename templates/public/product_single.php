@@ -19,13 +19,28 @@
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="md:flex">
                 <!-- Product Info -->
-                <div class="md:w-1/2 p-4 md:p-8 bg-gray-50">
+                <div class="md:w-1/2 p-4 md:p-8 bg-gray-50" x-data="productInfo()">
                     <img src="<?php echo htmlspecialchars($primaryImage); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-full h-64 object-contain rounded-lg mb-6 bg-white p-4 border">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2"><?php echo htmlspecialchars($product['name']); ?></h1>
-                    <div class="text-2xl font-bold text-orange-600 mb-4"><?php echo formatMoney($product['price']); ?></div>
+                    <div class="text-2xl font-bold text-orange-600 mb-4" x-text="formatMoney(currentPrice)"><?php echo formatMoney($product['price']); ?></div>
                     <div class="prose text-gray-600 mb-6">
                         <?php echo $product['short_desc']; ?>
                     </div>
+                    
+                    <template x-if="variations.length > 0">
+                        <div class="mb-6 space-y-4">
+                            <template x-for="v in variations" :key="v.name">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1" x-text="v.name"></label>
+                                    <select x-model="$store.checkoutVariations[v.name]" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md border bg-white">
+                                        <template x-for="opt in v.options" :key="opt.name">
+                                            <option :value="opt.name" x-text="opt.name + (parseFloat(opt.price_modifier) > 0 ? ' (+ ' + formatMoney(parseFloat(opt.price_modifier)) + ')' : '')"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
                 </div>
 
                 <!-- Checkout Form -->
@@ -49,7 +64,7 @@
                             </div>
                             
                             <button type="submit" :disabled="loading" class="w-full bg-orange-600 text-white py-4 rounded-md font-bold text-lg hover:bg-orange-700 transition-colors disabled:opacity-50 mt-6">
-                                <span x-show="!loading">Gerar PIX - <?php echo formatMoney($product['price']); ?></span>
+                                <span x-show="!loading">Gerar PIX - <span x-text="finalPriceFormatted"></span></span>
                                 <span x-show="loading">Processando...</span>
                             </button>
 
@@ -142,6 +157,38 @@
     </div>
 
     <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('checkoutVariations', {});
+        });
+
+        function productInfo() {
+            return {
+                basePrice: <?php echo (float)($product['price'] ?? 0); ?>,
+                variations: <?php echo empty($product['variations_json']) ? '[]' : $product['variations_json']; ?>,
+                get currentPrice() {
+                    let total = this.basePrice;
+                    for (const v of this.variations) {
+                        const selected = this.$store.checkoutVariations[v.name];
+                        if (selected) {
+                            const opt = v.options.find(o => o.name === selected);
+                            if (opt) total += parseFloat(opt.price_modifier || 0);
+                        }
+                    }
+                    return total;
+                },
+                formatMoney(amount) {
+                    return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(amount);
+                },
+                init() {
+                    for (const v of this.variations) {
+                        if (v.options && v.options.length > 0) {
+                            this.$store.checkoutVariations[v.name] = v.options[0].name;
+                        }
+                    }
+                }
+            }
+        }
+
         function singleCheckout() {
             return {
                 step: 1,
@@ -162,14 +209,35 @@
                     copy_paste: ''
                 },
                 pollInterval: null,
+                get finalPriceFormatted() {
+                    let basePrice = <?php echo (float)($product['price'] ?? 0); ?>;
+                    let total = basePrice;
+                    const variations = <?php echo empty($product['variations_json']) ? '[]' : $product['variations_json']; ?>;
+                    for (const v of variations) {
+                        const selected = this.$store.checkoutVariations[v.name];
+                        if (selected) {
+                            const opt = v.options.find(o => o.name === selected);
+                            if (opt) total += parseFloat(opt.price_modifier || 0);
+                        }
+                    }
+                    return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(total);
+                },
 
                 submitCheckout() {
                     if (!this.customer.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.customer.email)) {
                         alert('<?php echo __('Invalid email format'); ?>');
                         return;
                     }
+                    
+                    const variations = <?php echo empty($product['variations_json']) ? '[]' : $product['variations_json']; ?>;
+                    for (const v of variations) {
+                        if (!this.$store.checkoutVariations[v.name]) {
+                            alert('<?php echo __('Please select all options before checkout'); ?>: ' + v.name);
+                            return;
+                        }
+                    }
+                    
                     this.loading = true;
-                    // Limpar os dados antigos do QR code para forçar a re-renderização
                     this.payment.qr_code = '';
                     this.payment.copy_paste = '';
                     
@@ -180,7 +248,8 @@
                             product_id: this.productId,
                             name: this.customer.name,
                             email: this.customer.email,
-                            whatsapp: this.customer.whatsapp
+                            whatsapp: this.customer.whatsapp,
+                            variations: this.$store.checkoutVariations
                         })
                     })
                     .then(res => res.json())

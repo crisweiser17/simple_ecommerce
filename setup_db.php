@@ -23,6 +23,22 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS products (
     download_limit INTEGER DEFAULT 0,
     download_expiry_days INTEGER DEFAULT 0,
     file_url TEXT,
+    variations_json TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)");
+
+// Add variations_json column to existing products table if it doesn't exist
+try {
+    $pdo->exec("ALTER TABLE products ADD COLUMN variations_json TEXT");
+} catch (Exception $e) {
+    // Column might already exist
+}
+
+// Create Global Variations Table
+$pdo->exec("CREATE TABLE IF NOT EXISTS global_variations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    options_json TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )");
 
