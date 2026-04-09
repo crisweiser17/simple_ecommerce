@@ -310,4 +310,22 @@ return [
     'Comprar agora' => 'Comprar agora',
     'Widget de Venda Externa' => 'Widget de Venda Externa',
     'Are you sure?' => 'Tem certeza?',
+    'Add New Product' => 'Adicionar Novo Produto',
+    
+    // Additional keys
+    'Request Quote' => 'Solicitar Orçamento',
+    'Copy PIX code' => 'Copiar código PIX',
+    'Payment Instructions' => 'Instruções de Pagamento',
+    'Quote Summary' => 'Resumo da Solicitação',
+    'Logo Display' => 'Exibição do logo',
+    'Store Operation Mode' => 'Modo de Operação da Loja',
+    'Portuguese' => 'Português',
+    'User' => 'Usuário',
+    'Enabled modules' => 'Módulos habilitados',
+    'Enable manual Pix module' => 'Habilitar módulo Pix manual',
+    'Display Payment Instructions on Order Success' => 'Exibir Instruções de Pagamento no Pedido Concluído',
+    'Instructions Text' => 'Texto das Instruções',
+    'Leave blank to not expire' => 'Deixe em branco para não expirar',
+    'Invalid file type' => 'Tipo de arquivo inválido',
+    'Only list items' => 'Apenas listar itens',
 ];

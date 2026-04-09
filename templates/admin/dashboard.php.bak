@@ -490,7 +490,7 @@
                                 </div>
                                 <div class="mb-4">
                                     <?php $brandMode = getSetting('brand_mode', 'text'); ?>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Logo Display'); ?></label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">Exibição do logo</label>
                                     <select name="brand_mode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                         <option value="text" <?php echo $brandMode === 'text' ? 'selected' : ''; ?>>Texto</option>
                                         <option value="image" <?php echo $brandMode === 'image' ? 'selected' : ''; ?>>Imagem</option>
@@ -520,7 +520,7 @@
                             </div>
 
                             <div class="border-b pb-4 mb-4">
-                                <h3 class="text-lg font-semibold mb-3"><?php echo __('Store Operation Mode'); ?></h3>
+                                <h3 class="text-lg font-semibold mb-3">Modo de Operação da Loja</h3>
                                 <div class="mb-4">
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Selecione o modo</label>
                                     <select name="store_mode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
@@ -590,7 +590,7 @@
                                     <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Single language when multi-language is off'); ?></label>
                                     <select name="i18n_single_lang" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                         <option value="en" <?php echo $singleLang === 'en' ? 'selected' : ''; ?>>English</option>
-                                        <option value="pt" <?php echo $singleLang === 'pt' ? 'selected' : ''; ?>><?php echo __('Portuguese'); ?></option>
+                                        <option value="pt" <?php echo $singleLang === 'pt' ? 'selected' : ''; ?>>Português</option>
                                     </select>
                                 </div>
                             </div>
@@ -639,7 +639,7 @@
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('User'); ?></label>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2">Usuário</label>
                                         <input type="text" name="smtp_username" value="<?php echo htmlspecialchars(getSetting('smtp_username', 'resend')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                         <p class="text-xs text-gray-500 mt-1">Para Resend, use “resend”.</p>
                                     </div>
@@ -725,7 +725,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Enabled modules'); ?></label>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">Módulos habilitados</label>
                                 <div class="space-y-2">
                                     <label class="flex items-center">
                                         <input type="checkbox" name="payment_provider_modules[]" value="mercadopago" <?php echo in_array('mercadopago', $providerModules, true) ? 'checked' : ''; ?> class="form-checkbox h-5 w-5 text-blue-600">
@@ -764,7 +764,7 @@
                                 <div>
                                     <label class="flex items-center mb-2">
                                         <input type="checkbox" name="payment_provider_modules[]" value="manual_pix" <?php echo in_array('manual_pix', $providerModules, true) ? 'checked' : ''; ?> class="form-checkbox h-5 w-5 text-blue-600">
-                                        <span class="ml-2 text-gray-700 text-sm font-bold"><?php echo __('Enable manual Pix module'); ?></span>
+                                        <span class="ml-2 text-gray-700 text-sm font-bold">Habilitar módulo Pix manual</span>
                                     </label>
                                 </div>
                                 <div>
@@ -778,13 +778,13 @@
                             </div>
                             
                             <div class="grid grid-cols-1 gap-4 border rounded p-4 bg-gray-50">
-                                <h4 class="font-semibold text-gray-800"><?php echo __('Payment Instructions'); ?></h4>
+                                <h4 class="font-semibold text-gray-800">Instruções de Pagamento</h4>
                                 <label class="flex items-center mb-2">
                                     <input type="checkbox" name="payment_instructions_enabled" value="1" <?php echo getSetting('payment_instructions_enabled', '0') === '1' ? 'checked' : ''; ?> class="form-checkbox h-5 w-5 text-blue-600">
-                                    <span class="ml-2 text-gray-700 text-sm font-bold">Exibir <?php echo __('Payment Instructions'); ?> no Pedido Concluído</span>
+                                    <span class="ml-2 text-gray-700 text-sm font-bold">Exibir Instruções de Pagamento no Pedido Concluído</span>
                                 </label>
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Instructions Text'); ?></label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">Texto das Instruções</label>
                                     <div class="bg-white mb-12">
                                         <div id="payment_instructions_editor" style="min-height: 200px; height: auto;"><?php echo getSetting('payment_instructions_text', ''); ?></div>
                                     </div>
@@ -1200,7 +1200,7 @@
                     options.allowMultiple = false;
                     options.acceptedFileTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
                     options.maxFileSize = '5MB';
-                    options.labelFileTypeNotAllowed = '<?php echo __("Invalid file type"); ?>';
+                    options.labelFileTypeNotAllowed = 'Tipo de arquivo inválido';
                     options.fileValidateTypeLabelExpectedTypes = 'Use PNG, JPG, WEBP ou GIF';
                     options.labelMaxFileSizeExceeded = 'Arquivo muito grande';
                     options.labelMaxFileSize = 'Tamanho máximo: {filesize}';
@@ -1209,7 +1209,7 @@
                     options.acceptedFileTypes = ['text/csv', 'application/csv', 'text/plain'];
                     options.maxFileSize = '10MB';
                     options.allowImagePreview = false;
-                    options.labelFileTypeNotAllowed = '<?php echo __("Invalid file type"); ?>';
+                    options.labelFileTypeNotAllowed = 'Tipo de arquivo inválido';
                     options.fileValidateTypeLabelExpectedTypes = 'Use arquivo CSV';
                 }
 

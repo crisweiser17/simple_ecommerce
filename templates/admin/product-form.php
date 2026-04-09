@@ -291,7 +291,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700"><?php echo __('Dias para Expirar'); ?></label>
-                                        <input type="number" min="0" name="download_expiry_days" value="<?php echo htmlspecialchars($product['download_expiry_days'] ?? ''); ?>" placeholder="<?php echo __('Deixe em branco para não expirar'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                        <input type="number" min="0" name="download_expiry_days" value="<?php echo htmlspecialchars($product['download_expiry_days'] ?? ''); ?>" placeholder="<?php echo __('<?php echo __('Leave blank to not expire'); ?>'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                                     </div>
                                     
                                     <!-- Widget Embed Code Box -->
@@ -460,7 +460,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                         acceptedFileTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
                         maxFileSize: '5MB',
                         labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione imagens</span>',
-                        labelFileTypeNotAllowed: 'Tipo de arquivo inválido',
+                        labelFileTypeNotAllowed: '<?php echo __("Invalid file type"); ?>',
                         fileValidateTypeLabelExpectedTypes: 'Use PNG, JPG, WEBP ou GIF',
                         labelMaxFileSizeExceeded: 'Arquivo muito grande',
                         labelMaxFileSize: 'Tamanho máximo: {filesize}'
@@ -476,7 +476,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                         acceptedFileTypes: ['application/pdf'],
                         maxFileSize: '10MB',
                         labelIdle: 'Arraste e solte o PDF ou <span class="filepond--label-action">selecione o arquivo</span>',
-                        labelFileTypeNotAllowed: 'Tipo de arquivo inválido',
+                        labelFileTypeNotAllowed: '<?php echo __("Invalid file type"); ?>',
                         fileValidateTypeLabelExpectedTypes: 'Use PDF',
                         labelMaxFileSizeExceeded: 'Arquivo muito grande',
                         labelMaxFileSize: 'Tamanho máximo: {filesize}'
@@ -492,7 +492,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                         acceptedFileTypes: ['application/pdf', 'application/zip', 'video/mp4', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
                         maxFileSize: '25MB',
                         labelIdle: 'Arraste e solte o arquivo digital ou <span class="filepond--label-action">selecione o arquivo</span>',
-                        labelFileTypeNotAllowed: 'Tipo de arquivo inválido',
+                        labelFileTypeNotAllowed: '<?php echo __("Invalid file type"); ?>',
                         fileValidateTypeLabelExpectedTypes: 'Use PDF, ZIP, MP4 ou DOCX',
                         labelMaxFileSizeExceeded: 'Arquivo muito grande',
                         labelMaxFileSize: 'Tamanho máximo: {filesize}'

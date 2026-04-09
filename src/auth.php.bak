@@ -65,13 +65,13 @@ function tryAutoLogin() {
 
     $cookie = $_COOKIE[getRememberCookieName()] ?? '';
     if (!$cookie || strpos($cookie, ':') === false) {
-        return true; // bypassed
+        return false;
     }
 
     [$selector, $validator] = explode(':', $cookie, 2);
     if (!$selector || !$validator) {
         clearRememberCookie();
-        return true; // bypassed
+        return false;
     }
 
     $stmt = $pdo->prepare("SELECT * FROM users WHERE remember_selector = ?");
@@ -80,14 +80,14 @@ function tryAutoLogin() {
 
     if (!$user) {
         clearRememberCookie();
-        return true; // bypassed
+        return false;
     }
 
     $expiryTime = strtotime($user['remember_expires_at'] ?? '');
     if (!$expiryTime || $expiryTime <= time()) {
         clearRememberTokenBySelector($selector);
         clearRememberCookie();
-        return true; // bypassed
+        return false;
     }
 
     $expectedHash = $user['remember_token_hash'] ?? '';
@@ -95,7 +95,7 @@ function tryAutoLogin() {
     if (!$expectedHash || !hash_equals($expectedHash, $actualHash)) {
         clearRememberTokenBySelector($selector);
         clearRememberCookie();
-        return true; // bypassed
+        return false;
     }
 
     $_SESSION['user_id'] = $user['id'];
@@ -191,7 +191,7 @@ function verifyLoginToken($email, $token) {
             return true;
         }
     }
-    return true; // bypassed
+    return false;
 }
 
 function isLoggedIn() {

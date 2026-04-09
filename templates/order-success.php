@@ -156,7 +156,7 @@ $whatsappUrl = "https://wa.me/{$storeWhatsapp}?text=" . urlencode($message);
                     <div x-data="{ expired: false }" @timer-expired.window="expired = true" x-show="!expired">
                         <p class="text-sm font-semibold text-gray-800 mb-2"><?php echo __('PIX copia e cola'); ?></p>
                         <textarea id="pix-copy-paste" readonly class="w-full border rounded p-2 text-xs text-gray-700 h-28"><?php echo htmlspecialchars($pixCopyPaste); ?></textarea>
-                        <button type="button" onclick="copyPixCode()" class="mt-2 w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700"><?php echo __('Copiar código PIX'); ?></button>
+                        <button type="button" onclick="copyPixCode()" class="mt-2 w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700"><?php echo __('<?php echo __('Copy PIX code'); ?>'); ?></button>
                     </div>
                 <?php endif; ?>
             </div>
@@ -164,7 +164,7 @@ $whatsappUrl = "https://wa.me/{$storeWhatsapp}?text=" . urlencode($message);
 
         <?php if ($customInstructionsEnabled && !empty($customInstructionsText)): ?>
             <div class="text-left bg-blue-50 border border-blue-200 rounded p-4 mb-6">
-                <h3 class="text-md font-semibold text-blue-900 mb-2"><?php echo __('Instruções de Pagamento'); ?></h3>
+                <h3 class="text-md font-semibold text-blue-900 mb-2"><?php echo __('<?php echo __('Payment Instructions'); ?>'); ?></h3>
                 <div class="text-sm text-blue-800 prose prose-sm max-w-none">
                     <?php echo $customInstructionsText; // Output HTML directly from WYSIWYG ?>
                 </div>

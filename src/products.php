@@ -107,6 +107,13 @@ function ensureProductsSchema() {
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_images_product_id ON product_images(product_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_images_primary ON product_images(product_id, is_primary, sort_order)");
 
+    $pdo->exec("CREATE TABLE IF NOT EXISTS global_variations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        options_json TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+
     $checked = true;
 }
 
@@ -408,6 +415,7 @@ function deleteProduct($id) {
 // === Global Variations Logic ===
 
 function getGlobalVariations() {
+    ensureProductsSchema();
     global $pdo;
     $stmt = $pdo->query("SELECT * FROM global_variations ORDER BY name ASC");
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -418,6 +426,7 @@ function getGlobalVariations() {
 }
 
 function getGlobalVariation($id) {
+    ensureProductsSchema();
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM global_variations WHERE id = ?");
     $stmt->execute([$id]);
@@ -429,6 +438,7 @@ function getGlobalVariation($id) {
 }
 
 function saveGlobalVariation($id, $name, $options) {
+    ensureProductsSchema();
     global $pdo;
     $optionsJson = json_encode($options);
     
@@ -448,6 +458,7 @@ function saveGlobalVariation($id, $name, $options) {
 }
 
 function deleteGlobalVariation($id) {
+    ensureProductsSchema();
     global $pdo;
     $stmt = $pdo->prepare("DELETE FROM global_variations WHERE id = ?");
     $stmt->execute([$id]);
