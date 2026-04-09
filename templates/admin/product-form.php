@@ -92,174 +92,190 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                             <input type="hidden" name="id" value="<?php echo htmlspecialchars($product['id']); ?>">
                         <?php endif; ?>
 
-                        <div class="grid grid-cols-1 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Name'); ?></label>
-                                <input type="text" name="name" value="<?php echo htmlspecialchars($product['name'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Slug'); ?></label>
-                                <input type="text" id="product_slug" name="slug" value="<?php echo htmlspecialchars($product['slug'] ?? ''); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="ex: bpc-157-10mg">
-                                <p class="mt-1 text-xs text-gray-500"><?php echo __('Used in product URL. If duplicated, a suffix is added automatically.'); ?></p>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Seção 1: Informações Básicas -->
+                        <div class="border border-gray-200 rounded-md p-5 bg-white shadow-sm mb-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2"><?php echo __('Informações Básicas'); ?></h3>
+                            <div class="grid grid-cols-1 gap-6">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('SKU'); ?></label>
-                                    <input type="text" name="sku" value="<?php echo htmlspecialchars($product['sku'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Name'); ?></label>
+                                    <input type="text" name="name" value="<?php echo htmlspecialchars($product['name'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                                 </div>
+
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Price'); ?></label>
-                                    <input type="number" step="0.01" name="price" value="<?php echo htmlspecialchars($product['price'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Slug'); ?></label>
+                                    <input type="text" id="product_slug" name="slug" value="<?php echo htmlspecialchars($product['slug'] ?? ''); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="ex: bpc-157-10mg">
+                                    <p class="mt-1 text-xs text-gray-500"><?php echo __('Used in product URL. If duplicated, a suffix is added automatically.'); ?></p>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('SKU'); ?></label>
+                                        <input type="text" name="sku" value="<?php echo htmlspecialchars($product['sku'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('Price'); ?></label>
+                                        <input type="number" step="0.01" name="price" value="<?php echo htmlspecialchars($product['price'] ?? ''); ?>" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Category'); ?></label>
+                                    <select name="category_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                        <option value=""><?php echo __('Select Category'); ?></option>
+                                        <?php foreach ($categories as $cat): ?>
+                                            <option value="<?php echo $cat['id']; ?>" <?php echo (isset($product['category_id']) && $product['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($cat['name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
                             </div>
+                        </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Category'); ?></label>
-                                <select name="category_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                    <option value=""><?php echo __('Select Category'); ?></option>
-                                    <?php foreach ($categories as $cat): ?>
-                                        <option value="<?php echo $cat['id']; ?>" <?php echo (isset($product['category_id']) && $product['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($cat['name']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                        <!-- Seção 2: Mídia e Uploads -->
+                        <div class="border border-gray-200 rounded-md p-5 bg-white shadow-sm mb-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2"><?php echo __('Imagens e Arquivos (Uploads)'); ?></h3>
+                            <div class="grid grid-cols-1 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload Product Images'); ?></label>
+                                    <input type="file" name="product_images[]" accept="image/*" multiple class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white" data-filepond="image-multi">
+                                    <p class="mt-2 text-xs text-gray-500"><?php echo __('You can upload one or multiple images.'); ?></p>
+                                </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload Product Images'); ?></label>
-                                <input type="file" name="product_images[]" accept="image/*" multiple class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white" data-filepond="image-multi">
-                                <p class="mt-2 text-xs text-gray-500"><?php echo __('You can upload one or multiple images.'); ?></p>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-3"><?php echo __('Product Images'); ?></label>
-                                <div id="image-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                    <?php
-                                    $combinedImages = [];
-                                    if (!empty($product['image_url'])) {
-                                        $combinedImages[] = $product['image_url'];
-                                    }
-                                    if (!empty($productImages)) {
-                                        foreach ($productImages as $img) {
-                                            if (!empty($img['image_url']) && !in_array($img['image_url'], $combinedImages)) {
-                                                $combinedImages[] = $img['image_url'];
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3"><?php echo __('Product Images'); ?></label>
+                                    <div id="image-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                        <?php
+                                        $combinedImages = [];
+                                        if (!empty($product['image_url'])) {
+                                            $combinedImages[] = $product['image_url'];
+                                        }
+                                        if (!empty($productImages)) {
+                                            foreach ($productImages as $img) {
+                                                if (!empty($img['image_url']) && !in_array($img['image_url'], $combinedImages)) {
+                                                    $combinedImages[] = $img['image_url'];
+                                                }
                                             }
                                         }
-                                    }
-                                    foreach ($combinedImages as $index => $imgUrl):
-                                        $imgUrl = trim((string)$imgUrl);
-                                        if ($imgUrl === '') continue;
-                                    ?>
-                                        <div class="relative border rounded-md p-2 bg-white shadow-sm cursor-move group">
-                                            <img src="<?php echo htmlspecialchars($imgUrl); ?>" class="h-32 w-full object-contain rounded">
-                                            <input type="hidden" name="existing_images[]" value="<?php echo htmlspecialchars($imgUrl); ?>" class="existing-image-input">
-                                            <!-- Primary Badge -->
-                                            <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
-                                            <!-- Remove Button -->
-                                            <button type="button" onclick="this.closest('.relative').remove();" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                            </button>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                                <p class="mt-2 text-xs text-gray-500">Arraste e solte para reordenar. A primeira imagem sempre será a principal (capa). Clique no X vermelho para excluir imagens (inclusive placeholders indesejados).</p>
-                                
-                                <div class="mt-4 flex gap-2 max-w-lg">
-                                    <input type="text" id="new_image_url" placeholder="Adicionar imagem via URL..." class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm">
-                                    <button type="button" onclick="addImageFromUrl()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-bold hover:bg-gray-300 transition-colors">Adicionar URL</button>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('PDF Report URL or File'); ?></label>
-                                    <input type="text" name="pdf_url" value="<?php echo htmlspecialchars($product['pdf_url'] ?? ''); ?>" placeholder="<?php echo __('External URL (or use upload below)'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3">
+                                        foreach ($combinedImages as $index => $imgUrl):
+                                            $imgUrl = trim((string)$imgUrl);
+                                            if ($imgUrl === '') continue;
+                                        ?>
+                                            <div class="relative border rounded-md p-2 bg-white shadow-sm cursor-move group">
+                                                <img src="<?php echo htmlspecialchars($imgUrl); ?>" class="h-32 w-full object-contain rounded">
+                                                <input type="hidden" name="existing_images[]" value="<?php echo htmlspecialchars($imgUrl); ?>" class="existing-image-input">
+                                                <!-- Primary Badge -->
+                                                <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
+                                                <!-- Remove Button -->
+                                                <button type="button" onclick="this.closest('.relative').remove();" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <p class="mt-2 text-xs text-gray-500">Arraste e solte para reordenar. A primeira imagem sempre será a principal (capa). Clique no X vermelho para excluir imagens (inclusive placeholders indesejados).</p>
                                     
-                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload PDF File'); ?></label>
-                                    <input type="file" name="pdf_file" accept="application/pdf" class="mt-1 block w-full bg-white" data-filepond="pdf-single">
+                                    <div class="mt-4 flex gap-2 max-w-lg">
+                                        <input type="text" id="new_image_url" placeholder="Adicionar imagem via URL..." class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm">
+                                        <button type="button" onclick="addImageFromUrl()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-bold hover:bg-gray-300 transition-colors">Adicionar URL</button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('PDF Button Text'); ?></label>
-                                    <input type="text" name="pdf_label" value="<?php echo htmlspecialchars($product['pdf_label'] ?? ''); ?>" placeholder="<?php echo __('Ex: Download Analysis Report'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('PDF Report URL or File'); ?></label>
+                                        <input type="text" name="pdf_url" value="<?php echo htmlspecialchars($product['pdf_url'] ?? ''); ?>" placeholder="<?php echo __('External URL (or use upload below)'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3">
+                                        
+                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload PDF File'); ?></label>
+                                        <input type="file" name="pdf_file" accept="application/pdf" class="mt-1 block w-full bg-white" data-filepond="pdf-single">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('PDF Button Text'); ?></label>
+                                        <input type="text" name="pdf_label" value="<?php echo htmlspecialchars($product['pdf_label'] ?? ''); ?>" placeholder="<?php echo __('Ex: Download Analysis Report'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Digital Product Settings -->
-                            <div class="border border-gray-200 rounded-md p-4 bg-gray-50 mt-4 mb-4" x-data="{ isDigital: <?php echo isset($product['digital_delivery']) && $product['digital_delivery'] ? 'true' : 'false'; ?> }">
-                                <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-3">
-                                    <div>
-                                        <h3 class="text-lg font-medium text-gray-900"><?php echo __('Digital Delivery'); ?></h3>
-                                        <p class="text-sm text-gray-500"><?php echo __('Enable if this product includes a downloadable file after purchase.'); ?></p>
-                                    </div>
-                                    <label class="flex items-center cursor-pointer">
-                                        <div class="relative">
-                                            <input type="checkbox" name="digital_delivery" value="1" class="sr-only" x-model="isDigital">
-                                            <div class="block bg-gray-300 w-10 h-6 rounded-full transition" :class="{'bg-indigo-600': isDigital}"></div>
-                                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform" :class="{'translate-x-4': isDigital}"></div>
-                                        </div>
-                                    </label>
+                        <!-- Digital Product Settings -->
+                        <div class="border border-blue-200 rounded-md p-5 bg-blue-50 mb-6" x-data="{ isDigital: <?php echo isset($product['digital_delivery']) && $product['digital_delivery'] ? 'true' : 'false'; ?> }">
+                            <div class="flex items-center justify-between mb-4 border-b border-blue-200 pb-3">
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900"><?php echo __('Entrega Digital'); ?></h3>
+                                    <p class="text-sm text-gray-500"><?php echo __('Ative se este produto incluir um arquivo para download após a compra.'); ?></p>
                                 </div>
-                                
-                                <div x-show="isDigital" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2" style="display: none;">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('File URL'); ?></label>
-                                        <input type="text" name="file_url" value="<?php echo htmlspecialchars($product['file_url'] ?? ''); ?>" placeholder="<?php echo __('Remote URL (or upload below)'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3">
-                                        
-                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload Digital File (Max 25MB)'); ?></label>
-                                        <input type="file" name="digital_file" accept=".pdf,.zip,.mp4,.docx" class="mt-1 block w-full bg-white" data-filepond="digital-single">
-                                        <p class="mt-1 text-xs text-gray-500">Allowed: PDF, ZIP, MP4, DOCX.</p>
+                                <label class="flex items-center cursor-pointer">
+                                    <div class="relative">
+                                        <input type="checkbox" name="digital_delivery" value="1" class="sr-only" x-model="isDigital">
+                                        <div class="block bg-gray-300 w-10 h-6 rounded-full transition" :class="{'bg-indigo-600': isDigital}"></div>
+                                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform" :class="{'translate-x-4': isDigital}"></div>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div x-show="isDigital" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2" style="display: none;">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('URL do Arquivo'); ?></label>
+                                    <input type="text" name="file_url" value="<?php echo htmlspecialchars($product['file_url'] ?? ''); ?>" placeholder="<?php echo __('URL Remota (ou faça o upload abaixo)'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3">
+                                    
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload do Arquivo Digital (Máx 25MB)'); ?></label>
+                                    <input type="file" name="digital_file" accept=".pdf,.zip,.mp4,.docx" class="mt-1 block w-full bg-white" data-filepond="digital-single">
+                                    <p class="mt-1 text-xs text-gray-500"><?php echo __('Permitido: PDF, ZIP, MP4, DOCX.'); ?></p>
+                                </div>
+                                <div>
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('Limite de Downloads'); ?></label>
+                                        <input type="number" min="0" name="download_limit" value="<?php echo htmlspecialchars($product['download_limit'] ?? ''); ?>" placeholder="<?php echo __('Deixe em branco para ilimitado'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                                     </div>
                                     <div>
-                                        <div class="mb-4">
-                                            <label class="block text-sm font-medium text-gray-700"><?php echo __('Download Limit'); ?></label>
-                                            <input type="number" min="0" name="download_limit" value="<?php echo htmlspecialchars($product['download_limit'] ?? ''); ?>" placeholder="<?php echo __('Leave empty for unlimited'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700"><?php echo __('Expiry Days'); ?></label>
-                                            <input type="number" min="0" name="download_expiry_days" value="<?php echo htmlspecialchars($product['download_expiry_days'] ?? ''); ?>" placeholder="<?php echo __('Leave empty for no expiry'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                        </div>
-                                        
-                                        <!-- Widget Embed Code Box -->
-                                        <?php if(isset($product['slug']) && $product['slug']): ?>
-                                        <div class="mt-4 p-3 bg-gray-100 rounded border border-gray-300 text-xs">
-                                            <p class="font-bold mb-1 text-gray-800">Widget de Venda Externa (Embed)</p>
-                                            <p class="text-gray-500 mb-2">Copie e cole este código em qualquer site para exibir um botão de compra deste produto.</p>
-                                            <textarea readonly class="w-full bg-gray-800 text-green-400 p-2 rounded font-mono h-24" onclick="this.select()">&lt;!-- Botão de Compra --&gt;
+                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('Dias para Expirar'); ?></label>
+                                        <input type="number" min="0" name="download_expiry_days" value="<?php echo htmlspecialchars($product['download_expiry_days'] ?? ''); ?>" placeholder="<?php echo __('Deixe em branco para não expirar'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                    </div>
+                                    
+                                    <!-- Widget Embed Code Box -->
+                                    <?php if(isset($product['slug']) && $product['slug']): ?>
+                                    <div class="mt-4 p-3 bg-gray-100 rounded border border-gray-300 text-xs">
+                                        <p class="font-bold mb-1 text-gray-800">Widget de Venda Externa (Embed)</p>
+                                        <p class="text-gray-500 mb-2">Copie e cole este código em qualquer site para exibir um botão de compra deste produto.</p>
+                                        <textarea readonly class="w-full bg-gray-800 text-green-400 p-2 rounded font-mono h-24" onclick="this.select()">&lt;!-- Botão de Compra --&gt;
 &lt;div data-checkout="<?php echo htmlspecialchars($product['slug']); ?>" data-color="#017737" data-text="Comprar agora"&gt;&lt;/div&gt;
 &lt;script src="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']; ?>/public/embed.js"&gt;&lt;/script&gt;</textarea>
-                                        </div>
-                                        <?php endif; ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <input type="hidden" name="type" x-bind:value="isDigital ? 'digital' : 'physical'">
+                        </div>
+
+                        <!-- Seção 3: Descrições -->
+                        <div class="border border-gray-200 rounded-md p-5 bg-white shadow-sm mb-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2"><?php echo __('Descrições'); ?></h3>
+                            <div class="grid grid-cols-1 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Short Description'); ?></label>
+                                    <input type="hidden" name="short_desc" id="short_desc_input">
+                                    <div id="short_desc_editor" class="bg-white">
+                                        <?php echo $product['short_desc'] ?? ''; ?>
                                     </div>
                                 </div>
-                                <input type="hidden" name="type" x-bind:value="isDigital ? 'digital' : 'physical'">
-                            </div>
 
-                            <div class="mb-12">
-                                <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Short Description'); ?></label>
-                                <input type="hidden" name="short_desc" id="short_desc_input">
-                                <div id="short_desc_editor" class="bg-white">
-                                    <?php echo $product['short_desc'] ?? ''; ?>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Long Description'); ?></label>
+                                    <input type="hidden" name="long_desc" id="long_desc_input">
+                                    <div id="long_desc_editor" class="bg-white">
+                                        <?php echo $product['long_desc'] ?? ''; ?>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="mb-12">
-                                <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Long Description'); ?></label>
-                                <input type="hidden" name="long_desc" id="long_desc_input">
-                                <div id="long_desc_editor" class="bg-white">
-                                    <?php echo $product['long_desc'] ?? ''; ?>
-                                </div>
-                            </div>
-
-                            <div class="flex justify-end pt-4">
-                                <a href="/admin" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none mr-3">
-                                    <?php echo __('Cancel'); ?>
-                                </a>
-                                <button type="submit" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none">
-                                    <?php echo __('Save Product'); ?>
-                                </button>
-                            </div>
+                        <div class="flex justify-end pt-4 mb-8">
+                            <a href="/admin" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none mr-3">
+                                <?php echo __('Cancel'); ?>
+                            </a>
+                            <button type="submit" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none">
+                                <?php echo __('Save Product'); ?>
+                            </button>
                         </div>
                     </form>
                 </div>
