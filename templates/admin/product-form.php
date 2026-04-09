@@ -318,16 +318,20 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Short Description'); ?></label>
                                     <input type="hidden" name="short_desc" id="short_desc_input">
-                                    <div id="short_desc_editor" class="bg-white">
-                                        <?php echo $product['short_desc'] ?? ''; ?>
+                                    <div class="mb-6">
+                                        <div id="short_desc_editor" class="bg-white">
+                                            <?php echo $product['short_desc'] ?? ''; ?>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div>
+                                <div class="mt-8 pt-4 border-t border-gray-100">
                                     <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Long Description'); ?></label>
                                     <input type="hidden" name="long_desc" id="long_desc_input">
-                                    <div id="long_desc_editor" class="bg-white">
-                                        <?php echo $product['long_desc'] ?? ''; ?>
+                                    <div class="mb-6">
+                                        <div id="long_desc_editor" class="bg-white">
+                                            <?php echo $product['long_desc'] ?? ''; ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -357,15 +361,52 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
     <script src="https://unpkg.com/filepond/dist/filepond.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Register Code View Module
+            Quill.register('modules/codeView', function(quill, options) {
+                const toolbar = quill.getModule('toolbar');
+                toolbar.addHandler('code-view', function() {
+                    const container = quill.container;
+                    const editor = container.querySelector('.ql-editor');
+                    let textarea = container.querySelector('.ql-html-editor');
+                    
+                    if (!textarea) {
+                        textarea = document.createElement('textarea');
+                        textarea.className = 'ql-html-editor w-full p-4 font-mono text-sm bg-gray-900 text-green-400 border-none focus:ring-0';
+                        textarea.style.minHeight = '300px';
+                        textarea.style.display = 'none';
+                        container.appendChild(textarea);
+                        
+                        // Sync textarea back to Quill on change
+                        textarea.addEventListener('input', function() {
+                            quill.root.innerHTML = textarea.value;
+                        });
+                    }
+
+                    if (textarea.style.display === 'none') {
+                        textarea.value = quill.root.innerHTML;
+                        textarea.style.display = 'block';
+                        editor.style.display = 'none';
+                    } else {
+                        quill.root.innerHTML = textarea.value;
+                        textarea.style.display = 'none';
+                        editor.style.display = 'block';
+                    }
+                });
+            });
+
             // Initialize Short Description Editor
             var shortQuill = new Quill('#short_desc_editor', {
                 theme: 'snow',
                 modules: {
-                    toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        ['clean']
-                    ]
+                    toolbar: {
+                        container: [
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['clean'],
+                            ['code-view']
+                        ]
+                    },
+                    codeView: true
                 }
             });
 
@@ -373,14 +414,24 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
             var longQuill = new Quill('#long_desc_editor', {
                 theme: 'snow',
                 modules: {
-                    toolbar: [
-                        [{ 'header': [1, 2, 3, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        ['link', 'image'],
-                        ['clean']
-                    ]
+                    toolbar: {
+                        container: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'image'],
+                            ['clean'],
+                            ['code-view']
+                        ]
+                    },
+                    codeView: true
                 }
+            });
+
+            // Add SVG icons to code-view buttons
+            document.querySelectorAll('.ql-code-view').forEach(function(btn) {
+                btn.innerHTML = '<svg viewBox="0 0 18 18"><polyline class="ql-even ql-stroke" points="5 7 3 9 5 11"></polyline><polyline class="ql-even ql-stroke" points="13 7 15 9 13 11"></polyline><line class="ql-stroke" x1="10" x2="8" y1="5" y2="13"></line></svg>';
+                btn.title = 'View HTML Source';
             });
 
             // Form submission handler

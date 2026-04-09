@@ -188,6 +188,7 @@
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Image'); ?></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Name'); ?></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
@@ -201,6 +202,7 @@
                             <?php $adminImageUrl = getProductPrimaryImageUrl($p); ?>
                             <?php if ($adminImageUrl === '') $adminImageUrl = 'https://placehold.co/100x100?text=No+Image'; ?>
                             <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#<?php echo htmlspecialchars($p['id'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <img src="<?php echo htmlspecialchars($adminImageUrl ?? ''); ?>" class="h-10 w-10 object-contain rounded">
                                 </td>
