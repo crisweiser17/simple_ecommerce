@@ -372,5 +372,13 @@ return [
     'Use CSV file' => 'Use CSV file',
     'Use PNG, JPG' => 'Use PNG, JPG',
     'Use PDF, ZIP, MP4 or DOCX' => 'Use PDF, ZIP, MP4 or DOCX',
-    'Option (e.g. Small)' => 'Option (e.g. Small)'
+    'Option (e.g. Small)' => 'Option (e.g. Small)',
+    
+    // Pagination
+    'Previous' => 'Previous',
+    'Next' => 'Next',
+    'Showing' => 'Showing',
+    'to' => 'to',
+    'of' => 'of',
+    'results' => 'results'
 ];

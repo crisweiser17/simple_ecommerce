@@ -697,7 +697,15 @@ switch ($path) {
             echo __('Access Denied. Login as admin@r2.com');
             exit;
         }
-        $products = getAllProducts();
+        
+        $page = max(1, isset($_GET['p']) ? (int)$_GET['p'] : 1);
+        $perPage = 20;
+        $offset = ($page - 1) * $perPage;
+        
+        $products = getAllProducts(null, $perPage, $offset);
+        $totalProducts = countProducts();
+        $totalPages = max(1, ceil($totalProducts / $perPage));
+        
         $orders = getAllOrders();
         $customers = getAdminCustomers();
         $categories = getAllCategories();

@@ -229,6 +229,55 @@
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+
+                    <!-- Pagination Controls -->
+                    <?php if (isset($totalPages) && $totalPages > 1): ?>
+                    <div class="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between bg-white gap-4">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                <?php echo __('Showing'); ?> <span class="font-medium"><?php echo ($totalProducts > 0 ? $offset + 1 : 0); ?></span> <?php echo __('to'); ?> <span class="font-medium"><?php echo min($offset + $perPage, $totalProducts); ?></span> <?php echo __('of'); ?> <span class="font-medium"><?php echo $totalProducts; ?></span> <?php echo __('results'); ?>
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <?php if ($page > 1): ?>
+                                <?php $q = $_GET; $q['p'] = $page - 1; ?>
+                                <a href="?<?php echo http_build_query($q); ?>" class="px-3 py-1 border rounded bg-white text-gray-600 hover:bg-gray-50">&laquo; <?php echo __('Previous'); ?></a>
+                            <?php endif; ?>
+                            
+                            <?php
+                            $startPage = max(1, $page - 2);
+                            $endPage = min($totalPages, $page + 2);
+                            
+                            if ($startPage > 1): ?>
+                                <?php $q = $_GET; $q['p'] = 1; ?>
+                                <a href="?<?php echo http_build_query($q); ?>" class="px-3 py-1 border rounded bg-white text-gray-600 hover:bg-gray-50">1</a>
+                                <?php if ($startPage > 2): ?>
+                                    <span class="px-3 py-1 text-gray-500">...</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                            
+                            <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                <?php $q = $_GET; $q['p'] = $i; ?>
+                                <a href="?<?php echo http_build_query($q); ?>" class="px-3 py-1 border rounded <?php echo $i === $page ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 hover:bg-gray-50'; ?>">
+                                    <?php echo $i; ?>
+                                </a>
+                            <?php endfor; ?>
+                            
+                            <?php if ($endPage < $totalPages): ?>
+                                <?php if ($endPage < $totalPages - 1): ?>
+                                    <span class="px-3 py-1 text-gray-500">...</span>
+                                <?php endif; ?>
+                                <?php $q = $_GET; $q['p'] = $totalPages; ?>
+                                <a href="?<?php echo http_build_query($q); ?>" class="px-3 py-1 border rounded bg-white text-gray-600 hover:bg-gray-50"><?php echo $totalPages; ?></a>
+                            <?php endif; ?>
+                            
+                            <?php if ($page < $totalPages): ?>
+                                <?php $q = $_GET; $q['p'] = $page + 1; ?>
+                                <a href="?<?php echo http_build_query($q); ?>" class="px-3 py-1 border rounded bg-white text-gray-600 hover:bg-gray-50"><?php echo __('Next'); ?> &raquo;</a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
