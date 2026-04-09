@@ -197,7 +197,16 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <img src="<?php echo htmlspecialchars($adminImageUrl ?? ''); ?>" class="h-10 w-10 object-contain rounded">
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($p['name'] ?? ''); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                                    <div class="flex items-center gap-2">
+                                        <?php if (!empty($p['digital_delivery'])): ?>
+                                            <i class="fa-solid fa-cloud-arrow-down text-blue-500" title="Produto Digital"></i>
+                                        <?php else: ?>
+                                            <i class="fa-solid fa-box text-gray-400" title="Produto Físico"></i>
+                                        <?php endif; ?>
+                                        <span><?php echo htmlspecialchars($p['name'] ?? ''); ?></span>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($p['sku'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo formatMoney($p['price']); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($p['category_name'] ?? __('Uncategorized')); ?></td>
