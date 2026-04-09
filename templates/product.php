@@ -157,9 +157,6 @@ if ($primaryImage === '') {
 
         <div x-show="activeTab === 'description'" class="prose max-w-none text-gray-600">
             <?php echo $product['long_desc']; ?>
-            <div class="mt-8">
-                <img src="https://placehold.co/600x400?text=Chemical+Structure" alt="Chemical Structure" class="rounded border p-4">
-            </div>
         </div>
 
         <div x-show="activeTab === 'laudos'" class="text-gray-600">
