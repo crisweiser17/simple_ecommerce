@@ -250,8 +250,8 @@
                     ?>
 
                     <!-- Previous Page -->
-                    <?php if ($page > 1): ?>
-                        <a href="<?php echo $baseUrl . 'page=' . ($page - 1); ?>" class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
+                    <?php if ($currentPage > 1): ?>
+                        <a href="<?php echo $baseUrl . 'page=' . ($currentPage - 1); ?>" class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </a>
                     <?php else: ?>
@@ -262,7 +262,7 @@
 
                     <!-- Page Numbers -->
                     <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                        <?php if ($i == $page): ?>
+                        <?php if ($i == $currentPage): ?>
                             <span class="w-8 h-8 flex items-center justify-center rounded bg-orange-500 text-white font-bold"><?php echo $i; ?></span>
                         <?php else: ?>
                             <a href="<?php echo $baseUrl . 'page=' . $i; ?>" class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-700 hover:bg-gray-100 font-medium"><?php echo $i; ?></a>
@@ -270,8 +270,8 @@
                     <?php endfor; ?>
 
                     <!-- Next Page -->
-                    <?php if ($page < $totalPages): ?>
-                        <a href="<?php echo $baseUrl . 'page=' . ($page + 1); ?>" class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
+                    <?php if ($currentPage < $totalPages): ?>
+                        <a href="<?php echo $baseUrl . 'page=' . ($currentPage + 1); ?>" class="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </a>
                     <?php else: ?>

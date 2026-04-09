@@ -628,6 +628,11 @@
                                         <input type="number" min="1" name="product_card_aspect_height" value="<?php echo htmlspecialchars(getSetting('product_card_aspect_height', '1')); ?>" placeholder="Ex: 493" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                     </div>
                                 </div>
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Products per Page (Home)'); ?></label>
+                                    <input type="number" min="1" name="products_per_page" value="<?php echo htmlspecialchars(getSetting('products_per_page', '15')); ?>" placeholder="Ex: 15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <p class="text-xs text-gray-500 mt-1">Número de produtos exibidos por página na vitrine principal.</p>
+                                </div>
                             </div>
 
                             <div class="border-b pb-4 mb-4">

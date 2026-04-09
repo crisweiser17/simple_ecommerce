@@ -14,8 +14,54 @@
     $themeTextColor = getSetting('theme_text_color', '#1f2937');
     $isMultilangEnabled = getSetting('i18n_multilang_enabled', '1') === '1';
     $storeMode = getSetting('store_mode', 'ecommerce');
+    
+    // Open Graph Variables
+    $ogTitle = $storeName;
+    $ogDescription = '';
+    $ogImage = $brandMode === 'image' && !empty($brandLogoUrl) ? $brandLogoUrl : '';
+    $ogUrl = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/' . ltrim($_SERVER['REQUEST_URI'] ?? '/', '/');
+    $ogType = 'website';
+    
+    if (isset($product) && is_array($product)) {
+        $ogTitle = $product['name'] . ' - ' . $storeName;
+        $ogDescription = strip_tags($product['short_desc'] ?? '');
+        if (mb_strlen($ogDescription) > 160) {
+            $ogDescription = mb_substr($ogDescription, 0, 157) . '...';
+        }
+        
+        $primaryImg = $product['primary_image_url'] ?? '';
+        if ($primaryImg === '' && !empty($product['images']) && is_array($product['images'])) {
+            $primaryImg = $product['images'][0]['image_url'] ?? '';
+        }
+        
+        if ($primaryImg !== '') {
+            $ogImage = $primaryImg;
+        }
+        $ogType = 'product';
+    } elseif (isset($page) && is_array($page) && !empty($page['title'])) {
+        $ogTitle = __($page['title']) . ' - ' . $storeName;
+        $ogType = 'article';
+    }
+    
+    if ($ogImage !== '' && strpos($ogImage, 'http') !== 0) {
+        $ogImage = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/' . ltrim($ogImage, '/');
+    }
     ?>
-    <title><?php echo htmlspecialchars($storeName); ?></title>
+    <title><?php echo htmlspecialchars($ogTitle); ?></title>
+    <meta property="og:title" content="<?php echo htmlspecialchars($ogTitle); ?>">
+    <?php if ($ogDescription !== ''): ?>
+    <meta property="og:description" content="<?php echo htmlspecialchars($ogDescription); ?>">
+    <meta name="twitter:description" content="<?php echo htmlspecialchars($ogDescription); ?>">
+    <?php endif; ?>
+    <?php if ($ogImage !== ''): ?>
+    <meta property="og:image" content="<?php echo htmlspecialchars($ogImage); ?>">
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($ogImage); ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <?php endif; ?>
+    <meta property="og:url" content="<?php echo htmlspecialchars($ogUrl); ?>">
+    <meta property="og:type" content="<?php echo htmlspecialchars($ogType); ?>">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($storeName); ?>">
+    <meta name="twitter:title" content="<?php echo htmlspecialchars($ogTitle); ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
     <style>
@@ -149,12 +195,12 @@
                 ?>
                 <a href="/" class="<?php echo $isHome ? $activeClass : $inactiveClass; ?>"><?php echo __('All Products'); ?></a>
                 
-                <?php foreach ($navPages as $page): 
-                    $pageSlug = '/' . $page['slug'];
+                <?php foreach ($navPages as $navPage): 
+                    $pageSlug = '/' . $navPage['slug'];
                     $isActive = (isset($path) && $path === $pageSlug);
                 ?>
                     <a href="<?php echo htmlspecialchars($pageSlug); ?>" class="<?php echo $isActive ? $activeClass : $inactiveClass; ?>">
-                        <?php echo htmlspecialchars(__($page['title'])); ?>
+                        <?php echo htmlspecialchars(__($navPage['title'])); ?>
                     </a>
                 <?php endforeach; ?>
                 <a href="/contact" class="<?php echo $isContact ? $activeClass : $inactiveClass; ?>"><?php echo __('Contact Us'); ?></a>

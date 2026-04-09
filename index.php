@@ -187,10 +187,11 @@ switch ($path) {
     case '/home':
         $categorySlug = $_GET['category'] ?? null;
         $searchTerm = trim((string)($_GET['q'] ?? ''));
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        if ($page < 1) $page = 1;
-        $limit = 15;
-        $offset = ($page - 1) * $limit;
+        $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if ($currentPage < 1) $currentPage = 1;
+        $limit = (int)getSetting('products_per_page', '15');
+        if ($limit < 1) $limit = 15;
+        $offset = ($currentPage - 1) * $limit;
         
         $products = getAllProducts($categorySlug, $limit, $offset, $searchTerm);
         $totalProducts = countProducts($categorySlug, $searchTerm);
@@ -869,6 +870,9 @@ switch ($path) {
         
         updateSetting('product_card_aspect_width', $_POST['product_card_aspect_width'] ?? '1');
         updateSetting('product_card_aspect_height', $_POST['product_card_aspect_height'] ?? '1');
+        
+        $productsPerPage = max(1, (int)($_POST['products_per_page'] ?? 15));
+        updateSetting('products_per_page', (string)$productsPerPage);
 
         header('Location: /admin');
         exit;
