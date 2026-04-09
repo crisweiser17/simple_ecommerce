@@ -60,10 +60,10 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                 
                 <div class="border-t border-gray-800 my-2"></div>
                 <div class="px-4 py-2">
-                    <span class="text-xs text-gray-500 uppercase tracking-wider block mb-2">Idioma / Language</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wider block mb-2"><?php echo __('Language'); ?></span>
                     <div class="flex gap-2">
-                        <a href="?lang=en" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">EN</a>
-                        <a href="?lang=pt" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'pt' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">PT</a>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'en'; echo '?' . http_build_query($q); ?>" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">EN</a>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'pt'; echo '?' . http_build_query($q); ?>" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'pt' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">PT</a>
                     </div>
                 </div>
             </nav>
@@ -103,7 +103,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700"><?php echo __('Slug'); ?></label>
-                                    <input type="text" id="product_slug" name="slug" value="<?php echo htmlspecialchars($product['slug'] ?? ''); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="ex: bpc-157-10mg">
+                                    <input type="text" id="product_slug" name="slug" value="<?php echo htmlspecialchars($product['slug'] ?? ''); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="<?php echo __('e.g. bpc-157-10mg'); ?>">
                                     <p class="mt-1 text-xs text-gray-500"><?php echo __('Used in product URL. If duplicated, a suffix is added automatically.'); ?></p>
                                 </div>
 
@@ -173,7 +173,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
-                                    <p class="mt-2 text-xs text-gray-500">Arraste e solte para reordenar. A primeira imagem sempre será a principal (capa). Clique no X vermelho para excluir imagens (inclusive placeholders indesejados).</p>
+                                    <p class="mt-2 text-xs text-gray-500"><?php echo __('Drag and drop to reorder. The first image will be the primary one. Click the red X to remove images.'); ?></p>
                                     
                                     <div class="mt-4 flex gap-2 max-w-lg">
                                         <input type="text" id="new_image_url" placeholder="<?php echo __('Add URL'); ?>..." class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm">
@@ -291,13 +291,13 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700"><?php echo __('Dias para Expirar'); ?></label>
-                                        <input type="number" min="0" name="download_expiry_days" value="<?php echo htmlspecialchars($product['download_expiry_days'] ?? ''); ?>" placeholder="<?php echo __('<?php echo __('Leave blank to not expire'); ?>'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                        <input type="number" min="0" name="download_expiry_days" value="<?php echo htmlspecialchars($product['download_expiry_days'] ?? ''); ?>" placeholder="<?php echo __('Leave blank to not expire'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                                     </div>
                                     
                                     <!-- Widget Embed Code Box -->
                                     <?php if(isset($product['slug']) && $product['slug']): ?>
                                     <div class="mt-4 p-3 bg-gray-100 rounded border border-gray-300 text-xs">
-                                        <p class="font-bold mb-1 text-gray-800">Widget de Venda Externa (Embed)</p>
+                                        <p class="font-bold mb-1 text-gray-800"><?php echo __('External Sale Widget (Embed)'); ?></p>
                                         <p class="text-gray-500 mb-2">Copie e cole este código em qualquer site para exibir um botão de compra deste produto.</p>
                                         <textarea readonly class="w-full bg-gray-800 text-green-400 p-2 rounded font-mono h-24" onclick="this.select()">&lt;!-- Botão de Compra --&gt;
 &lt;div data-checkout="<?php echo htmlspecialchars($product['slug']); ?>" data-color="#017737" data-text="Comprar agora"&gt;&lt;/div&gt;
@@ -461,9 +461,9 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                         maxFileSize: '5MB',
                         labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione imagens</span>',
                         labelFileTypeNotAllowed: '<?php echo __("Invalid file type"); ?>',
-                        fileValidateTypeLabelExpectedTypes: 'Use PNG, JPG, WEBP ou GIF',
-                        labelMaxFileSizeExceeded: 'Arquivo muito grande',
-                        labelMaxFileSize: 'Tamanho máximo: {filesize}'
+                        fileValidateTypeLabelExpectedTypes: '<?php echo __('Use PNG, JPG'); ?>, WEBP ou GIF',
+                        labelMaxFileSizeExceeded: '<?php echo __('File is too large'); ?>',
+                        labelMaxFileSize: '<?php echo __('Maximum file size is'); ?> {filesize}'
                     });
                 }
 
@@ -478,8 +478,8 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                         labelIdle: 'Arraste e solte o PDF ou <span class="filepond--label-action">selecione o arquivo</span>',
                         labelFileTypeNotAllowed: '<?php echo __("Invalid file type"); ?>',
                         fileValidateTypeLabelExpectedTypes: 'Use PDF',
-                        labelMaxFileSizeExceeded: 'Arquivo muito grande',
-                        labelMaxFileSize: 'Tamanho máximo: {filesize}'
+                        labelMaxFileSizeExceeded: '<?php echo __('File is too large'); ?>',
+                        labelMaxFileSize: '<?php echo __('Maximum file size is'); ?> {filesize}'
                     });
                 }
 
@@ -493,9 +493,9 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                         maxFileSize: '25MB',
                         labelIdle: 'Arraste e solte o arquivo digital ou <span class="filepond--label-action">selecione o arquivo</span>',
                         labelFileTypeNotAllowed: '<?php echo __("Invalid file type"); ?>',
-                        fileValidateTypeLabelExpectedTypes: 'Use PDF, ZIP, MP4 ou DOCX',
-                        labelMaxFileSizeExceeded: 'Arquivo muito grande',
-                        labelMaxFileSize: 'Tamanho máximo: {filesize}'
+                        fileValidateTypeLabelExpectedTypes: '<?php echo __('Use PDF, ZIP, MP4 or DOCX'); ?>',
+                        labelMaxFileSizeExceeded: '<?php echo __('File is too large'); ?>',
+                        labelMaxFileSize: '<?php echo __('Maximum file size is'); ?> {filesize}'
                     });
                 }
             }

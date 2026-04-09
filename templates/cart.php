@@ -104,7 +104,7 @@
 
         <!-- Checkout Sidebar -->
         <div class="bg-white p-6 rounded border shadow-sm h-fit sticky top-24">
-            <h2 class="text-xl font-bold mb-4 text-gray-800"><?php echo $storeMode === 'catalog' ? __('<?php echo __('Request Quote'); ?>') : __('Order Summary'); ?></h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-800"><?php echo $storeMode === 'catalog' ? __('Request Quote') : __('Order Summary'); ?></h2>
             
             <?php if ($storeMode === 'ecommerce'): ?>
             <div class="flex justify-between mb-2 text-gray-700">

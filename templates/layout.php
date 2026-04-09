@@ -56,9 +56,9 @@
                 <!-- Language Switcher (Desktop) -->
                 <?php if ($isMultilangEnabled): ?>
                     <div class="hidden md:flex items-center gap-4 text-sm text-gray-400 mr-6">
-                        <a href="?lang=en" class="<?php echo $_SESSION['lang'] === 'en' ? 'text-white font-bold' : 'hover:text-white'; ?>">EN</a>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'en'; echo '?' . http_build_query($q); ?>" class="<?php echo $_SESSION['lang'] === 'en' ? 'text-white font-bold' : 'hover:text-white'; ?>">EN</a>
                         <span class="text-gray-600">|</span>
-                        <a href="?lang=pt" class="<?php echo $_SESSION['lang'] === 'pt' ? 'text-white font-bold' : 'hover:text-white'; ?>">PT</a>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'pt'; echo '?' . http_build_query($q); ?>" class="<?php echo $_SESSION['lang'] === 'pt' ? 'text-white font-bold' : 'hover:text-white'; ?>">PT</a>
                     </div>
                 <?php endif; ?>
 
@@ -122,8 +122,8 @@
                 
                 <?php if ($isMultilangEnabled): ?>
                     <div class="flex items-center justify-center gap-6 text-sm text-gray-400 border-t border-gray-800 pt-3">
-                        <a href="?lang=en" class="px-4 py-1 rounded-full <?php echo $_SESSION['lang'] === 'en' ? 'bg-gray-800 text-white font-medium' : 'hover:text-white'; ?>">EN</a>
-                        <a href="?lang=pt" class="px-4 py-1 rounded-full <?php echo $_SESSION['lang'] === 'pt' ? 'bg-gray-800 text-white font-medium' : 'hover:text-white'; ?>">PT</a>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'en'; echo '?' . http_build_query($q); ?>" class="px-4 py-1 rounded-full <?php echo $_SESSION['lang'] === 'en' ? 'bg-gray-800 text-white font-medium' : 'hover:text-white'; ?>">EN</a>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'pt'; echo '?' . http_build_query($q); ?>" class="px-4 py-1 rounded-full <?php echo $_SESSION['lang'] === 'pt' ? 'bg-gray-800 text-white font-medium' : 'hover:text-white'; ?>">PT</a>
                     </div>
                 <?php endif; ?>
             </div>

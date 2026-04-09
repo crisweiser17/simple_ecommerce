@@ -125,10 +125,10 @@
                 
                 <div class="border-t border-gray-800 my-2"></div>
                 <div class="px-4 py-2">
-                    <span class="text-xs text-gray-500 uppercase tracking-wider block mb-2">Idioma / Language</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wider block mb-2"><?php echo __('Language'); ?></span>
                     <div class="flex gap-2">
-                        <a href="?lang=en" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">EN</a>
-                        <a href="?lang=pt" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'pt' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">PT</a>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'en'; echo '?' . http_build_query($q); ?>" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">EN</a>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'pt'; echo '?' . http_build_query($q); ?>" class="text-xs px-2 py-1 rounded <?php echo ($_SESSION['lang'] ?? 'en') === 'pt' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'; ?>">PT</a>
                     </div>
                 </div>
             </nav>
@@ -356,7 +356,7 @@
                                             $wa_number = preg_replace('/\D/', '', $o['customer_whatsapp']);
                                             $wa_link = 'https://wa.me/55' . $wa_number;
                                         ?>
-                                            <a href="<?php echo $wa_link; ?>" target="_blank" class="text-green-600 hover:text-green-800 flex items-center gap-1 w-fit" title="Falar no WhatsApp">
+                                            <a href="<?php echo $wa_link; ?>" target="_blank" class="text-green-600 hover:text-green-800 flex items-center gap-1 w-fit" title="<?php echo __('Contact on WhatsApp'); ?>">
                                                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
                                                 <?php echo htmlspecialchars($o['customer_whatsapp']); ?>
                                             </a>
@@ -432,7 +432,7 @@
                                                 $wa_number = preg_replace('/\D/', '', $customer['whatsapp']);
                                                 $wa_link = 'https://wa.me/55' . $wa_number;
                                             ?>
-                                                <a href="<?php echo $wa_link; ?>" target="_blank" class="text-green-600 hover:text-green-800 flex items-center gap-1 w-fit" title="Falar no WhatsApp">
+                                                <a href="<?php echo $wa_link; ?>" target="_blank" class="text-green-600 hover:text-green-800 flex items-center gap-1 w-fit" title="<?php echo __('Contact on WhatsApp'); ?>">
                                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
                                                     <?php echo htmlspecialchars($customer['whatsapp']); ?>
                                                 </a>
@@ -475,7 +475,7 @@
                             <div class="border-b pb-4 mb-4">
                                 <h3 class="text-lg font-semibold mb-3"><?php echo __('Store Branding'); ?></h3>
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Nome da loja</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Store Name'); ?></label>
                                     <input type="text" name="store_name" value="<?php echo htmlspecialchars(getSetting('store_name', 'R2 Research Labs')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                 </div>
                                 <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -492,28 +492,28 @@
                                     <?php $brandMode = getSetting('brand_mode', 'text'); ?>
                                     <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Logo Display'); ?></label>
                                     <select name="brand_mode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                                        <option value="text" <?php echo $brandMode === 'text' ? 'selected' : ''; ?>>Texto</option>
-                                        <option value="image" <?php echo $brandMode === 'image' ? 'selected' : ''; ?>>Imagem</option>
+                                        <option value="text" <?php echo $brandMode === 'text' ? 'selected' : ''; ?>><?php echo __('Text'); ?></option>
+                                        <option value="image" <?php echo $brandMode === 'image' ? 'selected' : ''; ?>><?php echo __('Image'); ?></option>
                                     </select>
                                 </div>
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">URL do logo</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Logo URL'); ?></label>
                                     <input type="text" name="brand_logo_url" value="<?php echo htmlspecialchars(getSetting('brand_logo_url', '')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Ou envie uma imagem</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Or upload an image'); ?></label>
                                     <input type="file" name="brand_logo_file" accept="image/*" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" data-filepond="image-single">
                                     <?php if($logo = getSetting('brand_logo_url', '')): ?>
                                         <div class="mt-2 border rounded p-2 bg-gray-50">
-                                            <img src="<?php echo htmlspecialchars($logo); ?>" alt="Logo atual" class="max-h-20 object-contain">
+                                            <img src="<?php echo htmlspecialchars($logo); ?>" alt="<?php echo __('Current Logo'); ?>" class="max-h-20 object-contain">
                                         </div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2">Largura do logo (px)</label>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Logo Width (px)'); ?></label>
                                         <input type="number" min="20" max="1200" name="brand_logo_width" value="<?php echo htmlspecialchars(getSetting('brand_logo_width', '160')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                     </div>
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2">Altura do logo (px)</label>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Logo Height (px)'); ?></label>
                                         <input type="number" min="20" max="600" name="brand_logo_height" value="<?php echo htmlspecialchars(getSetting('brand_logo_height', '48')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                     </div>
                                 </div>
@@ -522,11 +522,11 @@
                             <div class="border-b pb-4 mb-4">
                                 <h3 class="text-lg font-semibold mb-3"><?php echo __('Store Operation Mode'); ?></h3>
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Selecione o modo</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Select Mode'); ?></label>
                                     <select name="store_mode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
-                                        <option value="ecommerce" <?php echo getSetting('store_mode', 'ecommerce') === 'ecommerce' ? 'selected' : ''; ?>>E-commerce Completo (Carrinho, Preços, Checkout)</option>
-                                        <option value="catalog" <?php echo getSetting('store_mode', 'ecommerce') === 'catalog' ? 'selected' : ''; ?>>Modo Catálogo (Sem preços, Lista de Desejos, Orçamento em PDF)</option>
-                                        <option value="informational" <?php echo getSetting('store_mode', 'ecommerce') === 'informational' ? 'selected' : ''; ?>>Modo Informativo (Sem preços, Sem carrinho, Apenas vitrine)</option>
+                                        <option value="ecommerce" <?php echo getSetting('store_mode', 'ecommerce') === 'ecommerce' ? 'selected' : ''; ?>><?php echo __('Full E-commerce (Cart, Prices, Checkout)'); ?></option>
+                                        <option value="catalog" <?php echo getSetting('store_mode', 'ecommerce') === 'catalog' ? 'selected' : ''; ?>><?php echo __('Catalog Mode (No prices, Wishlist, PDF Quote)'); ?></option>
+                                        <option value="informational" <?php echo getSetting('store_mode', 'ecommerce') === 'informational' ? 'selected' : ''; ?>><?php echo __('Informational Mode (No prices, No cart, Showcase only)'); ?></option>
                                     </select>
                                     <p class="text-xs text-gray-500 mt-2">
                                         <strong>E-commerce:</strong> Fluxo normal de vendas com pagamento.<br>
@@ -564,10 +564,10 @@
                             </div>
 
                             <div class="border-b pb-4 mb-4">
-                                <h3 class="text-lg font-semibold mb-3">Layout do Produto</h3>
+                                <h3 class="text-lg font-semibold mb-3"><?php echo __('Product Layout'); ?></h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2">Proporção da Imagem - Largura (Aspect Ratio)</label>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Image Aspect Ratio - Width'); ?></label>
                                         <input type="number" min="1" name="product_card_aspect_width" value="<?php echo htmlspecialchars(getSetting('product_card_aspect_width', '1')); ?>" placeholder="Ex: 363" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                     </div>
                                     <div>
@@ -609,7 +609,7 @@
                                         <input type="checkbox" name="enable_whatsapp_button" value="1" <?php echo getSetting('enable_whatsapp_button', '1') === '1' ? 'checked' : ''; ?> class="form-checkbox h-5 w-5 text-blue-600">
                                         <span class="ml-2 text-gray-700 text-sm font-bold"><?php echo __('Enable WhatsApp checkout button'); ?></span>
                                     </label>
-                                    <p class="text-gray-500 text-xs mt-1 ml-7">Se desativado, o botão do WhatsApp não aparecerá no carrinho nem na página de sucesso.</p>
+                                    <p class="text-gray-500 text-xs mt-1 ml-7"><?php echo __('If disabled, WhatsApp button will not appear'); ?> no carrinho nem na página de sucesso.</p>
                                 </div>
                             </div>
                             
@@ -633,7 +633,7 @@
                                         <input type="text" name="smtp_host" value="<?php echo htmlspecialchars(getSetting('smtp_host', 'smtp.resend.com')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                     </div>
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2">Porta</label>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Port'); ?></label>
                                         <input type="text" name="smtp_port" value="<?php echo htmlspecialchars(getSetting('smtp_port', '587')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                     </div>
                                 </div>
@@ -644,7 +644,7 @@
                                         <p class="text-xs text-gray-500 mt-1">Para Resend, use “resend”.</p>
                                     </div>
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2">Senha / API Key</label>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Password / API Key'); ?></label>
                                         <?php $hasPass = (bool) getSetting('smtp_password', ''); ?>
                                         <input type="password" name="smtp_password" value="<?php echo $hasPass ? '********' : ''; ?>" placeholder="<?php echo $hasPass ? '********' : 're_xxxxxxxxxxxxxxxxx'; ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                         <p class="text-xs text-gray-500 mt-1">Para Resend, use a API Key como senha.</p>
@@ -652,7 +652,7 @@
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-bold mb-2">Criptografia</label>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Encryption'); ?></label>
                                         <?php $enc = getSetting('smtp_encryption', 'tls'); ?>
                                         <select name="smtp_encryption" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                             <option value="tls" <?php echo $enc === 'tls' ? 'selected' : ''; ?>>STARTTLS (587)</option>
@@ -672,11 +672,11 @@
                                     </div>
                                 </div>
                                 <div class="mt-4">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Reply-To (opcional)</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Reply-To (optional)'); ?></label>
                                     <input type="email" name="smtp_reply_to" value="<?php echo htmlspecialchars(getSetting('smtp_reply_to', '')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                 </div>
                                 <div class="mt-4">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">E-mail para Receber Contatos</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Email to Receive Contacts'); ?></label>
                                     <p class="text-xs text-gray-500 mb-1">E-mail que receberá as mensagens enviadas pelo formulário de contato. Se vazio, usará o Reply-To ou From Email.</p>
                                     <input type="email" name="contact_receive_email" value="<?php echo htmlspecialchars(getSetting('contact_receive_email', '')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                 </div>
@@ -692,8 +692,8 @@
                             <h3 class="text-lg font-semibold mb-3"><?php echo __('Send Test'); ?></h3>
                             <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
                                 <div class="flex-1">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">E-mail de teste</label>
-                                    <input type="email" x-model="testEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none" placeholder="ex.: e@crisweiser.com">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Test Email'); ?></label>
+                                    <input type="email" x-model="testEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none" placeholder="<?php echo __('e.g. email@example.com'); ?>">
                                 </div>
                                 <button type="button" @click="testSMTP" :disabled="smtpTesting" class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                                     <span x-show="!smtpTesting"><?php echo __('Send test email'); ?></span>
@@ -703,7 +703,7 @@
                             <template x-if="smtpTestMessage">
                                 <p class="mt-3 text-sm" :class="smtpTestSuccess ? 'text-green-700' : 'text-red-700'" x-text="smtpTestMessage"></p>
                             </template>
-                            <p class="mt-2 text-xs text-gray-500">Certifique-se de ativar o SMTP e preencher as credenciais acima antes de testar.</p>
+                            <p class="mt-2 text-xs text-gray-500"><?php echo __('Make sure to enable SMTP'); ?> e preencher as credenciais acima antes de testar.</p>
                         </div>
                     </div>
 
@@ -718,10 +718,10 @@
                         ?>
                         <form action="/admin/save-payment-settings" method="POST" class="space-y-4">
                             <div>
-                                <label class="block text-gray-700 text-sm font-bold mb-2">Provider ativo</label>
+                                <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Active Provider'); ?></label>
                                 <select name="payment_provider_active" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                     <option value="mercadopago" <?php echo $activeProvider === 'mercadopago' ? 'selected' : ''; ?>>Mercado Pago</option>
-                                    <option value="manual_pix" <?php echo $activeProvider === 'manual_pix' ? 'selected' : ''; ?>>Pix manual</option>
+                                    <option value="manual_pix" <?php echo $activeProvider === 'manual_pix' ? 'selected' : ''; ?>><?php echo __('Manual Pix'); ?></option>
                                 </select>
                             </div>
                             <div>
@@ -736,9 +736,9 @@
                             <div class="grid grid-cols-1 gap-4 border rounded p-4 bg-gray-50">
                                 <h4 class="font-semibold text-gray-800">Mercado Pago</h4>
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Access Token (Chave de Produção)</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Access Token (Production Key)'); ?></label>
                                     <input type="text" name="payment_mercadopago_access_token" value="<?php echo htmlspecialchars(getSetting('payment_mercadopago_access_token', '')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
-                                    <p class="text-xs text-gray-500 mt-1">Insira a chave que inicia com APP_USR- ou TEST-.</p>
+                                    <p class="text-xs text-gray-500 mt-1"><?php echo __('Enter key starting with APP_USR- or TEST-.'); ?></p>
                                 </div>
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2">Assinatura Secreta do Webhook (Webhook Secret)</label>
@@ -760,7 +760,7 @@
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 gap-4 border rounded p-4 bg-gray-50">
-                                <h4 class="font-semibold text-gray-800">Pix manual</h4>
+                                <h4 class="font-semibold text-gray-800"><?php echo __('Manual Pix'); ?></h4>
                                 <div>
                                     <label class="flex items-center mb-2">
                                         <input type="checkbox" name="payment_provider_modules[]" value="manual_pix" <?php echo in_array('manual_pix', $providerModules, true) ? 'checked' : ''; ?> class="form-checkbox h-5 w-5 text-blue-600">
@@ -768,11 +768,11 @@
                                     </label>
                                 </div>
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Chave PIX</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('PIX Key'); ?></label>
                                     <input type="text" name="payment_manual_pix_key" value="<?php echo htmlspecialchars(getSetting('payment_manual_pix_key', '')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                 </div>
                                 <div>
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Nome do recebedor (Titular da Conta)</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Receiver Name (Account Holder)'); ?></label>
                                     <input type="text" name="payment_manual_pix_recipient_name" value="<?php echo htmlspecialchars(getSetting('payment_manual_pix_recipient_name', '')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                                 </div>
                             </div>
@@ -781,7 +781,7 @@
                                 <h4 class="font-semibold text-gray-800"><?php echo __('Payment Instructions'); ?></h4>
                                 <label class="flex items-center mb-2">
                                     <input type="checkbox" name="payment_instructions_enabled" value="1" <?php echo getSetting('payment_instructions_enabled', '0') === '1' ? 'checked' : ''; ?> class="form-checkbox h-5 w-5 text-blue-600">
-                                    <span class="ml-2 text-gray-700 text-sm font-bold">Exibir <?php echo __('Payment Instructions'); ?> no Pedido Concluído</span>
+                                    <span class="ml-2 text-gray-700 text-sm font-bold">Exibir <?php echo __('Payment Instructions'); ?> <?php echo __('on Order Success'); ?></span>
                                 </label>
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Instructions Text'); ?></label>
@@ -1071,14 +1071,14 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700"><?php echo __('Name'); ?></label>
-                            <input type="text" name="name" x-model="editVariation.name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="e.g. Tamanho">
+                            <input type="text" name="name" x-model="editVariation.name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="<?php echo __('e.g. Size'); ?>">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Options'); ?></label>
                             <template x-for="(opt, index) in editVariation.options" :key="index">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <input type="text" :name="`options[${index}][name]`" x-model="opt.name" required class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Nome da opção (ex: Grande)">
+                                    <input type="text" :name="`options[${index}][name]`" x-model="opt.name" required class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="<?php echo __('Option Name (e.g. Large)'); ?>">
                                     <button type="button" @click="editVariation.options.splice(index, 1)" class="text-red-500 hover:text-red-700 p-2">
                                         <i class="fa-solid fa-times"></i>
                                     </button>
@@ -1193,7 +1193,7 @@
                     storeAsFile: true,
                     credits: false,
                     allowReorder: false,
-                    labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione um arquivo</span>'
+                    labelIdle: '<?php echo __('Drag & Drop your files or <span class="filepond--label-action"> Browse </span>'); ?>'
                 };
 
                 if (mode === 'image-single') {
@@ -1201,16 +1201,16 @@
                     options.acceptedFileTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
                     options.maxFileSize = '5MB';
                     options.labelFileTypeNotAllowed = '<?php echo __("Invalid file type"); ?>';
-                    options.fileValidateTypeLabelExpectedTypes = 'Use PNG, JPG, WEBP ou GIF';
-                    options.labelMaxFileSizeExceeded = 'Arquivo muito grande';
-                    options.labelMaxFileSize = 'Tamanho máximo: {filesize}';
+                    options.fileValidateTypeLabelExpectedTypes = '<?php echo __('Use PNG, JPG'); ?>, WEBP ou GIF';
+                    options.labelMaxFileSizeExceeded = '<?php echo __('File is too large'); ?>';
+                    options.labelMaxFileSize = '<?php echo __('Maximum file size is'); ?> {filesize}';
                 } else if (mode === 'csv-single') {
                     options.allowMultiple = false;
                     options.acceptedFileTypes = ['text/csv', 'application/csv', 'text/plain'];
                     options.maxFileSize = '10MB';
                     options.allowImagePreview = false;
                     options.labelFileTypeNotAllowed = '<?php echo __("Invalid file type"); ?>';
-                    options.fileValidateTypeLabelExpectedTypes = 'Use arquivo CSV';
+                    options.fileValidateTypeLabelExpectedTypes = '<?php echo __('Use CSV file'); ?>';
                 }
 
                 FilePond.create(input, options);

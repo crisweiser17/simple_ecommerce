@@ -9,7 +9,7 @@
     </p>
 
     <div class="bg-gray-50 rounded-lg p-6 mb-8 text-left border border-gray-200">
-        <h2 class="font-bold text-gray-900 mb-4 text-center"><?php echo __('<?php echo __('Quote Summary'); ?>'); ?></h2>
+        <h2 class="font-bold text-gray-900 mb-4 text-center"><?php echo __('Quote Summary'); ?></h2>
         <div class="space-y-2 text-sm text-gray-600">
             <p><span class="font-medium text-gray-800"><?php echo __('Número:'); ?></span> #<?php echo str_pad((string)$order['id'], 5, '0', STR_PAD_LEFT); ?></p>
             <p><span class="font-medium text-gray-800"><?php echo __('Data:'); ?></span> <?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?></p>
