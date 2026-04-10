@@ -152,7 +152,28 @@
             <div x-show="tab === 'products'">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                     <h1 class="text-2xl font-bold"><?php echo __('Products'); ?></h1>
+                    
+                    <!-- Search Bar for Admin Products -->
+                    <form action="/admin" method="GET" class="flex-1 max-w-md mx-4 hidden sm:flex">
+                        <input type="hidden" name="p" value="1">
+                        <div class="relative w-full">
+                            <input type="text" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" placeholder="<?php echo __('Search products by name or SKU...'); ?>" class="w-full border border-gray-300 rounded-md shadow-sm pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            <button type="submit" class="absolute right-2 top-2 text-gray-400 hover:text-indigo-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 4 4 0 0114 0z"></path></svg>
+                            </button>
+                        </div>
+                    </form>
+
                     <div class="flex flex-wrap items-center gap-2">
+                        <!-- Mobile Search (Visible only on small screens) -->
+                        <form action="/admin" method="GET" class="w-full sm:hidden mb-2 flex">
+                            <input type="hidden" name="p" value="1">
+                            <input type="text" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" placeholder="<?php echo __('Search products...'); ?>" class="flex-1 border border-gray-300 rounded-l-md shadow-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            <button type="submit" class="bg-gray-200 border border-l-0 border-gray-300 rounded-r-md px-3 py-2 text-gray-600 hover:bg-gray-300">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 4 4 0 0114 0z"></path></svg>
+                            </button>
+                        </form>
+
                         <a href="/admin/products/csv-template" class="bg-gray-700 text-white px-3 py-2 text-sm rounded hover:bg-gray-800"><?php echo __('CSV Template'); ?></a>
                         <a href="/admin/products/export-csv" class="bg-blue-600 text-white px-3 py-2 text-sm rounded hover:bg-blue-700"><?php echo __('Export CSV'); ?></a>
                         

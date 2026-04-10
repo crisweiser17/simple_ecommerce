@@ -1,7 +1,40 @@
 <?php
 require_once __DIR__ . '/db.php';
 
+function ensureOrdersSchema() {
+    global $pdo;
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+    $initialized = true;
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_name TEXT,
+        customer_whatsapp TEXT,
+        customer_email TEXT,
+        customer_address TEXT,
+        customer_cep TEXT,
+        customer_street TEXT,
+        customer_number TEXT,
+        customer_complement TEXT,
+        customer_neighborhood TEXT,
+        customer_city TEXT,
+        customer_state TEXT,
+        items_json TEXT,
+        total_amount REAL,
+        status TEXT DEFAULT 'pending',
+        payment_status TEXT DEFAULT 'pending',
+        payment_provider TEXT,
+        paid_at DATETIME,
+        tracking_number TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+}
+
 function createOrder($customerData, $items, $total) {
+    ensureOrdersSchema();
     global $pdo;
     $status = $customerData['status'] ?? 'pending_payment';
     $paymentStatus = $customerData['payment_status'] ?? 'pending';
@@ -40,12 +73,14 @@ function createOrder($customerData, $items, $total) {
 }
 
 function getAllOrders() {
+    ensureOrdersSchema();
     global $pdo;
     $stmt = $pdo->query("SELECT * FROM orders ORDER BY created_at DESC");
     return $stmt->fetchAll();
 }
 
 function getOrder($id) {
+    ensureOrdersSchema();
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
     $stmt->execute([$id]);
@@ -53,6 +88,7 @@ function getOrder($id) {
 }
 
 function updateOrder($id, $data) {
+    ensureOrdersSchema();
     global $pdo;
     
     // Fetch old order to compare status
@@ -160,12 +196,14 @@ function updateOrder($id, $data) {
 }
 
 function deleteOrder($id) {
+    ensureOrdersSchema();
     global $pdo;
     $stmt = $pdo->prepare("DELETE FROM orders WHERE id = ?");
     return $stmt->execute([$id]);
 }
 
 function getOrdersByEmail($email) {
+    ensureOrdersSchema();
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM orders WHERE customer_email = ? ORDER BY created_at DESC");
     $stmt->execute([$email]);

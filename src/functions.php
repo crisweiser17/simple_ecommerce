@@ -18,7 +18,22 @@ function formatMoney($amount) {
     }
 }
 
+function ensureSettingsSchema() {
+    global $pdo;
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+    $initialized = true;
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    )");
+}
+
 function getSetting($key, $default = '') {
+    ensureSettingsSchema();
     global $pdo;
     $stmt = $pdo->prepare("SELECT value FROM settings WHERE key = ?");
     $stmt->execute([$key]);
@@ -27,6 +42,7 @@ function getSetting($key, $default = '') {
 }
 
 function updateSetting($key, $value) {
+    ensureSettingsSchema();
     global $pdo;
     $stmt = $pdo->prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = ?");
     return $stmt->execute([$key, $value, $value]);

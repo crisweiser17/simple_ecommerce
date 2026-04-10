@@ -11,6 +11,8 @@ function ensurePaymentsSchema()
     }
     $initialized = true;
 
+    ensureOrdersSchema();
+
     $pdo->exec("CREATE TABLE IF NOT EXISTS payments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         order_id INTEGER NOT NULL,

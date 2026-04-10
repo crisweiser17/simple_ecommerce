@@ -56,6 +56,29 @@ function ensureProductsSchema() {
     }
 
     global $pdo;
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        sku TEXT,
+        slug TEXT UNIQUE,
+        price REAL,
+        image_url TEXT,
+        category TEXT,
+        category_id INTEGER,
+        short_desc TEXT,
+        long_desc TEXT,
+        pdf_url TEXT,
+        pdf_label TEXT,
+        type TEXT DEFAULT 'physical',
+        digital_delivery INTEGER DEFAULT 0,
+        download_limit INTEGER DEFAULT 0,
+        download_expiry_days INTEGER DEFAULT 0,
+        file_url TEXT,
+        variations_json TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+
     $stmt = $pdo->query("PRAGMA table_info(products)");
     $columns = $stmt->fetchAll(PDO::FETCH_COLUMN, 1);
 

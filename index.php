@@ -58,6 +58,12 @@ require_once __DIR__ . '/src/payment_engine.php';
 require_once __DIR__ . '/src/FileUploader.php';
 
 tryAutoLogin();
+ensureSettingsSchema();
+ensureUsersSchema();
+ensureCategoriesSchema();
+ensureProductsSchema();
+ensurePagesSchema();
+ensureOrdersSchema();
 ensurePaymentsSchema();
 
 function normalizeImageUrlsFromForm($urls) {
@@ -703,8 +709,10 @@ switch ($path) {
         $perPage = 20;
         $offset = ($page - 1) * $perPage;
         
-        $products = getAllProducts(null, $perPage, $offset);
-        $totalProducts = countProducts();
+        $adminSearchTerm = isset($_GET['q']) ? trim($_GET['q']) : '';
+        
+        $products = getAllProducts(null, $perPage, $offset, $adminSearchTerm);
+        $totalProducts = countProducts(null, $adminSearchTerm);
         $totalPages = max(1, ceil($totalProducts / $perPage));
         
         $orders = getAllOrders();

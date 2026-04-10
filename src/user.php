@@ -1,7 +1,42 @@
 <?php
 require_once __DIR__ . '/db.php';
 
+function ensureUsersSchema() {
+    global $pdo;
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+    $initialized = true;
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        login_token TEXT,
+        token_expiry DATETIME,
+        remember_selector TEXT UNIQUE,
+        remember_token_hash TEXT,
+        remember_expires_at DATETIME,
+        is_admin INTEGER DEFAULT 0,
+        admin_bypass_token TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        name TEXT,
+        whatsapp TEXT,
+        cep TEXT,
+        street TEXT,
+        number TEXT,
+        complement TEXT,
+        neighborhood TEXT,
+        city TEXT,
+        state TEXT
+    )");
+
+    $stmt = $pdo->prepare("INSERT OR IGNORE INTO users (email, is_admin) VALUES (?, ?)");
+    $stmt->execute(['admin@r2.com', 1]);
+}
+
 function getUser($id) {
+    ensureUsersSchema();
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->execute([$id]);
@@ -9,6 +44,7 @@ function getUser($id) {
 }
 
 function getAdminCustomers() {
+    ensureUsersSchema();
     global $pdo;
     $sql = "
         SELECT
@@ -37,6 +73,7 @@ function getAdminCustomers() {
 }
 
 function getAdminCustomerDetails($id) {
+    ensureUsersSchema();
     global $pdo;
     $sql = "
         SELECT
@@ -61,6 +98,7 @@ function getAdminCustomerDetails($id) {
 }
 
 function updateUser($id, $data) {
+    ensureUsersSchema();
     global $pdo;
     
     // Whitelist allowed fields
@@ -87,12 +125,14 @@ function updateUser($id, $data) {
 }
 
 function getAdminUsers() {
+    ensureUsersSchema();
     global $pdo;
     $stmt = $pdo->query("SELECT id, name, email, admin_bypass_token, created_at FROM users WHERE is_admin = 1 ORDER BY id ASC");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function promoteUserToAdmin($email, $name = null, $token = null) {
+    ensureUsersSchema();
     global $pdo;
     
     // First check if user exists

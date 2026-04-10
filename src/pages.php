@@ -1,12 +1,31 @@
 <?php
 
+function ensurePagesSchema() {
+    global $pdo;
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+    $initialized = true;
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS pages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        content TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+}
+
 function getAllPages() {
+    ensurePagesSchema();
     global $pdo;
     $stmt = $pdo->query("SELECT * FROM pages ORDER BY title ASC");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function getPage($id) {
+    ensurePagesSchema();
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM pages WHERE id = ?");
     $stmt->execute([$id]);
@@ -14,6 +33,7 @@ function getPage($id) {
 }
 
 function getPageBySlug($slug) {
+    ensurePagesSchema();
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM pages WHERE slug = ?");
     $stmt->execute([$slug]);
@@ -21,6 +41,7 @@ function getPageBySlug($slug) {
 }
 
 function createPage($data) {
+    ensurePagesSchema();
     global $pdo;
     $title = $data['title'];
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
@@ -31,6 +52,7 @@ function createPage($data) {
 }
 
 function updatePage($id, $data) {
+    ensurePagesSchema();
     global $pdo;
     $title = $data['title'];
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
@@ -41,6 +63,7 @@ function updatePage($id, $data) {
 }
 
 function deletePage($id) {
+    ensurePagesSchema();
     global $pdo;
     $stmt = $pdo->prepare("DELETE FROM pages WHERE id = ?");
     return $stmt->execute([$id]);
