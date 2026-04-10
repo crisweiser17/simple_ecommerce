@@ -1,4 +1,5 @@
 <?php
+/** @var array $product */
 $categoryName = isset($product['category_name']) ? (string) $product['category_name'] : (isset($product['category']) ? (string)$product['category'] : '');
 $categorySlug = $product['category_slug'] ?? strtolower(str_replace(' ', '-', $categoryName));
 $categoryLabel = $categoryName !== '' ? __($categoryName) : __('Category');
@@ -147,18 +148,21 @@ if ($primaryImage === '') {
                 class="pb-4 px-2 transition-colors">
                 <?php echo __('Description'); ?>
             </button>
+            <?php if (getSetting('store_laudos_tab_enabled', '1') == '1'): ?>
             <button 
                 @click="activeTab = 'laudos'"
                 :class="{ 'border-b-2 border-orange-600 text-orange-600 font-bold': activeTab === 'laudos', 'text-gray-500 hover:text-gray-700': activeTab !== 'laudos' }"
                 class="pb-4 px-2 transition-colors">
-                <?php echo !empty($product['pdf_label']) ? htmlspecialchars($product['pdf_label'] ?? '') : __('Laudos (PDF)'); ?>
+                <?php echo !empty($product['pdf_label']) ? htmlspecialchars($product['pdf_label'] ?? '') : htmlspecialchars(getSetting('store_laudos_tab_title', __('Laudos (PDF)'))); ?>
             </button>
+            <?php endif; ?>
         </div>
 
         <div x-show="activeTab === 'description'" class="prose max-w-none text-gray-600">
             <?php echo $product['long_desc']; ?>
         </div>
 
+        <?php if (getSetting('store_laudos_tab_enabled', '1') == '1'): ?>
         <div x-show="activeTab === 'laudos'" class="text-gray-600">
             <?php if (!empty($product['pdf_url'])): ?>
                 <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 p-4 rounded-lg border border-gray-200 gap-4 sm:gap-0">
@@ -185,5 +189,6 @@ if ($primaryImage === '') {
                 <p><?php echo __('No reports available for this product.'); ?></p>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
     </div>
 </div>

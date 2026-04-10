@@ -885,6 +885,9 @@ switch ($path) {
         $productsPerPage = max(1, (int)($_POST['products_per_page'] ?? 15));
         updateSetting('products_per_page', (string)$productsPerPage);
 
+        updateSetting('store_laudos_tab_enabled', $_POST['store_laudos_tab_enabled'] ?? '1');
+        updateSetting('store_laudos_tab_title', $_POST['store_laudos_tab_title'] ?? 'Laudos (PDF)');
+
         header('Location: /admin');
         exit;
         break;

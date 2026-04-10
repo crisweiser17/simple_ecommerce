@@ -660,6 +660,18 @@
                                     <input type="number" min="1" name="products_per_page" value="<?php echo htmlspecialchars(getSetting('products_per_page', '15')); ?>" placeholder="Ex: 15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                     <p class="text-xs text-gray-500 mt-1">Número de produtos exibidos por página na vitrine principal.</p>
                                 </div>
+                                <div class="mb-4">
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="store_laudos_tab_enabled" value="0">
+                                        <input type="checkbox" name="store_laudos_tab_enabled" value="1" <?php echo getSetting('store_laudos_tab_enabled', '1') == '1' ? 'checked' : ''; ?> class="form-checkbox h-5 w-5 text-blue-600">
+                                        <span class="ml-2 text-gray-700 text-sm font-bold"><?php echo __('Enable Second Tab (PDF Reports)'); ?></span>
+                                    </label>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Second Tab Title'); ?></label>
+                                    <input type="text" name="store_laudos_tab_title" value="<?php echo htmlspecialchars(getSetting('store_laudos_tab_title', __('Laudos (PDF)'))); ?>" placeholder="Ex: Laudos (PDF)" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <p class="text-xs text-gray-500 mt-1"><?php echo __('Default title for the secondary tab on product pages.'); ?></p>
+                                </div>
                             </div>
 
                             <div class="border-b pb-4 mb-4">
