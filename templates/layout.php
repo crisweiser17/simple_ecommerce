@@ -39,7 +39,9 @@
         }
         $ogType = 'product';
     } elseif (isset($page) && is_array($page) && !empty($page['title'])) {
-        $ogTitle = __($page['title']) . ' - ' . $storeName;
+        $lang = $_SESSION['lang'] ?? 'en';
+        $displayTitle = ($lang === 'pt' && !empty($page['title_pt'])) ? $page['title_pt'] : __($page['title']);
+        $ogTitle = $displayTitle . ' - ' . $storeName;
         $ogType = 'article';
     }
     
@@ -198,9 +200,11 @@
                 <?php foreach ($navPages as $navPage): 
                     $pageSlug = '/' . $navPage['slug'];
                     $isActive = (isset($path) && $path === $pageSlug);
+                    $navLang = $_SESSION['lang'] ?? 'en';
+                    $navTitle = ($navLang === 'pt' && !empty($navPage['title_pt'])) ? $navPage['title_pt'] : __($navPage['title']);
                 ?>
                     <a href="<?php echo htmlspecialchars($pageSlug); ?>" class="<?php echo $isActive ? $activeClass : $inactiveClass; ?>">
-                        <?php echo htmlspecialchars(__($navPage['title'])); ?>
+                        <?php echo htmlspecialchars($navTitle); ?>
                     </a>
                 <?php endforeach; ?>
                 <a href="/contact" class="<?php echo $isContact ? $activeClass : $inactiveClass; ?>"><?php echo __('Contact Us'); ?></a>

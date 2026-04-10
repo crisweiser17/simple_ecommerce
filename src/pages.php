@@ -15,6 +15,16 @@ function ensurePagesSchema() {
         content TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
+
+    $stmt = $pdo->query("PRAGMA table_info(pages)");
+    $columns = $stmt->fetchAll(PDO::FETCH_COLUMN, 1);
+    
+    if (!in_array('title_pt', $columns, true)) {
+        $pdo->exec("ALTER TABLE pages ADD COLUMN title_pt TEXT");
+    }
+    if (!in_array('content_pt', $columns, true)) {
+        $pdo->exec("ALTER TABLE pages ADD COLUMN content_pt TEXT");
+    }
 }
 
 function getAllPages() {
@@ -44,22 +54,26 @@ function createPage($data) {
     ensurePagesSchema();
     global $pdo;
     $title = $data['title'];
+    $title_pt = $data['title_pt'] ?? '';
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
     $content = $data['content'];
+    $content_pt = $data['content_pt'] ?? '';
     
-    $stmt = $pdo->prepare("INSERT INTO pages (title, slug, content) VALUES (?, ?, ?)");
-    return $stmt->execute([$title, $slug, $content]);
+    $stmt = $pdo->prepare("INSERT INTO pages (title, title_pt, slug, content, content_pt) VALUES (?, ?, ?, ?, ?)");
+    return $stmt->execute([$title, $title_pt, $slug, $content, $content_pt]);
 }
 
 function updatePage($id, $data) {
     ensurePagesSchema();
     global $pdo;
     $title = $data['title'];
+    $title_pt = $data['title_pt'] ?? '';
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
     $content = $data['content'];
+    $content_pt = $data['content_pt'] ?? '';
     
-    $stmt = $pdo->prepare("UPDATE pages SET title = ?, slug = ?, content = ? WHERE id = ?");
-    return $stmt->execute([$title, $slug, $content, $id]);
+    $stmt = $pdo->prepare("UPDATE pages SET title = ?, title_pt = ?, slug = ?, content = ?, content_pt = ? WHERE id = ?");
+    return $stmt->execute([$title, $title_pt, $slug, $content, $content_pt, (int)$id]);
 }
 
 function deletePage($id) {

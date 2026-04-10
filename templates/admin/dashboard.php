@@ -49,14 +49,19 @@
     smtpTesting: false,
     smtpTestMessage: '',
     smtpTestSuccess: null,
-    initQuill() {
-        if (!this.quill) {
-            this.quill = new Quill('#editor', {
-                theme: 'snow'
+    initQuills() {
+        if (!this.quillEn) {
+            this.quillEn = new Quill('#editor_en', { theme: 'snow' });
+            this.quillEn.on('text-change', () => {
+                this.editPage.content = this.quillEn.root.innerHTML;
+                document.getElementById('pageContent').value = this.quillEn.root.innerHTML;
             });
-            this.quill.on('text-change', () => {
-                this.editPage.content = this.quill.root.innerHTML;
-                document.getElementById('pageContent').value = this.quill.root.innerHTML;
+        }
+        if (!this.quillPt) {
+            this.quillPt = new Quill('#editor_pt', { theme: 'snow' });
+            this.quillPt.on('text-change', () => {
+                this.editPage.content_pt = this.quillPt.root.innerHTML;
+                document.getElementById('pageContentPt').value = this.quillPt.root.innerHTML;
             });
         }
     },
@@ -380,7 +385,7 @@
             <div x-show="tab === 'pages'" style="display: none;">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-2xl font-bold"><?php echo __('Pages'); ?></h1>
-                    <button @click="pageModalOpen = true; editPage = {}; setTimeout(() => { initQuill(); if(this.quill) this.quill.root.innerHTML = ''; }, 100);" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Page'); ?></button>
+                    <button @click="pageModalOpen = true; editPage = {title:'', title_pt:'', content:'', content_pt:''}; setTimeout(() => { initQuills(); if(this.quillEn) this.quillEn.root.innerHTML = ''; if(this.quillPt) this.quillPt.root.innerHTML = ''; }, 100);" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Page'); ?></button>
                 </div>
 
                 <div class="bg-white rounded shadow overflow-x-auto">
@@ -398,7 +403,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($pg['title'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($pg['slug'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button @click="pageModalOpen = true; editPage = <?php echo htmlspecialchars(json_encode($pg)); ?>; setTimeout(() => { initQuill(); if(this.quill) this.quill.root.innerHTML = editPage.content || ''; }, 100);" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></button>
+                                    <button @click="pageModalOpen = true; editPage = <?php echo htmlspecialchars(json_encode($pg)); ?>; setTimeout(() => { initQuills(); if(this.quillEn) this.quillEn.root.innerHTML = editPage.content || ''; if(this.quillPt) this.quillPt.root.innerHTML = editPage.content_pt || ''; }, 100);" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></button>
                                     <a href="/admin/delete-page?id=<?php echo $pg['id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('<?php echo __('Are you sure?'); ?>')"><?php echo __('Delete'); ?></a>
                                 </td>
                             </tr>
@@ -1227,14 +1232,27 @@
                     <input type="hidden" name="id" :value="editPage.id">
 
                     <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Title</label>
-                            <input type="text" name="title" x-model="editPage.title" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Title (English)</label>
+                                <input type="text" name="title" x-model="editPage.title" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Title (Portuguese)</label>
+                                <input type="text" name="title_pt" x-model="editPage.title_pt" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Content</label>
-                            <input type="hidden" name="content" id="pageContent" x-model="editPage.content">
-                            <div id="editor" class="h-64 bg-white"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Content (English)</label>
+                                <input type="hidden" name="content" id="pageContent" x-model="editPage.content">
+                                <div id="editor_en" class="h-64 bg-white"></div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Content (Portuguese)</label>
+                                <input type="hidden" name="content_pt" id="pageContentPt" x-model="editPage.content_pt">
+                                <div id="editor_pt" class="h-64 bg-white"></div>
+                            </div>
                         </div>
                     </div>
 
