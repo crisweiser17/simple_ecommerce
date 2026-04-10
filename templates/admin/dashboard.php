@@ -157,7 +157,7 @@
                     <form action="/admin" method="GET" class="flex-1 max-w-md mx-4 hidden sm:flex">
                         <input type="hidden" name="p" value="1">
                         <div class="relative w-full">
-                            <input type="text" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" placeholder="<?php echo __('Search products by name or SKU...'); ?>" class="w-full border border-gray-300 rounded-md shadow-sm pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            <input type="text" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" placeholder="<?php echo __('Search products by name...'); ?>" class="w-full border border-gray-300 rounded-md shadow-sm pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 search-input">
                             <button type="submit" class="absolute right-2 top-2 text-gray-400 hover:text-indigo-600">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 4 4 0 0114 0z"></path></svg>
                             </button>
@@ -168,7 +168,7 @@
                         <!-- Mobile Search (Visible only on small screens) -->
                         <form action="/admin" method="GET" class="w-full sm:hidden mb-2 flex">
                             <input type="hidden" name="p" value="1">
-                            <input type="text" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" placeholder="<?php echo __('Search products...'); ?>" class="flex-1 border border-gray-300 rounded-l-md shadow-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            <input type="text" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" placeholder="<?php echo __('Search products by name...'); ?>" class="flex-1 border border-gray-300 rounded-l-md shadow-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 search-input">
                             <button type="submit" class="bg-gray-200 border border-l-0 border-gray-300 rounded-r-md px-3 py-2 text-gray-600 hover:bg-gray-300">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 4 4 0 0114 0z"></path></svg>
                             </button>
@@ -205,6 +205,7 @@
                     </div>
                 <?php endif; ?>
 
+                <div id="products-table-container">
                 <div class="bg-white rounded shadow overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
@@ -299,6 +300,7 @@
                         </div>
                     </div>
                     <?php endif; ?>
+                </div>
                 </div>
             </div>
 
@@ -1301,5 +1303,55 @@
     <div class="w-full bg-black h-[35px] flex items-center justify-center shrink-0">
         <span class="text-white text-xs">Powered by LojaSimples</span>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let debounceTimer;
+            const searchInputs = document.querySelectorAll('.search-input');
+            
+            searchInputs.forEach(input => {
+                input.addEventListener('input', function(e) {
+                    clearTimeout(debounceTimer);
+                    
+                    const query = e.target.value;
+                    
+                    searchInputs.forEach(otherInput => {
+                        if (otherInput !== input) {
+                            otherInput.value = query;
+                        }
+                    });
+
+                    debounceTimer = setTimeout(() => {
+                        const url = new URL(window.location.href);
+                        if (query) {
+                            url.searchParams.set('q', query);
+                        } else {
+                            url.searchParams.delete('q');
+                        }
+                        url.searchParams.set('p', '1');
+                        
+                        const tableContainer = document.getElementById('products-table-container');
+                        if (tableContainer) {
+                            tableContainer.style.opacity = '0.5';
+                        }
+                        
+                        fetch(url.toString())
+                            .then(response => response.text())
+                            .then(html => {
+                                const parser = new DOMParser();
+                                const doc = parser.parseFromString(html, 'text/html');
+                                const newTable = doc.getElementById('products-table-container');
+                                if (newTable && tableContainer) {
+                                    tableContainer.innerHTML = newTable.innerHTML;
+                                    tableContainer.style.opacity = '1';
+                                }
+                            });
+                        
+                        window.history.pushState({}, '', url.toString());
+                    }, 400);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

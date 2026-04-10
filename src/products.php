@@ -236,10 +236,7 @@ function getAllProducts($categorySlug = null, $limit = null, $offset = 0, $searc
     $searchTerm = trim((string)$searchTerm);
     if ($searchTerm !== '') {
         $likeTerm = '%' . $searchTerm . '%';
-        $conditions[] = "(p.name LIKE ? OR p.sku LIKE ? OR p.short_desc LIKE ? OR p.long_desc LIKE ?)";
-        $params[] = $likeTerm;
-        $params[] = $likeTerm;
-        $params[] = $likeTerm;
+        $conditions[] = "p.name LIKE ?";
         $params[] = $likeTerm;
     }
 
@@ -277,10 +274,7 @@ function countProducts($categorySlug = null, $searchTerm = null) {
     $searchTerm = trim((string)$searchTerm);
     if ($searchTerm !== '') {
         $likeTerm = '%' . $searchTerm . '%';
-        $conditions[] = "(p.name LIKE ? OR p.sku LIKE ? OR p.short_desc LIKE ? OR p.long_desc LIKE ?)";
-        $params[] = $likeTerm;
-        $params[] = $likeTerm;
-        $params[] = $likeTerm;
+        $conditions[] = "p.name LIKE ?";
         $params[] = $likeTerm;
     }
 
