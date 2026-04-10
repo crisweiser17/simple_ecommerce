@@ -317,6 +317,7 @@ return [
     'Store and Admin Language' => 'Store and Admin Language',
     'Enable multi-language (EN/PT)' => 'Enable multi-language (EN/PT)',
     'Single language when multi-language is off' => 'Single language when multi-language is off',
+    'Default language when multi-language is on' => 'Default language when multi-language is on',
     'Enable WhatsApp checkout button' => 'Enable WhatsApp checkout button',
     'Enable email sending (Resend SMTP)' => 'Enable email sending (Resend SMTP)',
     'Send Test' => 'Send Test',

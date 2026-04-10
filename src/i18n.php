@@ -35,7 +35,11 @@ if ($isMultilangEnabled) {
         $selectedLang = $_COOKIE['lang'];
         $_SESSION['lang'] = $selectedLang;
     } else {
-        $selectedLang = 'en';
+        $defaultLang = getI18nSettingValue('i18n_default_lang', 'en');
+        if (!in_array($defaultLang, $supportedLanguages, true)) {
+            $defaultLang = 'en';
+        }
+        $selectedLang = $defaultLang;
         if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
             $browserLang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
             if (in_array($browserLang, $supportedLanguages, true)) {

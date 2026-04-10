@@ -690,6 +690,14 @@
                                         <option value="pt" <?php echo $singleLang === 'pt' ? 'selected' : ''; ?>><?php echo __('Portuguese'); ?></option>
                                     </select>
                                 </div>
+                                <?php $defaultLang = getSetting('i18n_default_lang', 'en'); ?>
+                                <div x-show="i18nMulti" class="mt-3">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Default language when multi-language is on'); ?></label>
+                                    <select name="i18n_default_lang" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                        <option value="en" <?php echo $defaultLang === 'en' ? 'selected' : ''; ?>>English</option>
+                                        <option value="pt" <?php echo $defaultLang === 'pt' ? 'selected' : ''; ?>><?php echo __('Portuguese'); ?></option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="border-b pb-4 mb-4">

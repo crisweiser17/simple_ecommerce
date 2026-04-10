@@ -849,11 +849,18 @@ switch ($path) {
 
         $multilangEnabled = isset($_POST['i18n_multilang_enabled']) ? '1' : '0';
         updateSetting('i18n_multilang_enabled', $multilangEnabled);
+        
         $singleLang = $_POST['i18n_single_lang'] ?? 'en';
         if (!in_array($singleLang, ['en', 'pt'], true)) {
             $singleLang = 'en';
         }
         updateSetting('i18n_single_lang', $singleLang);
+
+        $defaultLang = $_POST['i18n_default_lang'] ?? 'en';
+        if (!in_array($defaultLang, ['en', 'pt'], true)) {
+            $defaultLang = 'en';
+        }
+        updateSetting('i18n_default_lang', $defaultLang);
         
         $enable_whatsapp = isset($_POST['enable_whatsapp_button']) ? '1' : '0';
         updateSetting('enable_whatsapp_button', $enable_whatsapp);
