@@ -107,6 +107,9 @@
                 <button @click="tab = 'categories'; sidebarOpen = false;" :class="tab === 'categories' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Categories'); ?>
                 </button>
+                <button @click="tab = 'pages'; sidebarOpen = false;" :class="tab === 'pages' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
+                    <?php echo __('Pages'); ?>
+                </button>
                 <div class="border-t border-gray-800 my-1"></div>
                 <button @click="tab = 'orders'; sidebarOpen = false;" :class="tab === 'orders' ? 'bg-gray-700 text-white font-semibold border border-gray-600' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Orders'); ?>
