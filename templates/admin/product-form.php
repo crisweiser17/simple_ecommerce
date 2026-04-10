@@ -577,7 +577,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
 
     <!-- Powered By -->
     <div class="w-full bg-black h-[35px] flex items-center justify-center shrink-0">
-        <span class="text-white text-xs">Powered by LojaSimples</span>
+        <span class="text-white text-xs"><?php echo htmlspecialchars(getSetting('store_footer_text', 'R2 Research Labs - All Rights Reserved.')); ?></span>
     </div>
 </body>
 </html>

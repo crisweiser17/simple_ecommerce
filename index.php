@@ -812,6 +812,9 @@ switch ($path) {
         $storeCurrencySymbol = isset($_POST['store_currency_symbol']) ? trim($_POST['store_currency_symbol']) : 'R$';
         updateSetting('store_currency_symbol', $storeCurrencySymbol !== '' ? $storeCurrencySymbol : 'R$');
 
+        $storeFooterText = isset($_POST['store_footer_text']) ? trim($_POST['store_footer_text']) : '';
+        updateSetting('store_footer_text', $storeFooterText !== '' ? $storeFooterText : 'R2 Research Labs - All Rights Reserved.');
+
         $brandMode = ($_POST['brand_mode'] ?? 'text') === 'image' ? 'image' : 'text';
         updateSetting('brand_mode', $brandMode);
 

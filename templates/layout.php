@@ -227,7 +227,7 @@
 
     <!-- Footer -->
     <div class="w-full bg-black h-[35px] flex items-center justify-center shrink-0">
-        <span class="text-white text-xs">R2 Research Labs - All Rights Reserved.</span>
+        <span class="text-white text-xs"><?php echo htmlspecialchars(getSetting('store_footer_text', 'R2 Research Labs - All Rights Reserved.')); ?></span>
     </div>
 
     <!-- Alpine Cart Store -->

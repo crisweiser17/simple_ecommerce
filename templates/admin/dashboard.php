@@ -565,6 +565,10 @@
                                     </div>
                                 </div>
                                 <div class="mb-4">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Footer Text'); ?></label>
+                                    <input type="text" name="store_footer_text" value="<?php echo htmlspecialchars(getSetting('store_footer_text', 'R2 Research Labs - All Rights Reserved.')); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                </div>
+                                <div class="mb-4">
                                     <?php $brandMode = getSetting('brand_mode', 'text'); ?>
                                     <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Logo Display'); ?></label>
                                     <select name="brand_mode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
@@ -1301,7 +1305,7 @@
 
     <!-- Powered By -->
     <div class="w-full bg-black h-[35px] flex items-center justify-center shrink-0">
-        <span class="text-white text-xs">Powered by LojaSimples</span>
+        <span class="text-white text-xs"><?php echo htmlspecialchars(getSetting('store_footer_text', 'R2 Research Labs - All Rights Reserved.')); ?></span>
     </div>
 
     <script>
