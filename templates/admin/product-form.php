@@ -9,6 +9,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title><?php echo isset($product['id']) ? __('Edit Product') : __('Add New Product'); ?> - <?php echo htmlspecialchars(getSetting('store_name', 'R2 Research Labs')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="//unpkg.com/alpinejs" defer></script>
     <!-- Quill CSS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
