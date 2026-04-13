@@ -18,6 +18,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS products (
     long_desc TEXT,
     pdf_url TEXT,
     pdf_label TEXT,
+    pdf_active INTEGER DEFAULT 0,
     type TEXT DEFAULT 'physical',
     digital_delivery INTEGER DEFAULT 0,
     download_limit INTEGER DEFAULT 0,
@@ -30,6 +31,13 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS products (
 // Add variations_json column to existing products table if it doesn't exist
 try {
     $pdo->exec("ALTER TABLE products ADD COLUMN variations_json TEXT");
+} catch (Exception $e) {
+    // Column might already exist
+}
+
+// Add pdf_active column to existing products table if it doesn't exist
+try {
+    $pdo->exec("ALTER TABLE products ADD COLUMN pdf_active INTEGER DEFAULT 0");
 } catch (Exception $e) {
     // Column might already exist
 }
@@ -138,6 +146,31 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS embed_sessions (
     FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
 )");
 $pdo->exec("CREATE INDEX IF NOT EXISTS idx_embed_sessions_token ON embed_sessions(session_token)");
+
+// Create Pages Table (if not exists)
+$pdo->exec("CREATE TABLE IF NOT EXISTS pages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    title_pt TEXT,
+    slug TEXT UNIQUE NOT NULL,
+    content TEXT,
+    content_pt TEXT,
+    status TEXT DEFAULT 'published',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)");
+
+// Create Blog Posts Table
+$pdo->exec("CREATE TABLE IF NOT EXISTS blog_posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    image_url TEXT,
+    content TEXT,
+    status TEXT DEFAULT 'published',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)");
 
 // Create Users Table (for Admin & Login Tokens)
 $pdo->exec("CREATE TABLE IF NOT EXISTS users (

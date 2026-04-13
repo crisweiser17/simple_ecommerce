@@ -183,18 +183,36 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('PDF Report URL or File'); ?></label>
-                                        <input type="text" name="pdf_url" value="<?php echo htmlspecialchars($product['pdf_url'] ?? ''); ?>" placeholder="<?php echo __('External URL (or use upload below)'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3">
-                                        
-                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload PDF File'); ?></label>
-                                        <input type="file" name="pdf_file" accept="application/pdf" class="mt-1 block w-full bg-white" data-filepond="pdf-single">
+                            </div>
+                        </div>
+
+                        <!-- Analysis Report (PDF) -->
+                        <div class="border border-gray-200 rounded-md p-5 bg-gray-50 mb-6" x-data="{ pdfActive: <?php echo isset($product['pdf_active']) && $product['pdf_active'] ? 'true' : 'false'; ?> }">
+                            <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-3">
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900"><?php echo __('Analysis Report (PDF)'); ?></h3>
+                                    <p class="text-sm text-gray-500"><?php echo __('Habilite para mostrar a aba de PDF/Laudo na página do produto.'); ?></p>
+                                </div>
+                                <label class="flex items-center cursor-pointer">
+                                    <div class="relative">
+                                        <input type="checkbox" name="pdf_active" value="1" class="sr-only" x-model="pdfActive">
+                                        <div class="block bg-gray-300 w-10 h-6 rounded-full transition" :class="{'bg-indigo-600': pdfActive}"></div>
+                                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform" :class="{'translate-x-4': pdfActive}"></div>
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700"><?php echo __('PDF Button Text'); ?></label>
-                                        <input type="text" name="pdf_label" value="<?php echo htmlspecialchars($product['pdf_label'] ?? ''); ?>" placeholder="<?php echo __('Ex: Download Analysis Report'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                    </div>
+                                </label>
+                            </div>
+
+                            <div x-show="pdfActive" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2" style="display: none;">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('URL do PDF'); ?></label>
+                                    <input type="text" name="pdf_url" value="<?php echo htmlspecialchars($product['pdf_url'] ?? ''); ?>" placeholder="<?php echo __('External URL (or use upload below)'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3">
+                                    
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Upload de Arquivo (Máx 10MB)'); ?></label>
+                                    <input type="file" name="pdf_file" accept="application/pdf" class="mt-1 block w-full bg-white" data-filepond="pdf-single">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Nome da Aba / Rótulo'); ?></label>
+                                    <input type="text" name="pdf_label" value="<?php echo htmlspecialchars($product['pdf_label'] ?? ''); ?>" placeholder="<?php echo __('Ex: Download Analysis Report'); ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                                 </div>
                             </div>
                         </div>
@@ -228,16 +246,17 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                             <template x-for="(opt, oIndex) in variation.options" :key="oIndex">
                                                 <div class="flex items-center gap-2 mb-2">
                                                     <input type="text" x-model="opt.name" class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Option (ex: Pequeno)">
+                                                    <input type="text" x-model="opt.sku" class="w-32 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="SKU">
                                                     <div class="flex items-center gap-1">
-                                                        <span class="text-sm text-gray-500">+ <?php echo htmlspecialchars(getSetting('store_currency_symbol', 'R$')); ?></span>
-                                                        <input type="number" step="0.01" x-model="opt.price_modifier" class="w-24 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="0.00">
+                                                        <span class="text-sm text-gray-500"><?php echo htmlspecialchars(getSetting('store_currency_symbol', 'R$')); ?></span>
+                                                        <input type="number" step="0.01" x-model="opt.price" class="w-24 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Preço">
                                                     </div>
                                                     <button type="button" @click="variation.options.splice(oIndex, 1)" class="text-red-500 hover:text-red-700 p-2">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                                     </button>
                                                 </div>
                                             </template>
-                                            <button type="button" @click="variation.options.push({name: '', price_modifier: 0})" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                                            <button type="button" @click="variation.options.push({name: '', sku: '', price: ''})" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
                                                 + <?php echo __('Add Option'); ?>
                                             </button>
                                         </div>
@@ -562,7 +581,8 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                         const gv = JSON.parse(jsonStr);
                         const opts = gv.options.map(o => ({
                             name: o.name,
-                            price_modifier: 0
+                            sku: o.sku || '',
+                            price: o.price || ''
                         }));
                         this.variations.push({
                             name: gv.name,

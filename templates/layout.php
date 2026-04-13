@@ -43,6 +43,16 @@
         $displayTitle = ($lang === 'pt' && !empty($page['title_pt'])) ? $page['title_pt'] : __($page['title']);
         $ogTitle = $displayTitle . ' - ' . $storeName;
         $ogType = 'article';
+    } elseif (isset($blog_post) && is_array($blog_post)) {
+        $ogTitle = $blog_post['title'] . ' - ' . $storeName;
+        $ogDescription = strip_tags($blog_post['content'] ?? '');
+        if (mb_strlen($ogDescription) > 160) {
+            $ogDescription = mb_substr($ogDescription, 0, 157) . '...';
+        }
+        if (!empty($blog_post['image_url'])) {
+            $ogImage = $blog_post['image_url'];
+        }
+        $ogType = 'article';
     }
     
     if ($ogImage !== '' && strpos($ogImage, 'http') !== 0) {
@@ -194,8 +204,10 @@
                 // $path is available from index.php
                 $isHome = (isset($path) && ($path === '/' || $path === '/home'));
                 $isContact = (isset($path) && $path === '/contact');
+                $isBlog = (isset($path) && strpos($path, '/blog') === 0);
                 ?>
                 <a href="/" class="<?php echo $isHome ? $activeClass : $inactiveClass; ?>"><?php echo __('All Products'); ?></a>
+                <a href="/blog" class="<?php echo $isBlog ? $activeClass : $inactiveClass; ?>"><?php echo __('Blog'); ?></a>
                 
                 <?php foreach ($navPages as $navPage): 
                     $pageSlug = '/' . $navPage['slug'];

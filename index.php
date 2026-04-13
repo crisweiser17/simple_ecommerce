@@ -51,6 +51,7 @@ require_once __DIR__ . '/src/functions.php';
 require_once __DIR__ . '/src/user.php';
 require_once __DIR__ . '/src/categories.php';
 require_once __DIR__ . '/src/pages.php';
+require_once __DIR__ . '/src/blog.php';
 require_once __DIR__ . '/src/contact.php';
 require_once __DIR__ . '/src/products_csv.php';
 require_once __DIR__ . '/src/payments.php';
@@ -63,6 +64,7 @@ ensureUsersSchema();
 ensureCategoriesSchema();
 ensureProductsSchema();
 ensurePagesSchema();
+ensureBlogSchema();
 ensureOrdersSchema();
 ensurePaymentsSchema();
 
@@ -426,6 +428,7 @@ switch ($path) {
 
             // Calculate final price based on selected variations
             $finalPrice = floatval($product['price']);
+            $finalSku = $product['sku'] ?? '';
             $selectedVariations = $input['variations'] ?? [];
             $productVariations = json_decode($product['variations_json'] ?? '[]', true) ?: [];
             
@@ -434,7 +437,12 @@ switch ($path) {
                     $selectedOptName = $selectedVariations[$v['name']];
                     foreach ($v['options'] as $opt) {
                         if ($opt['name'] === $selectedOptName) {
-                            $finalPrice += floatval($opt['price_modifier'] ?? 0);
+                            if (!empty($opt['price']) && (float)$opt['price'] > 0) {
+                                $finalPrice = (float)$opt['price'];
+                            }
+                            if (!empty($opt['sku'])) {
+                                $finalSku = $opt['sku'];
+                            }
                             break;
                         }
                     }
@@ -446,6 +454,7 @@ switch ($path) {
                     'id' => $product['id'],
                     'name' => $product['name'],
                     'price' => $finalPrice,
+                    'sku' => $finalSku,
                     'quantity' => 1,
                     'selected_variations' => $selectedVariations
                 ]
@@ -567,6 +576,12 @@ switch ($path) {
             exit;
         }
         $template = __DIR__ . '/templates/quote-success.php';
+        require __DIR__ . '/templates/layout.php';
+        break;
+
+    case '/blog':
+        $posts = getAllBlogPosts('published');
+        $template = __DIR__ . '/templates/blog.php';
         require __DIR__ . '/templates/layout.php';
         break;
 
@@ -892,9 +907,6 @@ switch ($path) {
         $productsPerPage = max(1, (int)($_POST['products_per_page'] ?? 15));
         updateSetting('products_per_page', (string)$productsPerPage);
 
-        updateSetting('store_laudos_tab_enabled', $_POST['store_laudos_tab_enabled'] ?? '1');
-        updateSetting('store_laudos_tab_title', $_POST['store_laudos_tab_title'] ?? 'Laudos (PDF)');
-
         header('Location: /admin');
         exit;
         break;
@@ -1085,7 +1097,7 @@ switch ($path) {
                 // Ensure options are formatted correctly for global
                 $globalOpts = [];
                 foreach ($var['options'] as $opt) {
-                    $globalOpts[] = ['name' => $opt['name'], 'price_modifier' => 0];
+                    $globalOpts[] = ['name' => $opt['name'], 'sku' => $opt['sku'] ?? '', 'price' => $opt['price'] ?? ''];
                 }
                 saveGlobalVariation(null, $var['name'], $globalOpts);
             }
@@ -1169,7 +1181,8 @@ switch ($path) {
                 if ($optName !== '') {
                     $options[] = [
                         'name' => $optName,
-                        'price_modifier' => (float)($opt['price_modifier'] ?? 0)
+                        'sku' => trim((string)($opt['sku'] ?? '')),
+                        'price' => trim((string)($opt['price'] ?? ''))
                     ];
                 }
             }
@@ -1188,6 +1201,53 @@ switch ($path) {
         $id = $_GET['id'];
         deleteGlobalVariation($id);
         header('Location: /admin');
+        exit;
+        break;
+
+    case '/admin/blog':
+        if (!isAdmin()) die(__('Access Denied'));
+        $posts = getAllBlogPosts();
+        require __DIR__ . '/templates/admin/blog-list.php';
+        break;
+
+    case '/admin/blog/form':
+        if (!isAdmin()) die(__('Access Denied'));
+        $id = $_GET['id'] ?? null;
+        $post = $id ? getBlogPostById($id) : null;
+        require __DIR__ . '/templates/admin/blog-form.php';
+        break;
+
+    case '/admin/blog/save':
+        if (!isAdmin()) die(__('Access Denied'));
+        
+        $data = $_POST;
+        
+        $uploadedImage = uploadSingleImageFile(
+            $_FILES['image_file'] ?? null,
+            __DIR__ . '/public/uploads/blog/',
+            '/uploads/blog',
+            'blog_',
+            ['jpg', 'jpeg', 'png', 'webp'],
+            ['image/jpeg', 'image/png', 'image/webp'],
+            5242880
+        );
+        
+        if ($uploadedImage !== '') {
+            $data['image_url'] = $uploadedImage;
+        } elseif (!empty($data['image_url_manual'])) {
+            $data['image_url'] = $data['image_url_manual'];
+        }
+
+        saveBlogPost($data);
+        header('Location: /admin/blog');
+        exit;
+        break;
+
+    case '/admin/blog/delete':
+        if (!isAdmin()) die(__('Access Denied'));
+        $id = $_GET['id'];
+        deleteBlogPost($id);
+        header('Location: /admin/blog');
         exit;
         break;
 
@@ -1500,7 +1560,17 @@ switch ($path) {
             break;
         }
 
-        if (strpos($path, '/product/') === 0) {
+    if (strpos($path, '/blog/') === 0) {
+        $slug = trim((string)substr($path, strlen('/blog/')), '/');
+        $blog_post = getBlogPostBySlug($slug);
+        if ($blog_post) {
+            $template = __DIR__ . '/templates/blog-post.php';
+            require __DIR__ . '/templates/layout.php';
+            exit;
+        }
+    }
+
+    if (strpos($path, '/product/') === 0) {
             $slug = trim((string)substr($path, strlen('/product/')), '/');
             if ($slug !== '') {
                 $product = getProductBySlug(rawurldecode($slug));

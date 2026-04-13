@@ -50,7 +50,6 @@ if ($primaryImage === '') {
         </div>
 
         <div>
-            <div class="text-sm text-gray-500 mb-2">SKU: <?php echo htmlspecialchars($product['sku'] ?? ''); ?></div>
             <h1 class="text-3xl font-bold text-gray-900 mb-4"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
             
             <?php $variations = json_decode($product['variations_json'] ?? '[]', true) ?: []; ?>
@@ -62,12 +61,28 @@ if ($primaryImage === '') {
                 get currentPrice() {
                     let total = this.basePrice;
                     for (const v of this.variations) {
-                        if (this.selectedOptions[v.name]) {
-                            const opt = v.options.find(o => o.name === this.selectedOptions[v.name]);
-                            if (opt) total += parseFloat(opt.price_modifier || 0);
+                        const selected = this.selectedOptions[v.name];
+                        if (selected) {
+                            const opt = v.options.find(o => o.name === selected);
+                            if (opt && opt.price && parseFloat(opt.price) > 0) {
+                                total = parseFloat(opt.price);
+                            }
                         }
                     }
                     return total;
+                },
+                get currentSku() {
+                    let sku = '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>';
+                    for (const v of this.variations) {
+                        const selected = this.selectedOptions[v.name];
+                        if (selected) {
+                            const opt = v.options.find(o => o.name === selected);
+                            if (opt && opt.sku) {
+                                sku = opt.sku;
+                            }
+                        }
+                    }
+                    return sku;
                 },
                 formatMoney(amount) {
                     return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(amount);
@@ -94,6 +109,11 @@ if ($primaryImage === '') {
                     }
                 }
             }">
+                <div class="mb-4">
+                    <span class="text-gray-500 text-sm">SKU:</span>
+                    <span class="text-gray-900 text-sm font-medium" x-text="currentSku"></span>
+                </div>
+
                 <?php if ($storeMode === 'ecommerce'): ?>
                 <div class="text-2xl font-bold text-orange-600 mb-6" x-text="formatMoney(currentPrice)"><?php echo formatMoney($product['price']); ?></div>
                 <?php endif; ?>
@@ -109,7 +129,7 @@ if ($primaryImage === '') {
                                 <label class="block text-sm font-medium text-gray-700 mb-1" x-text="v.name"></label>
                                 <select x-model="selectedOptions[v.name]" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md border">
                                     <template x-for="opt in v.options" :key="opt.name">
-                                        <option :value="opt.name" x-text="opt.name + (parseFloat(opt.price_modifier) > 0 ? ' (+ ' + formatMoney(parseFloat(opt.price_modifier)) + ')' : '')"></option>
+                                        <option :value="opt.name" x-text="opt.name + (parseFloat(opt.price) > 0 ? ' (' + formatMoney(parseFloat(opt.price)) + ')' : '')"></option>
                                     </template>
                                 </select>
                             </div>
@@ -148,12 +168,12 @@ if ($primaryImage === '') {
                 class="pb-4 px-2 transition-colors">
                 <?php echo __('Description'); ?>
             </button>
-            <?php if (getSetting('store_laudos_tab_enabled', '1') == '1'): ?>
+            <?php if (isset($product['pdf_active']) && $product['pdf_active']): ?>
             <button 
                 @click="activeTab = 'laudos'"
                 :class="{ 'border-b-2 border-orange-600 text-orange-600 font-bold': activeTab === 'laudos', 'text-gray-500 hover:text-gray-700': activeTab !== 'laudos' }"
                 class="pb-4 px-2 transition-colors">
-                <?php echo !empty($product['pdf_label']) ? htmlspecialchars($product['pdf_label'] ?? '') : htmlspecialchars(getSetting('store_laudos_tab_title', __('Laudos (PDF)'))); ?>
+                <?php echo !empty($product['pdf_label']) ? htmlspecialchars($product['pdf_label'] ?? '') : __('Analysis Report (PDF)'); ?>
             </button>
             <?php endif; ?>
         </div>
@@ -162,9 +182,10 @@ if ($primaryImage === '') {
             <?php echo $product['long_desc']; ?>
         </div>
 
-        <?php if (getSetting('store_laudos_tab_enabled', '1') == '1'): ?>
+        <?php if (isset($product['pdf_active']) && $product['pdf_active']): ?>
         <div x-show="activeTab === 'laudos'" class="text-gray-600">
             <?php if (!empty($product['pdf_url'])): ?>
+                <?php $pdfUrlWithZoom = htmlspecialchars($product['pdf_url'] ?? '') . '#zoom=75'; ?>
                 <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 p-4 rounded-lg border border-gray-200 gap-4 sm:gap-0">
                     <span class="font-medium text-gray-700">
                         <?php echo !empty($product['pdf_label']) ? htmlspecialchars($product['pdf_label'] ?? '') : __('Analysis Report (PDF)'); ?>
@@ -174,9 +195,9 @@ if ($primaryImage === '') {
                         <?php echo __('Download PDF'); ?>
                     </a>
                 </div>
-                <div class="w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-gray-50" style="height: 600px;">
-                    <object data="<?php echo htmlspecialchars($product['pdf_url'] ?? ''); ?>" type="application/pdf" width="100%" height="100%">
-                        <iframe src="<?php echo htmlspecialchars($product['pdf_url'] ?? ''); ?>" width="100%" height="100%" style="border: none;">
+                <div class="w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-gray-50" style="height: 800px;">
+                    <object data="<?php echo $pdfUrlWithZoom; ?>" type="application/pdf" width="100%" height="100%">
+                        <iframe src="<?php echo $pdfUrlWithZoom; ?>" width="100%" height="100%" style="border: none;">
                             <div class="flex flex-col items-center justify-center h-full p-8 text-center">
                                 <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 <p class="text-gray-500 mb-2"><?php echo __('Your browser does not support embedded PDFs.'); ?></p>

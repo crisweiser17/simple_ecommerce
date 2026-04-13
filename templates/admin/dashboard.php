@@ -115,6 +115,9 @@
                 <button @click="tab = 'pages'; sidebarOpen = false;" :class="tab === 'pages' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Pages'); ?>
                 </button>
+                <a href="/admin/blog" class="block w-full text-left px-4 py-2 text-gray-400 hover:text-white rounded">
+                    <?php echo __('Blog'); ?>
+                </a>
                 <div class="border-t border-gray-800 my-1"></div>
                 <button @click="tab = 'orders'; sidebarOpen = false;" :class="tab === 'orders' ? 'bg-gray-700 text-white font-semibold border border-gray-600' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
                     <?php echo __('Orders'); ?>
@@ -668,18 +671,6 @@
                                     <input type="number" min="1" name="products_per_page" value="<?php echo htmlspecialchars(getSetting('products_per_page', '15')); ?>" placeholder="Ex: 15" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                     <p class="text-xs text-gray-500 mt-1">Número de produtos exibidos por página na vitrine principal.</p>
                                 </div>
-                                <div class="mb-4">
-                                    <label class="flex items-center">
-                                        <input type="hidden" name="store_laudos_tab_enabled" value="0">
-                                        <input type="checkbox" name="store_laudos_tab_enabled" value="1" <?php echo getSetting('store_laudos_tab_enabled', '1') == '1' ? 'checked' : ''; ?> class="form-checkbox h-5 w-5 text-blue-600">
-                                        <span class="ml-2 text-gray-700 text-sm font-bold"><?php echo __('Enable Second Tab (PDF Reports)'); ?></span>
-                                    </label>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Second Tab Title'); ?></label>
-                                    <input type="text" name="store_laudos_tab_title" value="<?php echo htmlspecialchars(getSetting('store_laudos_tab_title', __('Laudos (PDF)'))); ?>" placeholder="Ex: Laudos (PDF)" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                                    <p class="text-xs text-gray-500 mt-1"><?php echo __('Default title for the secondary tab on product pages.'); ?></p>
-                                </div>
                             </div>
 
                             <div class="border-b pb-4 mb-4">
@@ -1192,12 +1183,17 @@
                             <template x-for="(opt, index) in editVariation.options" :key="index">
                                 <div class="flex items-center gap-2 mb-2">
                                     <input type="text" :name="`options[${index}][name]`" x-model="opt.name" required class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="<?php echo __('Option Name (e.g. Large)'); ?>">
+                                    <input type="text" :name="`options[${index}][sku]`" x-model="opt.sku" class="w-32 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="SKU">
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-sm text-gray-500"><?php echo htmlspecialchars(getSetting('store_currency_symbol', 'R$')); ?></span>
+                                        <input type="number" step="0.01" :name="`options[${index}][price]`" x-model="opt.price" class="w-24 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Preço">
+                                    </div>
                                     <button type="button" @click="editVariation.options.splice(index, 1)" class="text-red-500 hover:text-red-700 p-2">
                                         <i class="fa-solid fa-times"></i>
                                     </button>
                                 </div>
                             </template>
-                            <button type="button" @click="editVariation.options.push({name: '', price_modifier: 0})" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                            <button type="button" @click="editVariation.options.push({name: '', sku: '', price: ''})" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
                                 <i class="fa-solid fa-plus"></i> <?php echo __('Add Option'); ?>
                             </button>
                         </div>

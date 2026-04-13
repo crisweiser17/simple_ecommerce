@@ -70,6 +70,7 @@ function ensureProductsSchema() {
         long_desc TEXT,
         pdf_url TEXT,
         pdf_label TEXT,
+        pdf_active INTEGER DEFAULT 0,
         type TEXT DEFAULT 'physical',
         digital_delivery INTEGER DEFAULT 0,
         download_limit INTEGER DEFAULT 0,
@@ -89,7 +90,9 @@ function ensureProductsSchema() {
     if (!in_array('pdf_label', $columns, true)) {
         $pdo->exec("ALTER TABLE products ADD COLUMN pdf_label TEXT DEFAULT ''");
     }
-
+    if (!in_array('pdf_active', $columns, true)) {
+        $pdo->exec("ALTER TABLE products ADD COLUMN pdf_active INTEGER DEFAULT 0");
+    }
     if (!in_array('slug', $columns, true)) {
         $pdo->exec("ALTER TABLE products ADD COLUMN slug TEXT");
     }
@@ -358,7 +361,7 @@ function createProduct($data) {
     ensureProductsSchema();
     global $pdo;
     $slug = getUniqueProductSlug($data['slug'] ?? ($data['name'] ?? ''));
-    $stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category_id, short_desc, long_desc, pdf_url, pdf_label, type, digital_delivery, download_limit, download_expiry_days, file_url, variations_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category_id, short_desc, long_desc, pdf_url, pdf_label, pdf_active, type, digital_delivery, download_limit, download_expiry_days, file_url, variations_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     return $stmt->execute([
         trim((string)($data['name'] ?? '')),
         trim((string)($data['sku'] ?? '')),
@@ -370,6 +373,7 @@ function createProduct($data) {
         (string)($data['long_desc'] ?? ''),
         trim((string)($data['pdf_url'] ?? '')),
         $data['pdf_label'] ?? '',
+        isset($data['pdf_active']) ? (int)$data['pdf_active'] : 0,
         $data['type'] ?? 'physical',
         isset($data['digital_delivery']) ? 1 : 0,
         isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
@@ -391,7 +395,7 @@ function updateProduct($id, $data) {
     }
     $slug = getUniqueProductSlug($requestedSlug, (int)$id);
 
-    $stmt = $pdo->prepare("UPDATE products SET name=?, sku=?, slug=?, price=?, image_url=?, category_id=?, short_desc=?, long_desc=?, pdf_url=?, pdf_label=?, type=?, digital_delivery=?, download_limit=?, download_expiry_days=?, file_url=?, variations_json=? WHERE id=?");
+    $stmt = $pdo->prepare("UPDATE products SET name=?, sku=?, slug=?, price=?, image_url=?, category_id=?, short_desc=?, long_desc=?, pdf_url=?, pdf_label=?, pdf_active=?, type=?, digital_delivery=?, download_limit=?, download_expiry_days=?, file_url=?, variations_json=? WHERE id=?");
     return $stmt->execute([
         trim((string)($data['name'] ?? '')),
         trim((string)($data['sku'] ?? '')),
@@ -403,6 +407,7 @@ function updateProduct($id, $data) {
         (string)($data['long_desc'] ?? ''),
         trim((string)($data['pdf_url'] ?? '')),
         $data['pdf_label'] ?? '',
+        isset($data['pdf_active']) ? (int)$data['pdf_active'] : 0,
         $data['type'] ?? 'physical',
         isset($data['digital_delivery']) ? 1 : 0,
         isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,

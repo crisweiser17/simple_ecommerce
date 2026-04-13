@@ -34,7 +34,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1" x-text="v.name"></label>
                                     <select x-model="$store.checkoutVariations[v.name]" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md border bg-white">
                                         <template x-for="opt in v.options" :key="opt.name">
-                                            <option :value="opt.name" x-text="opt.name + (parseFloat(opt.price_modifier) > 0 ? ' (+ ' + formatMoney(parseFloat(opt.price_modifier)) + ')' : '')"></option>
+                                            <option :value="opt.name" x-text="opt.name + (parseFloat(opt.price) > 0 ? ' (' + formatMoney(parseFloat(opt.price)) + ')' : '')"></option>
                                         </template>
                                     </select>
                                 </div>
@@ -171,10 +171,25 @@
                         const selected = this.$store.checkoutVariations[v.name];
                         if (selected) {
                             const opt = v.options.find(o => o.name === selected);
-                            if (opt) total += parseFloat(opt.price_modifier || 0);
+                            if (opt && opt.price && parseFloat(opt.price) > 0) {
+                                total = parseFloat(opt.price);
+                            }
                         }
                     }
                     return total;
+                },
+                get currentSku() {
+                    let sku = '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>';
+                    for (const v of this.variations) {
+                        const selected = this.$store.checkoutVariations[v.name];
+                        if (selected) {
+                            const opt = v.options.find(o => o.name === selected);
+                            if (opt && opt.sku) {
+                                sku = opt.sku;
+                            }
+                        }
+                    }
+                    return sku;
                 },
                 formatMoney(amount) {
                     return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(amount);
@@ -217,7 +232,9 @@
                         const selected = this.$store.checkoutVariations[v.name];
                         if (selected) {
                             const opt = v.options.find(o => o.name === selected);
-                            if (opt) total += parseFloat(opt.price_modifier || 0);
+                            if (opt && opt.price && parseFloat(opt.price) > 0) {
+                                total = parseFloat(opt.price);
+                            }
                         }
                     }
                     return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(total);
