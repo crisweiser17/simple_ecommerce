@@ -172,7 +172,16 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                         ?>
                                             <div class="relative border rounded-md p-2 bg-white shadow-sm cursor-move group">
                                                 <img src="<?php echo htmlspecialchars($imgUrl); ?>" class="h-32 w-full object-contain rounded">
-                                                <p class="text-[10px] text-gray-500 mt-2 truncate w-full text-center" title="<?php echo htmlspecialchars(basename($imgUrl)); ?>"><?php echo htmlspecialchars(basename($imgUrl)); ?></p>
+                                                <?php
+                                                $filename = basename($imgUrl);
+                                                $displayFilename = mb_strlen($filename) > 22 ? mb_substr($filename, 0, 10) . '...' . mb_substr($filename, -9) : $filename;
+                                                ?>
+                                                <div class="relative group/tooltip mt-2 w-full flex justify-center">
+                                                    <p class="text-[10px] text-gray-500 text-center cursor-help"><?php echo htmlspecialchars($displayFilename); ?></p>
+                                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover/tooltip:block bg-gray-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-50 pointer-events-none shadow-lg">
+                                                        <?php echo htmlspecialchars($filename); ?>
+                                                    </div>
+                                                </div>
                                                 <input type="hidden" name="existing_images[]" value="<?php echo htmlspecialchars($imgUrl); ?>" class="existing-image-input">
                                                 <!-- Primary Badge -->
                                                 <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
@@ -260,11 +269,11 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                                         <input type="number" step="0.01" x-model="opt.price" class="w-full md:w-24 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Preço">
                                                     </div>
                                                     <div class="w-full md:w-48 relative" x-data="{ open: false }">
-                                                        <div class="flex items-center border border-gray-300 rounded-md shadow-sm p-1 text-sm bg-white cursor-pointer h-full" @click="updateAvailableImages(); open = !open">
+                                                        <div class="flex items-center border border-gray-300 rounded-md shadow-sm p-1 text-sm bg-white cursor-pointer h-full" @click="updateAvailableImages(); open = !open" :title="opt.image_url ? opt.image_url.split('/').pop() : ''">
                                                             <template x-if="opt.image_url">
                                                                 <div class="flex items-center w-full">
                                                                     <img :src="opt.image_url" class="w-6 h-6 object-cover rounded mr-2">
-                                                                    <span class="truncate flex-1 text-xs text-gray-700" x-text="opt.image_url.split('/').pop()"></span>
+                                                                    <span class="flex-1 text-xs text-gray-700" x-text="formatFilename(opt.image_url, 20)"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="!opt.image_url">
@@ -278,9 +287,9 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                                                 <span class="text-sm text-gray-500 italic"><?php echo __('No Image'); ?></span>
                                                             </div>
                                                             <template x-for="imgUrl in availableImages" :key="imgUrl">
-                                                                <div class="p-2 border-b border-gray-100 flex items-center hover:bg-gray-50 cursor-pointer" @click="opt.image_url = imgUrl; open = false">
+                                                                <div class="p-2 border-b border-gray-100 flex items-center hover:bg-gray-50 cursor-pointer" @click="opt.image_url = imgUrl; open = false" :title="imgUrl.split('/').pop()">
                                                                     <img :src="imgUrl" class="w-8 h-8 object-cover rounded border border-gray-200 mr-2">
-                                                                    <span class="truncate text-xs text-gray-700" x-text="imgUrl.split('/').pop()"></span>
+                                                                    <span class="text-xs text-gray-700" x-text="formatFilename(imgUrl, 25)"></span>
                                                                 </div>
                                                             </template>
                                                             <div x-show="availableImages.length === 0" class="p-3 text-center text-xs text-gray-500">
@@ -538,11 +547,17 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                 if (!url) return;
                 
                 const filename = url.split('/').pop() || url;
+                const displayFilename = filename.length > 22 ? filename.substring(0, 10) + '...' + filename.substring(filename.length - 9) : filename;
                 const div = document.createElement('div');
                 div.className = 'relative border rounded-md p-2 bg-white shadow-sm cursor-move group';
                 div.innerHTML = `
                     <img src="${url}" class="h-32 w-full object-contain rounded">
-                    <p class="text-[10px] text-gray-500 mt-2 truncate w-full text-center" title="${filename}">${filename}</p>
+                    <div class="relative group/tooltip mt-2 w-full flex justify-center">
+                        <p class="text-[10px] text-gray-500 text-center cursor-help">${displayFilename}</p>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover/tooltip:block bg-gray-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-50 pointer-events-none shadow-lg">
+                            ${filename}
+                        </div>
+                    </div>
                     <input type="hidden" name="existing_images[]" value="${url}">
                     <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
                     <button type="button" onclick="this.closest('.relative').remove(); document.dispatchEvent(new CustomEvent('gallery-updated'));" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
@@ -649,6 +664,13 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                 },
                 updateAvailableImages() {
                     this.availableImages = getAvailableImages();
+                },
+                formatFilename(url, maxLength = 22) {
+                    if (!url) return '';
+                    const filename = url.split('/').pop();
+                    if (filename.length <= maxLength) return filename;
+                    const charsToShow = Math.floor((maxLength - 3) / 2);
+                    return filename.substring(0, charsToShow) + '...' + filename.substring(filename.length - charsToShow);
                 },
                 addGlobalVariation(jsonStr) {
                     try {
