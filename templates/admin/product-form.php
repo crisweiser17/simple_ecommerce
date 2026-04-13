@@ -169,7 +169,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                                 <!-- Primary Badge -->
                                                 <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
                                                 <!-- Remove Button -->
-                                                <button type="button" onclick="this.closest('.relative').remove();" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
+                                                <button type="button" onclick="this.closest('.relative').remove(); document.dispatchEvent(new CustomEvent('gallery-updated'));" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                                 </button>
                                             </div>
@@ -251,7 +251,35 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                                         <span class="text-sm text-gray-500"><?php echo htmlspecialchars(getSetting('store_currency_symbol', 'R$')); ?></span>
                                                         <input type="number" step="0.01" x-model="opt.price" class="w-full md:w-24 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Preço">
                                                     </div>
-                                                    <input type="text" x-model="opt.image_url" class="w-full md:w-48 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Image URL (opcional)">
+                                                    <div class="w-full md:w-48 relative" x-data="{ open: false }">
+                                                        <div class="flex items-center border border-gray-300 rounded-md shadow-sm p-1 text-sm bg-white cursor-pointer h-full" @click="updateAvailableImages(); open = !open">
+                                                            <template x-if="opt.image_url">
+                                                                <div class="flex items-center w-full">
+                                                                    <img :src="opt.image_url" class="w-6 h-6 object-cover rounded mr-2">
+                                                                    <span class="truncate flex-1 text-xs text-gray-700" x-text="opt.image_url.split('/').pop()"></span>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="!opt.image_url">
+                                                                <span class="text-gray-400 pl-1"><?php echo __('Select Image...'); ?></span>
+                                                            </template>
+                                                            <svg class="w-4 h-4 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                        </div>
+                                                        <div x-show="open" @click.away="open = false" class="absolute z-50 w-64 bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto right-0">
+                                                            <div class="p-2 border-b border-gray-100 flex items-center hover:bg-gray-50 cursor-pointer" @click="opt.image_url = ''; open = false">
+                                                                <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400 mr-2 text-xs">None</div>
+                                                                <span class="text-sm text-gray-500 italic"><?php echo __('No Image'); ?></span>
+                                                            </div>
+                                                            <template x-for="imgUrl in availableImages" :key="imgUrl">
+                                                                <div class="p-2 border-b border-gray-100 flex items-center hover:bg-gray-50 cursor-pointer" @click="opt.image_url = imgUrl; open = false">
+                                                                    <img :src="imgUrl" class="w-8 h-8 object-cover rounded border border-gray-200 mr-2">
+                                                                    <span class="truncate text-xs text-gray-700" x-text="imgUrl.split('/').pop()"></span>
+                                                                </div>
+                                                            </template>
+                                                            <div x-show="availableImages.length === 0" class="p-3 text-center text-xs text-gray-500">
+                                                                <?php echo __('No images in gallery yet. Upload above first.'); ?>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                     <button type="button" @click="variation.options.splice(oIndex, 1)" class="text-red-500 hover:text-red-700 p-2 ml-auto self-end md:self-auto">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                                     </button>
@@ -507,12 +535,14 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                     <img src="${url}" class="h-32 w-full object-contain rounded">
                     <input type="hidden" name="existing_images[]" value="${url}">
                     <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
-                    <button type="button" onclick="this.closest('.relative').remove();" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
+                    <button type="button" onclick="this.closest('.relative').remove(); document.dispatchEvent(new CustomEvent('gallery-updated'));" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 `;
                 document.getElementById('image-grid').appendChild(div);
                 input.value = '';
+                // Dispatch event for variations component to update its image list
+                document.dispatchEvent(new CustomEvent('gallery-updated'));
             };
 
             if (typeof FilePond !== 'undefined') {
@@ -575,8 +605,41 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
         });
 
         function productVariations() {
+            // Get available images from the form inputs
+            const getAvailableImages = () => {
+                const images = [];
+                // Add primary image if it exists
+                const primaryInput = document.querySelector('input[name="existing_images[]"]');
+                if (primaryInput && primaryInput.value) {
+                    images.push(primaryInput.value);
+                }
+                
+                // Add gallery images if they exist
+                const galleryInputs = document.querySelectorAll('input[name="existing_images[]"]');
+                galleryInputs.forEach(input => {
+                    if (input.value && !images.includes(input.value)) {
+                        images.push(input.value);
+                    }
+                });
+                
+                return images;
+            };
+
             return {
                 variations: <?php echo empty($product['variations_json']) ? '[]' : $product['variations_json']; ?>,
+                availableImages: [],
+                init() {
+                    // Initialize available images
+                    this.updateAvailableImages();
+                    
+                    // Listen for changes in the gallery to update available images
+                    document.addEventListener('gallery-updated', () => {
+                        this.updateAvailableImages();
+                    });
+                },
+                updateAvailableImages() {
+                    this.availableImages = getAvailableImages();
+                },
                 addGlobalVariation(jsonStr) {
                     try {
                         const gv = JSON.parse(jsonStr);
