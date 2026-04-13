@@ -1137,7 +1137,7 @@ switch ($path) {
             updateProductImageUrl($productId, $primaryImageUrl);
         }
 
-        header('Location: /admin');
+        header('Location: /admin/product-form?id=' . $productId . '&saved=1');
         exit;
         break;
 

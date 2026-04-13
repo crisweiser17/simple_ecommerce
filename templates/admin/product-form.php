@@ -84,7 +84,14 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
             <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="max-w-4xl mx-auto">
                 <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-2xl font-bold"><?php echo isset($product['id']) ? __('Edit Product') : __('Add New Product'); ?></h1>
+                    <div class="flex items-center">
+                        <h1 class="text-2xl font-bold"><?php echo isset($product['id']) ? __('Edit Product') : __('Add New Product'); ?></h1>
+                        <?php if (isset($_GET['saved']) && $_GET['saved'] == '1'): ?>
+                            <span class="ml-4 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-400">
+                                <?php echo __('Saved successfully!'); ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
                     <a href="/admin" class="text-gray-600 hover:text-gray-900"><?php echo __('Back to Dashboard'); ?></a>
                 </div>
 
@@ -165,6 +172,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                         ?>
                                             <div class="relative border rounded-md p-2 bg-white shadow-sm cursor-move group">
                                                 <img src="<?php echo htmlspecialchars($imgUrl); ?>" class="h-32 w-full object-contain rounded">
+                                                <p class="text-[10px] text-gray-500 mt-2 truncate w-full text-center" title="<?php echo htmlspecialchars(basename($imgUrl)); ?>"><?php echo htmlspecialchars(basename($imgUrl)); ?></p>
                                                 <input type="hidden" name="existing_images[]" value="<?php echo htmlspecialchars($imgUrl); ?>" class="existing-image-input">
                                                 <!-- Primary Badge -->
                                                 <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
@@ -529,10 +537,12 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                 const url = input.value.trim();
                 if (!url) return;
                 
+                const filename = url.split('/').pop() || url;
                 const div = document.createElement('div');
                 div.className = 'relative border rounded-md p-2 bg-white shadow-sm cursor-move group';
                 div.innerHTML = `
                     <img src="${url}" class="h-32 w-full object-contain rounded">
+                    <p class="text-[10px] text-gray-500 mt-2 truncate w-full text-center" title="${filename}">${filename}</p>
                     <input type="hidden" name="existing_images[]" value="${url}">
                     <div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hidden group-first:block uppercase">Primary</div>
                     <button type="button" onclick="this.closest('.relative').remove(); document.dispatchEvent(new CustomEvent('gallery-updated'));" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow transition-transform hover:scale-110" title="Remove image">
