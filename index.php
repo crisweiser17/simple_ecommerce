@@ -1097,7 +1097,7 @@ switch ($path) {
                 // Ensure options are formatted correctly for global
                 $globalOpts = [];
                 foreach ($var['options'] as $opt) {
-                    $globalOpts[] = ['name' => $opt['name'], 'sku' => $opt['sku'] ?? '', 'price' => $opt['price'] ?? ''];
+                    $globalOpts[] = ['name' => $opt['name'], 'sku' => $opt['sku'] ?? '', 'price' => $opt['price'] ?? '', 'image_url' => $opt['image_url'] ?? ''];
                 }
                 saveGlobalVariation(null, $var['name'], $globalOpts);
             }
@@ -1182,7 +1182,8 @@ switch ($path) {
                     $options[] = [
                         'name' => $optName,
                         'sku' => trim((string)($opt['sku'] ?? '')),
-                        'price' => trim((string)($opt['price'] ?? ''))
+                        'price' => trim((string)($opt['price'] ?? '')),
+                        'image_url' => trim((string)($opt['image_url'] ?? ''))
                     ];
                 }
             }

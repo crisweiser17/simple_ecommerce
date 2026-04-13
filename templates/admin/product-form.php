@@ -244,19 +244,20 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                         <div class="bg-gray-50 p-3 rounded border border-gray-200">
                                             <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Options and Prices'); ?></label>
                                             <template x-for="(opt, oIndex) in variation.options" :key="oIndex">
-                                                <div class="flex items-center gap-2 mb-2">
+                                                <div class="flex flex-col md:flex-row md:items-center gap-2 mb-2 p-2 border border-gray-200 bg-white rounded-md">
                                                     <input type="text" x-model="opt.name" class="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Option (ex: Pequeno)">
-                                                    <input type="text" x-model="opt.sku" class="w-32 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="SKU">
-                                                    <div class="flex items-center gap-1">
+                                                    <input type="text" x-model="opt.sku" class="w-full md:w-32 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="SKU">
+                                                    <div class="flex items-center gap-1 w-full md:w-auto">
                                                         <span class="text-sm text-gray-500"><?php echo htmlspecialchars(getSetting('store_currency_symbol', 'R$')); ?></span>
-                                                        <input type="number" step="0.01" x-model="opt.price" class="w-24 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Preço">
+                                                        <input type="number" step="0.01" x-model="opt.price" class="w-full md:w-24 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Preço">
                                                     </div>
-                                                    <button type="button" @click="variation.options.splice(oIndex, 1)" class="text-red-500 hover:text-red-700 p-2">
+                                                    <input type="text" x-model="opt.image_url" class="w-full md:w-48 border border-gray-300 rounded-md shadow-sm p-2 text-sm" placeholder="Image URL (opcional)">
+                                                    <button type="button" @click="variation.options.splice(oIndex, 1)" class="text-red-500 hover:text-red-700 p-2 ml-auto self-end md:self-auto">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                                     </button>
                                                 </div>
                                             </template>
-                                            <button type="button" @click="variation.options.push({name: '', sku: '', price: ''})" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                                            <button type="button" @click="variation.options.push({name: '', sku: '', price: '', image_url: ''})" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
                                                 + <?php echo __('Add Option'); ?>
                                             </button>
                                         </div>
@@ -582,7 +583,8 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                         const opts = gv.options.map(o => ({
                             name: o.name,
                             sku: o.sku || '',
-                            price: o.price || ''
+                            price: o.price || '',
+                            image_url: o.image_url || ''
                         }));
                         this.variations.push({
                             name: gv.name,

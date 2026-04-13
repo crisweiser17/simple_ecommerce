@@ -33,10 +33,82 @@ if ($primaryImage === '') {
         <span class="text-gray-900"><?php echo htmlspecialchars($product['name'] ?? ''); ?></span>
     </nav>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div x-data="{ selectedImage: <?php echo htmlspecialchars(json_encode($primaryImage), ENT_QUOTES, 'UTF-8'); ?> }">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12" x-data="{ 
+        qty: 1, 
+        basePrice: <?php echo (float)($product['price'] ?? 0); ?>,
+        variations: <?php echo htmlspecialchars(json_encode(json_decode($product['variations_json'] ?? '[]', true) ?: [])); ?>,
+        selectedOptions: {},
+        selectedImage: <?php echo htmlspecialchars(json_encode($primaryImage), ENT_QUOTES, 'UTF-8'); ?>,
+        get currentPrice() {
+            let total = this.basePrice;
+            for (const v of this.variations) {
+                const selected = this.selectedOptions[v.name];
+                if (selected) {
+                    const opt = v.options.find(o => o.name === selected);
+                    if (opt && opt.price && parseFloat(opt.price) > 0) {
+                        total = parseFloat(opt.price);
+                    }
+                }
+            }
+            return total;
+        },
+        get currentSku() {
+            let sku = '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>';
+            for (const v of this.variations) {
+                const selected = this.selectedOptions[v.name];
+                if (selected) {
+                    const opt = v.options.find(o => o.name === selected);
+                    if (opt && opt.sku) {
+                        sku = opt.sku;
+                    }
+                }
+            }
+            return sku;
+        },
+        get currentImage() {
+            let img = this.selectedImage || '<?php echo htmlspecialchars($product['image_url'] ?? ''); ?>';
+            let variationImgFound = false;
+            for (const v of this.variations) {
+                const selected = this.selectedOptions[v.name];
+                if (selected) {
+                    const opt = v.options.find(o => o.name === selected);
+                    if (opt && opt.image_url) {
+                        img = opt.image_url;
+                        variationImgFound = true;
+                    }
+                }
+            }
+            // Only return variation image if one exists, else selected image
+            return variationImgFound ? img : (this.selectedImage || 'https://placehold.co/600x600?text=Sem+Imagem');
+        },
+        formatMoney(amount) {
+            return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(amount);
+        },
+        addToCart() {
+            for (const v of this.variations) {
+                if (!this.selectedOptions[v.name]) {
+                    alert('<?php echo __('Please select all options before adding to cart'); ?>: ' + v.name);
+                    return;
+                }
+            }
+            
+            const productData = <?php echo htmlspecialchars(json_encode($product)); ?>;
+            productData.price = this.currentPrice;
+            productData.selected_variations = this.selectedOptions;
+            
+            $store.cart.add({ ...productData, quantity: this.qty });
+        },
+        init() {
+            for (const v of this.variations) {
+                if (v.options && v.options.length > 0) {
+                    this.selectedOptions[v.name] = v.options[0].name;
+                }
+            }
+        }
+    }">
+        <div>
             <div class="bg-white border rounded-lg p-8 flex items-center justify-center">
-                <img :src="selectedImage" src="<?php echo htmlspecialchars($primaryImage ?? ''); ?>" alt="<?php echo htmlspecialchars($product['name'] ?? ''); ?>" class="max-h-[500px] object-contain">
+                <img :src="currentImage" src="<?php echo htmlspecialchars($primaryImage ?? ''); ?>" alt="<?php echo htmlspecialchars($product['name'] ?? ''); ?>" class="max-h-[500px] object-contain" id="mainImage">
             </div>
             <?php if (count($galleryImages) > 1): ?>
                 <div class="mt-4 grid grid-cols-4 gap-3">
@@ -53,62 +125,7 @@ if ($primaryImage === '') {
             <h1 class="text-3xl font-bold text-gray-900 mb-4"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
             
             <?php $variations = json_decode($product['variations_json'] ?? '[]', true) ?: []; ?>
-            <div x-data="{ 
-                qty: 1, 
-                basePrice: <?php echo (float)($product['price'] ?? 0); ?>,
-                variations: <?php echo htmlspecialchars(json_encode($variations)); ?>,
-                selectedOptions: {},
-                get currentPrice() {
-                    let total = this.basePrice;
-                    for (const v of this.variations) {
-                        const selected = this.selectedOptions[v.name];
-                        if (selected) {
-                            const opt = v.options.find(o => o.name === selected);
-                            if (opt && opt.price && parseFloat(opt.price) > 0) {
-                                total = parseFloat(opt.price);
-                            }
-                        }
-                    }
-                    return total;
-                },
-                get currentSku() {
-                    let sku = '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>';
-                    for (const v of this.variations) {
-                        const selected = this.selectedOptions[v.name];
-                        if (selected) {
-                            const opt = v.options.find(o => o.name === selected);
-                            if (opt && opt.sku) {
-                                sku = opt.sku;
-                            }
-                        }
-                    }
-                    return sku;
-                },
-                formatMoney(amount) {
-                    return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(amount);
-                },
-                addToCart() {
-                    for (const v of this.variations) {
-                        if (!this.selectedOptions[v.name]) {
-                            alert('<?php echo __('Please select all options before adding to cart'); ?>: ' + v.name);
-                            return;
-                        }
-                    }
-                    
-                    const productData = <?php echo htmlspecialchars(json_encode($product)); ?>;
-                    productData.price = this.currentPrice;
-                    productData.selected_variations = this.selectedOptions;
-                    
-                    $store.cart.add({ ...productData, quantity: this.qty });
-                },
-                init() {
-                    for (const v of this.variations) {
-                        if (v.options && v.options.length > 0) {
-                            this.selectedOptions[v.name] = v.options[0].name;
-                        }
-                    }
-                }
-            }">
+            <div>
                 <div class="mb-4">
                     <span class="text-gray-500 text-sm">SKU:</span>
                     <span class="text-gray-900 text-sm font-medium" x-text="currentSku"></span>

@@ -20,7 +20,7 @@
             <div class="md:flex">
                 <!-- Product Info -->
                 <div class="md:w-1/2 p-4 md:p-8 bg-gray-50" x-data="productInfo()">
-                    <img src="<?php echo htmlspecialchars($primaryImage); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-full h-64 object-contain rounded-lg mb-6 bg-white p-4 border">
+                    <img :src="currentImage || '<?php echo htmlspecialchars($primaryImage); ?>'" src="<?php echo htmlspecialchars($primaryImage); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-full h-64 object-contain rounded-lg mb-6 bg-white p-4 border">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2"><?php echo htmlspecialchars($product['name']); ?></h1>
                     <div class="text-2xl font-bold text-orange-600 mb-4" x-text="formatMoney(currentPrice)"><?php echo formatMoney($product['price']); ?></div>
                     <div class="prose text-gray-600 mb-6">
@@ -190,6 +190,19 @@
                         }
                     }
                     return sku;
+                },
+                get currentImage() {
+                    let img = '<?php echo htmlspecialchars($product['image_url'] ?? ''); ?>';
+                    for (const v of this.variations) {
+                        const selected = this.$store.checkoutVariations[v.name];
+                        if (selected) {
+                            const opt = v.options.find(o => o.name === selected);
+                            if (opt && opt.image_url) {
+                                img = opt.image_url;
+                            }
+                        }
+                    }
+                    return img;
                 },
                 formatMoney(amount) {
                     return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(amount);
