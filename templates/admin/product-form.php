@@ -92,7 +92,16 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                             </span>
                         <?php endif; ?>
                     </div>
-                    <a href="/admin" class="text-gray-600 hover:text-gray-900"><?php echo __('Back to Dashboard'); ?></a>
+                    <div class="flex items-center gap-4">
+                        <?php if (isset($product['slug'])): ?>
+                            <a href="/product/<?php echo htmlspecialchars($product['slug']); ?>" target="_blank" class="text-indigo-600 hover:text-indigo-800" title="<?php echo __('View Product Page'); ?>">
+                                <i class="fa-solid fa-external-link-alt text-lg"></i>
+                            </a>
+                        <?php endif; ?>
+                        <a href="/admin" class="text-gray-600 hover:text-gray-900" title="<?php echo __('Back to Dashboard'); ?>">
+                            <i class="fa-solid fa-arrow-left text-lg"></i>
+                        </a>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded shadow overflow-x-auto p-4 sm:p-6">
