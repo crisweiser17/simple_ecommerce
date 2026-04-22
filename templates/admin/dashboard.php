@@ -628,34 +628,94 @@
                             </div>
 
                             <div class="border-b pb-4 mb-4">
-                                <h3 class="text-lg font-semibold mb-3"><?php echo __('Typography (Google Fonts)'); ?></h3>
+                                <h3 class="text-lg font-semibold mb-3"><?php echo __('Typography (Google Fonts & Custom TTF)'); ?></h3>
                                 <p class="text-xs text-gray-500 mb-4">
-                                    Insira o nome exato da fonte conforme consta no <a href="https://fonts.google.com" target="_blank" class="text-blue-500 underline">Google Fonts</a> (ex: <code>Inter</code>, <code>Roboto</code>, <code>Montserrat</code>). Deixe em branco ou use "Inter" para o padrão.
+                                    Selecione uma fonte do Google Fonts ou faça o upload da sua própria fonte (TTF/WOFF/OTF) no campo abaixo.
                                 </p>
+                                
+                                <div class="bg-gray-50 border rounded p-4 mb-6">
+                                    <h4 class="font-bold text-gray-700 text-sm mb-2">Upload de Fonte Customizada (TTF/OTF/WOFF)</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-gray-700 text-xs font-bold mb-1">Nome da Fonte (ex: Helvetica Neue Std)</label>
+                                            <input type="text" name="custom_font_1_name" value="<?php echo htmlspecialchars(getSetting('custom_font_1_name', '')); ?>" placeholder="Minha Fonte" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-xs font-bold mb-1">Arquivo da Fonte</label>
+                                            <input type="file" name="custom_font_1_file" accept=".ttf,.otf,.woff,.woff2" class="shadow appearance-none border rounded w-full py-1 px-3 text-gray-700 focus:outline-none focus:shadow-outline" data-filepond="font-single">
+                                            <?php if($customFontUrl = getSetting('custom_font_1_url', '')): ?>
+                                                <p class="text-xs text-green-600 mt-1">✓ Arquivo enviado: <?php echo basename($customFontUrl); ?></p>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <?php
+                                $popularFonts = [
+                                    'Inter', 'Roboto', 'Montserrat', 'Open Sans', 'Lato', 'Poppins', 'Oswald', 
+                                    'Source Sans Pro', 'Slabo 27px', 'Raleway', 'PT Sans', 'Merriweather', 'Nunito', 
+                                    'Playfair Display', 'Lora', 'Mukta', 'Work Sans', 'Fira Sans', 'Barlow', 
+                                    'Quicksand', 'Rubik', 'Ubuntu', 'DM Sans', 'Manrope'
+                                ];
+                                
+                                $customFont1Name = getSetting('custom_font_1_name', '');
+                                
+                                function renderFontOptions($currentValue, $popularFonts, $customFont1Name) {
+                                    $options = '';
+                                    if ($customFont1Name !== '') {
+                                        $selected = $currentValue === $customFont1Name ? 'selected' : '';
+                                        $options .= '<option value="' . htmlspecialchars($customFont1Name) . '" ' . $selected . '>★ ' . htmlspecialchars($customFont1Name) . ' (Custom)</option>';
+                                    }
+                                    
+                                    // Ensure current value is in the list even if it's custom typed previously
+                                    if ($currentValue !== '' && $currentValue !== $customFont1Name && !in_array($currentValue, $popularFonts)) {
+                                        $options .= '<option value="' . htmlspecialchars($currentValue) . '" selected>' . htmlspecialchars($currentValue) . '</option>';
+                                    }
+
+                                    foreach ($popularFonts as $font) {
+                                        $selected = $currentValue === $font ? 'selected' : '';
+                                        $options .= '<option value="' . htmlspecialchars($font) . '" ' . $selected . '>' . htmlspecialchars($font) . '</option>';
+                                    }
+                                    return $options;
+                                }
+                                ?>
+
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Body Font (General Text)'); ?></label>
-                                        <input type="text" name="font_body" value="<?php echo htmlspecialchars(getSetting('font_body', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                        <select name="font_body" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                            <?php echo renderFontOptions(getSetting('font_body', 'Inter'), $popularFonts, $customFont1Name); ?>
+                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Headings Font (H1-H6)'); ?></label>
-                                        <input type="text" name="font_headings" value="<?php echo htmlspecialchars(getSetting('font_headings', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                        <select name="font_headings" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                            <?php echo renderFontOptions(getSetting('font_headings', 'Inter'), $popularFonts, $customFont1Name); ?>
+                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Product Title Font'); ?></label>
-                                        <input type="text" name="font_product_title" value="<?php echo htmlspecialchars(getSetting('font_product_title', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                        <select name="font_product_title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                            <?php echo renderFontOptions(getSetting('font_product_title', 'Inter'), $popularFonts, $customFont1Name); ?>
+                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Menu Font'); ?></label>
-                                        <input type="text" name="font_menu" value="<?php echo htmlspecialchars(getSetting('font_menu', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                        <select name="font_menu" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                            <?php echo renderFontOptions(getSetting('font_menu', 'Inter'), $popularFonts, $customFont1Name); ?>
+                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Buttons/CTA Font'); ?></label>
-                                        <input type="text" name="font_buttons" value="<?php echo htmlspecialchars(getSetting('font_buttons', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                        <select name="font_buttons" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                            <?php echo renderFontOptions(getSetting('font_buttons', 'Inter'), $popularFonts, $customFont1Name); ?>
+                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Prices Font'); ?></label>
-                                        <input type="text" name="font_prices" value="<?php echo htmlspecialchars(getSetting('font_prices', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                        <select name="font_prices" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                            <?php echo renderFontOptions(getSetting('font_prices', 'Inter'), $popularFonts, $customFont1Name); ?>
+                                        </select>
                                     </div>
                                 </div>
                             </div>

@@ -167,7 +167,8 @@ function uploadSingleImageFile($file, $uploadDir, $publicBasePath, $filePrefix, 
         if ($finfo) {
             $mimeType = finfo_file($finfo, $tmpName) ?: '';
             finfo_close($finfo);
-            if (!in_array($mimeType, $allowedMimeTypes, true)) {
+            // Allow bypassing strict mime type check for fonts because PHP finfo often misidentifies font mimes
+            if (!in_array($mimeType, $allowedMimeTypes, true) && !in_array($ext, ['ttf', 'otf', 'woff', 'woff2'], true)) {
                 return '';
             }
         }
@@ -914,6 +915,22 @@ switch ($path) {
         updateSetting('font_menu', trim($_POST['font_menu'] ?? 'Inter'));
         updateSetting('font_buttons', trim($_POST['font_buttons'] ?? 'Inter'));
         updateSetting('font_prices', trim($_POST['font_prices'] ?? 'Inter'));
+
+        // Custom Fonts Upload
+        $customFont1Name = trim($_POST['custom_font_1_name'] ?? '');
+        updateSetting('custom_font_1_name', $customFont1Name);
+        
+        $uploadedCustomFont1 = uploadSingleImageFile(
+            $_FILES['custom_font_1_file'] ?? null,
+            __DIR__ . '/public/uploads/fonts/',
+            '/uploads/fonts',
+            'font_',
+            ['ttf', 'otf', 'woff', 'woff2'],
+            ['font/ttf', 'font/otf', 'font/woff', 'font/woff2', 'application/x-font-ttf', 'application/x-font-opentype', 'application/font-woff', 'application/font-woff2', 'application/octet-stream']
+        );
+        if ($uploadedCustomFont1 !== '') {
+            updateSetting('custom_font_1_url', $uploadedCustomFont1);
+        }
 
         header('Location: /admin');
         exit;

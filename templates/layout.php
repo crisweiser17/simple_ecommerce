@@ -23,10 +23,20 @@
     $fontButtons = getSetting('font_buttons', 'Inter');
     $fontPrices = getSetting('font_prices', 'Inter');
 
+    $customFont1Name = getSetting('custom_font_1_name', '');
+    $customFont1Url = getSetting('custom_font_1_url', '');
+
     // Collect unique fonts to request from Google Fonts
     $fontsToLoad = array_unique(array_filter([
         $fontBody, $fontHeadings, $fontProductTitle, $fontMenu, $fontButtons, $fontPrices
     ]));
+    
+    // Remove custom font from Google Fonts loading request
+    if ($customFont1Name !== '') {
+        $fontsToLoad = array_filter($fontsToLoad, function($f) use ($customFont1Name) {
+            return $f !== $customFont1Name;
+        });
+    }
     
     // Open Graph Variables
     $ogTitle = $storeName;
@@ -104,6 +114,16 @@
     <?php endif; ?>
 
     <style>
+        <?php if ($customFont1Name !== '' && $customFont1Url !== ''): ?>
+        @font-face {
+            font-family: '<?php echo htmlspecialchars($customFont1Name); ?>';
+            src: url('<?php echo htmlspecialchars($customFont1Url); ?>') format('truetype'); /* Modern browsers handle ttf/otf/woff natively via format inference if omit, but truetype is safe fallback */
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        <?php endif; ?>
+
         :root {
             --font-body: '<?php echo htmlspecialchars($fontBody); ?>', sans-serif;
             --font-headings: '<?php echo htmlspecialchars($fontHeadings); ?>', sans-serif;
