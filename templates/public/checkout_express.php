@@ -75,7 +75,7 @@
                             <input type="text" x-model="customer.whatsapp" x-mask="(99) 99999-9999" required placeholder="(11) 99999-9999" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
                         </div>
                         
-                        <button type="submit" :disabled="loading" class="w-full bg-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-all transform hover:-translate-y-1 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mt-8 flex justify-center items-center gap-2">
+                        <button type="submit" :disabled="loading" class="w-full bg-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-all transform hover:-translate-y-1 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mt-8 flex justify-center items-center gap-2 font-buttons">
                             <span x-show="!loading">Pagar com PIX</span>
                             <span x-show="loading" class="flex items-center gap-2">
                                 <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

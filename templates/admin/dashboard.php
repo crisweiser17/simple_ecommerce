@@ -628,6 +628,39 @@
                             </div>
 
                             <div class="border-b pb-4 mb-4">
+                                <h3 class="text-lg font-semibold mb-3"><?php echo __('Typography (Google Fonts)'); ?></h3>
+                                <p class="text-xs text-gray-500 mb-4">
+                                    Insira o nome exato da fonte conforme consta no <a href="https://fonts.google.com" target="_blank" class="text-blue-500 underline">Google Fonts</a> (ex: <code>Inter</code>, <code>Roboto</code>, <code>Montserrat</code>). Deixe em branco ou use "Inter" para o padrão.
+                                </p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Body Font (General Text)'); ?></label>
+                                        <input type="text" name="font_body" value="<?php echo htmlspecialchars(getSetting('font_body', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Headings Font (H1-H6)'); ?></label>
+                                        <input type="text" name="font_headings" value="<?php echo htmlspecialchars(getSetting('font_headings', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Product Title Font'); ?></label>
+                                        <input type="text" name="font_product_title" value="<?php echo htmlspecialchars(getSetting('font_product_title', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Menu Font'); ?></label>
+                                        <input type="text" name="font_menu" value="<?php echo htmlspecialchars(getSetting('font_menu', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Buttons/CTA Font'); ?></label>
+                                        <input type="text" name="font_buttons" value="<?php echo htmlspecialchars(getSetting('font_buttons', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-bold mb-2"><?php echo __('Prices Font'); ?></label>
+                                        <input type="text" name="font_prices" value="<?php echo htmlspecialchars(getSetting('font_prices', 'Inter')); ?>" placeholder="Ex: Inter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-b pb-4 mb-4">
                                 <h3 class="text-lg font-semibold mb-3"><?php echo __('Store Theme'); ?></h3>
                                 <div class="grid grid-cols-1 gap-3">
                                     <div>

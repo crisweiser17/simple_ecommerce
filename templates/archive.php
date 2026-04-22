@@ -182,14 +182,14 @@
 
                         <!-- Content -->
                         <div class="w-full text-left">
-                            <h3 class="font-bold text-gray-900 text-lg leading-tight mb-1">
+                            <h3 class="font-bold text-gray-900 text-lg leading-tight mb-1 font-product-title">
                                 <a href="<?php echo htmlspecialchars($productUrl); ?>" class="hover:text-orange-600 transition-colors"><?php echo htmlspecialchars($product['name']); ?></a>
                             </h3>
                             <p class="text-xs text-gray-500 mb-3"><?php echo __('Best-in-class Bioavail.'); ?></p>
                             
                             <!-- Price -->
                             <?php if ($storeMode === 'ecommerce'): ?>
-                            <div class="font-bold text-xl text-gray-900 mb-4 border-t border-gray-100 pt-2">
+                            <div class="font-bold text-xl text-gray-900 mb-4 border-t border-gray-100 pt-2 font-prices">
                                 <?php echo formatMoney($product['price']); ?>
                             </div>
                             <?php else: ?>
@@ -203,7 +203,7 @@
                                 <div class="flex items-center gap-2">
                                     <button 
                                         @click="$store.cart.add({ ...<?php echo htmlspecialchars(json_encode($product)); ?>, quantity: qty })"
-                                        class="flex-1 bg-orange-500 text-white py-2.5 rounded text-sm font-bold hover:bg-orange-600 transition-colors shadow-md hover:shadow-lg flex justify-center items-center gap-2">
+                                        class="flex-1 bg-orange-500 text-white py-2.5 rounded text-sm font-bold hover:bg-orange-600 transition-colors shadow-md hover:shadow-lg flex justify-center items-center gap-2 font-buttons">
                                         <span><?php echo $storeMode === 'catalog' ? __('Adicionar à lista') : __('Add to Cart'); ?></span>
                                         <?php if ($storeMode === 'catalog'): ?>
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>

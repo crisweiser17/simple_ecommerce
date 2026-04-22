@@ -24,6 +24,12 @@ $defaults = [
     'theme_header_bg' => '#0f1115',
     'theme_page_bg' => '#f3f4f6',
     'theme_text_color' => '#1f2937',
+    'font_body' => 'Inter',
+    'font_headings' => 'Inter',
+    'font_product_title' => 'Inter',
+    'font_menu' => 'Inter',
+    'font_buttons' => 'Inter',
+    'font_prices' => 'Inter',
     'i18n_multilang_enabled' => '1',
     'i18n_single_lang' => 'en'
 ];

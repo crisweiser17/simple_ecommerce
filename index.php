@@ -907,6 +907,14 @@ switch ($path) {
         $productsPerPage = max(1, (int)($_POST['products_per_page'] ?? 15));
         updateSetting('products_per_page', (string)$productsPerPage);
 
+        // Fonts
+        updateSetting('font_body', trim($_POST['font_body'] ?? 'Inter'));
+        updateSetting('font_headings', trim($_POST['font_headings'] ?? 'Inter'));
+        updateSetting('font_product_title', trim($_POST['font_product_title'] ?? 'Inter'));
+        updateSetting('font_menu', trim($_POST['font_menu'] ?? 'Inter'));
+        updateSetting('font_buttons', trim($_POST['font_buttons'] ?? 'Inter'));
+        updateSetting('font_prices', trim($_POST['font_prices'] ?? 'Inter'));
+
         header('Location: /admin');
         exit;
         break;

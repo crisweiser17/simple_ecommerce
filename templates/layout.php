@@ -15,6 +15,19 @@
     $isMultilangEnabled = getSetting('i18n_multilang_enabled', '1') === '1';
     $storeMode = getSetting('store_mode', 'ecommerce');
     
+    // Typography Settings
+    $fontBody = getSetting('font_body', 'Inter');
+    $fontHeadings = getSetting('font_headings', 'Inter');
+    $fontProductTitle = getSetting('font_product_title', 'Inter');
+    $fontMenu = getSetting('font_menu', 'Inter');
+    $fontButtons = getSetting('font_buttons', 'Inter');
+    $fontPrices = getSetting('font_prices', 'Inter');
+
+    // Collect unique fonts to request from Google Fonts
+    $fontsToLoad = array_unique(array_filter([
+        $fontBody, $fontHeadings, $fontProductTitle, $fontMenu, $fontButtons, $fontPrices
+    ]));
+    
     // Open Graph Variables
     $ogTitle = $storeName;
     $ogDescription = '';
@@ -76,7 +89,37 @@
     <meta name="twitter:title" content="<?php echo htmlspecialchars($ogTitle); ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
+    
+    <?php if (!empty($fontsToLoad)): ?>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <?php
+        $fontParams = [];
+        foreach ($fontsToLoad as $f) {
+            $fontParams[] = 'family=' . urlencode(trim($f)) . ':wght@300;400;500;600;700;800';
+        }
+        $fontUrl = 'https://fonts.googleapis.com/css2?' . implode('&', $fontParams) . '&display=swap';
+    ?>
+    <link href="<?php echo htmlspecialchars($fontUrl); ?>" rel="stylesheet">
+    <?php endif; ?>
+
     <style>
+        :root {
+            --font-body: '<?php echo htmlspecialchars($fontBody); ?>', sans-serif;
+            --font-headings: '<?php echo htmlspecialchars($fontHeadings); ?>', sans-serif;
+            --font-product-title: '<?php echo htmlspecialchars($fontProductTitle); ?>', sans-serif;
+            --font-menu: '<?php echo htmlspecialchars($fontMenu); ?>', sans-serif;
+            --font-buttons: '<?php echo htmlspecialchars($fontButtons); ?>', sans-serif;
+            --font-prices: '<?php echo htmlspecialchars($fontPrices); ?>', sans-serif;
+        }
+        
+        body { font-family: var(--font-body); }
+        h1, h2, h3, h4, h5, h6 { font-family: var(--font-headings); }
+        .font-product-title { font-family: var(--font-product-title); }
+        .font-menu { font-family: var(--font-menu); }
+        .font-buttons { font-family: var(--font-buttons); }
+        .font-prices { font-family: var(--font-prices); }
+        
         [x-cloak] { display: none !important; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -191,7 +234,7 @@
     <!-- Navigation -->
     <div class="bg-white border-b shadow-sm sticky top-0 z-40">
         <div class="container mx-auto px-4">
-            <nav class="flex items-center space-x-6 md:space-x-8 py-3 text-sm font-semibold text-gray-600 overflow-x-auto hide-scrollbar">
+            <nav class="flex items-center space-x-6 md:space-x-8 py-3 text-sm font-semibold text-gray-600 overflow-x-auto hide-scrollbar font-menu">
                 <?php
                 // Get all dynamic pages
                 $navPages = getAllPages();

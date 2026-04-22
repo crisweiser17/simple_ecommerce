@@ -122,7 +122,7 @@ if ($primaryImage === '') {
         </div>
 
         <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-4"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-4 font-product-title"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
             
             <?php $variations = json_decode($product['variations_json'] ?? '[]', true) ?: []; ?>
             <div>
@@ -132,7 +132,7 @@ if ($primaryImage === '') {
                 </div>
 
                 <?php if ($storeMode === 'ecommerce'): ?>
-                <div class="text-2xl font-bold text-orange-600 mb-6" x-text="formatMoney(currentPrice)"><?php echo formatMoney($product['price']); ?></div>
+                <div class="text-2xl font-bold text-orange-600 mb-6 font-prices" x-text="formatMoney(currentPrice)"><?php echo formatMoney($product['price']); ?></div>
                 <?php endif; ?>
 
                 <div class="prose text-gray-600 mb-8">
@@ -164,7 +164,7 @@ if ($primaryImage === '') {
                     </div>
                     <button 
                         @click="addToCart()"
-                        class="w-full sm:w-auto bg-orange-500 text-white px-8 py-3 rounded font-bold hover:bg-orange-600 transition-colors uppercase shadow-lg transform active:scale-95 text-center">
+                        class="w-full sm:w-auto bg-orange-500 text-white px-8 py-3 rounded font-bold hover:bg-orange-600 transition-colors uppercase shadow-lg transform active:scale-95 text-center font-buttons">
                         <?php echo $storeMode === 'catalog' ? __('Adicionar à lista') : __('Add to cart'); ?>
                     </button>
                 </div>
