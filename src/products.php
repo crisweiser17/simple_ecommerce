@@ -61,11 +61,14 @@ function productsSchemaFastPathLooksReady(PDO $pdo) {
         'products' => 'table',
         'product_images' => 'table',
         'global_variations' => 'table',
+        'product_categories' => 'table',
         'idx_products_slug_unique' => 'index',
         'idx_products_sku' => 'index',
         'idx_products_category_id' => 'index',
         'idx_product_images_product_id' => 'index',
         'idx_product_images_primary' => 'index',
+        'idx_product_categories_product_id' => 'index',
+        'idx_product_categories_category_id' => 'index',
     ];
 
     $placeholders = implode(', ', array_fill(0, count($requiredObjects), '?'));
@@ -86,6 +89,7 @@ function productsSchemaFastPathLooksReady(PDO $pdo) {
     $pdo->query("SELECT category_id, pdf_label, pdf_active, slug, variations_json FROM products LIMIT 0");
     $pdo->query("SELECT product_id, image_url, is_primary, sort_order FROM product_images LIMIT 0");
     $pdo->query("SELECT name, options_json FROM global_variations LIMIT 0");
+    $pdo->query("SELECT product_id, category_id FROM product_categories LIMIT 0");
 
     return true;
 }
@@ -172,6 +176,21 @@ function ensureProductsSchema() {
         options_json TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS product_categories (
+        product_id INTEGER NOT NULL,
+        category_id INTEGER NOT NULL,
+        PRIMARY KEY (product_id, category_id)
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_categories_product_id ON product_categories(product_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_categories_category_id ON product_categories(category_id)");
+
+    // Migration script to copy products.category_id to product_categories
+    $pdo->exec("
+        INSERT OR IGNORE INTO product_categories (product_id, category_id)
+        SELECT id, category_id FROM products 
+        WHERE category_id IS NOT NULL AND category_id > 0
+    ");
 
     $checked = true;
 }
@@ -277,7 +296,10 @@ function getAllProducts($categorySlug = null, $limit = null, $offset = 0, $searc
     ensureProductsSchema();
     global $pdo;
     $sql = "
-        SELECT p.*, c.name as category_name,
+        SELECT p.*, 
+               GROUP_CONCAT(c.name, ', ') as category_name,
+               GROUP_CONCAT(c.id, ',') as category_ids,
+               MIN(c.slug) as category_slug,
                COALESCE(
                     (
                         SELECT pi.image_url
@@ -289,13 +311,18 @@ function getAllProducts($categorySlug = null, $limit = null, $offset = 0, $searc
                     p.image_url
                ) as primary_image_url
         FROM products p 
-        LEFT JOIN categories c ON p.category_id = c.id 
+        LEFT JOIN product_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id 
     ";
     
     $params = [];
     $conditions = [];
     if ($categorySlug) {
-        $conditions[] = "c.slug = ?";
+        $conditions[] = "EXISTS (
+            SELECT 1 FROM product_categories pc_filter
+            JOIN categories c_filter ON pc_filter.category_id = c_filter.id
+            WHERE pc_filter.product_id = p.id AND c_filter.slug = ?
+        )";
         $params[] = $categorySlug;
     }
 
@@ -310,7 +337,7 @@ function getAllProducts($categorySlug = null, $limit = null, $offset = 0, $searc
         $sql .= " WHERE " . implode(" AND ", $conditions);
     }
     
-    $sql .= " ORDER BY p.created_at DESC";
+    $sql .= " GROUP BY p.id ORDER BY p.created_at DESC";
 
     if ($limit !== null) {
         $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
@@ -325,15 +352,18 @@ function countProducts($categorySlug = null, $searchTerm = null) {
     ensureProductsSchema();
     global $pdo;
     $sql = "
-        SELECT COUNT(*) 
+        SELECT COUNT(DISTINCT p.id) 
         FROM products p 
-        LEFT JOIN categories c ON p.category_id = c.id 
     ";
     
     $params = [];
     $conditions = [];
     if ($categorySlug) {
-        $conditions[] = "c.slug = ?";
+        $conditions[] = "EXISTS (
+            SELECT 1 FROM product_categories pc_filter
+            JOIN categories c_filter ON pc_filter.category_id = c_filter.id
+            WHERE pc_filter.product_id = p.id AND c_filter.slug = ?
+        )";
         $params[] = $categorySlug;
     }
 
@@ -357,7 +387,10 @@ function getProduct($id) {
     ensureProductsSchema();
     global $pdo;
     $stmt = $pdo->prepare("
-        SELECT p.*, c.name as category_name, c.slug as category_slug,
+        SELECT p.*, 
+               GROUP_CONCAT(c.name, ', ') as category_name,
+               GROUP_CONCAT(c.id, ',') as category_ids,
+               MIN(c.slug) as category_slug,
                COALESCE(
                     (
                         SELECT pi.image_url
@@ -369,8 +402,10 @@ function getProduct($id) {
                     p.image_url
                ) as primary_image_url
         FROM products p 
-        LEFT JOIN categories c ON p.category_id = c.id 
+        LEFT JOIN product_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id 
         WHERE p.id = ?
+        GROUP BY p.id
     ");
     $stmt->execute([$id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -393,7 +428,10 @@ function getProductBySlug($slug) {
     }
 
     $stmt = $pdo->prepare("
-        SELECT p.*, c.name as category_name, c.slug as category_slug,
+        SELECT p.*, 
+               GROUP_CONCAT(c.name, ', ') as category_name,
+               GROUP_CONCAT(c.id, ',') as category_ids,
+               MIN(c.slug) as category_slug,
                COALESCE(
                     (
                         SELECT pi.image_url
@@ -405,8 +443,10 @@ function getProductBySlug($slug) {
                     p.image_url
                ) as primary_image_url
         FROM products p
-        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN product_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id
         WHERE p.slug = ?
+        GROUP BY p.id
         LIMIT 1
     ");
     $stmt->execute([$normalizedSlug]);
@@ -424,26 +464,53 @@ function createProduct($data) {
     ensureProductsSchema();
     global $pdo;
     $slug = getUniqueProductSlug($data['slug'] ?? ($data['name'] ?? ''));
-    $stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category_id, short_desc, long_desc, pdf_url, pdf_label, pdf_active, type, digital_delivery, download_limit, download_expiry_days, file_url, variations_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    return $stmt->execute([
-        trim((string)($data['name'] ?? '')),
-        trim((string)($data['sku'] ?? '')),
-        $slug,
-        ($data['price'] === '' || !isset($data['price'])) ? null : (float)$data['price'],
-        trim((string)($data['image_url'] ?? '')),
-        ($data['category_id'] === '' || !isset($data['category_id'])) ? null : (int)$data['category_id'],
-        (string)($data['short_desc'] ?? ''),
-        (string)($data['long_desc'] ?? ''),
-        trim((string)($data['pdf_url'] ?? '')),
-        $data['pdf_label'] ?? '',
-        isset($data['pdf_active']) ? (int)$data['pdf_active'] : 0,
-        $data['type'] ?? 'physical',
-        isset($data['digital_delivery']) ? 1 : 0,
-        isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
-        isset($data['download_expiry_days']) && $data['download_expiry_days'] !== '' ? (int)$data['download_expiry_days'] : null,
-        trim((string)($data['file_url'] ?? '')),
-        trim((string)($data['variations_json'] ?? '[]'))
-    ]);
+
+    $categoryIds = [];
+    if (isset($data['category_ids']) && is_array($data['category_ids'])) {
+        $categoryIds = array_map('intval', $data['category_ids']);
+    } elseif (isset($data['category_id']) && $data['category_id'] !== '') {
+        $categoryIds = [(int)$data['category_id']];
+    }
+    $primaryCategoryId = !empty($categoryIds) ? $categoryIds[0] : null;
+
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("INSERT INTO products (name, sku, slug, price, image_url, category_id, short_desc, long_desc, pdf_url, pdf_label, pdf_active, type, digital_delivery, download_limit, download_expiry_days, file_url, variations_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            trim((string)($data['name'] ?? '')),
+            trim((string)($data['sku'] ?? '')),
+            $slug,
+            ($data['price'] === '' || !isset($data['price'])) ? null : (float)$data['price'],
+            trim((string)($data['image_url'] ?? '')),
+            $primaryCategoryId,
+            (string)($data['short_desc'] ?? ''),
+            (string)($data['long_desc'] ?? ''),
+            trim((string)($data['pdf_url'] ?? '')),
+            $data['pdf_label'] ?? '',
+            isset($data['pdf_active']) ? (int)$data['pdf_active'] : 0,
+            $data['type'] ?? 'physical',
+            isset($data['digital_delivery']) ? 1 : 0,
+            isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
+            isset($data['download_expiry_days']) && $data['download_expiry_days'] !== '' ? (int)$data['download_expiry_days'] : null,
+            trim((string)($data['file_url'] ?? '')),
+            trim((string)($data['variations_json'] ?? '[]'))
+        ]);
+        $productId = (int)$pdo->lastInsertId();
+
+        if (!empty($categoryIds)) {
+            $stmtCat = $pdo->prepare("INSERT OR IGNORE INTO product_categories (product_id, category_id) VALUES (?, ?)");
+            foreach ($categoryIds as $cid) {
+                if ($cid > 0) {
+                    $stmtCat->execute([$productId, $cid]);
+                }
+            }
+        }
+        $pdo->commit();
+        return $productId;
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 }
 
 function updateProduct($id, $data) {
@@ -463,30 +530,59 @@ function updateProduct($id, $data) {
         $slug = getUniqueProductSlug($requestedSlug, (int)$id);
     }
 
-    $stmt = $pdo->prepare("UPDATE products SET name=?, sku=?, slug=?, price=?, image_url=?, category_id=?, short_desc=?, long_desc=?, pdf_url=?, pdf_label=?, pdf_active=?, type=?, digital_delivery=?, download_limit=?, download_expiry_days=?, file_url=?, variations_json=? WHERE id=?");
-    return $stmt->execute([
-        trim((string)($data['name'] ?? '')),
-        trim((string)($data['sku'] ?? '')),
-        $slug,
-        ($data['price'] === '' || !isset($data['price'])) ? null : (float)$data['price'],
-        trim((string)($data['image_url'] ?? '')),
-        ($data['category_id'] === '' || !isset($data['category_id'])) ? null : (int)$data['category_id'],
-        (string)($data['short_desc'] ?? ''),
-        (string)($data['long_desc'] ?? ''),
-        trim((string)($data['pdf_url'] ?? '')),
-        $data['pdf_label'] ?? '',
-        isset($data['pdf_active']) ? (int)$data['pdf_active'] : 0,
-        $data['type'] ?? 'physical',
-        isset($data['digital_delivery']) ? 1 : 0,
-        isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
-        isset($data['download_expiry_days']) && $data['download_expiry_days'] !== '' ? (int)$data['download_expiry_days'] : null,
-        trim((string)($data['file_url'] ?? '')),
-        trim((string)($data['variations_json'] ?? '[]')),
-        $id
-    ]);
+    $categoryIds = [];
+    if (isset($data['category_ids']) && is_array($data['category_ids'])) {
+        $categoryIds = array_map('intval', $data['category_ids']);
+    } elseif (isset($data['category_id']) && $data['category_id'] !== '') {
+        $categoryIds = [(int)$data['category_id']];
+    }
+    $primaryCategoryId = !empty($categoryIds) ? $categoryIds[0] : null;
+
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("UPDATE products SET name=?, sku=?, slug=?, price=?, image_url=?, category_id=?, short_desc=?, long_desc=?, pdf_url=?, pdf_label=?, pdf_active=?, type=?, digital_delivery=?, download_limit=?, download_expiry_days=?, file_url=?, variations_json=? WHERE id=?");
+        $result = $stmt->execute([
+            trim((string)($data['name'] ?? '')),
+            trim((string)($data['sku'] ?? '')),
+            $slug,
+            ($data['price'] === '' || !isset($data['price'])) ? null : (float)$data['price'],
+            trim((string)($data['image_url'] ?? '')),
+            $primaryCategoryId,
+            (string)($data['short_desc'] ?? ''),
+            (string)($data['long_desc'] ?? ''),
+            trim((string)($data['pdf_url'] ?? '')),
+            $data['pdf_label'] ?? '',
+            isset($data['pdf_active']) ? (int)$data['pdf_active'] : 0,
+            $data['type'] ?? 'physical',
+            isset($data['digital_delivery']) ? 1 : 0,
+            isset($data['download_limit']) && $data['download_limit'] !== '' ? (int)$data['download_limit'] : null,
+            isset($data['download_expiry_days']) && $data['download_expiry_days'] !== '' ? (int)$data['download_expiry_days'] : null,
+            trim((string)($data['file_url'] ?? '')),
+            trim((string)($data['variations_json'] ?? '[]')),
+            $id
+        ]);
+
+        if (isset($data['category_ids']) || isset($data['category_id'])) {
+            $stmtDel = $pdo->prepare("DELETE FROM product_categories WHERE product_id = ?");
+            $stmtDel->execute([(int)$id]);
+            if (!empty($categoryIds)) {
+                $stmtCat = $pdo->prepare("INSERT OR IGNORE INTO product_categories (product_id, category_id) VALUES (?, ?)");
+                foreach ($categoryIds as $cid) {
+                    if ($cid > 0) {
+                        $stmtCat->execute([(int)$id, $cid]);
+                    }
+                }
+            }
+        }
+        $pdo->commit();
+        return $result;
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 }
 
-function assignCategoryToProducts(array $productIds, $categoryId) {
+function assignCategoryToProducts(array $productIds, $categoryId, $action = 'add') {
     ensureProductsSchema();
     global $pdo;
 
@@ -514,11 +610,11 @@ function assignCategoryToProducts(array $productIds, $categoryId) {
         if ((int)$categoryCheck->fetchColumn() < 1) {
             throw new InvalidArgumentException('Category not found.');
         }
+    } else {
+        if ($action === 'add') {
+            throw new InvalidArgumentException('Invalid category id for adding.');
+        }
     }
-
-    $placeholders = implode(', ', array_fill(0, count($normalizedProductIds), '?'));
-    $sql = "UPDATE products SET category_id = ? WHERE id IN ($placeholders)";
-    $params = array_merge([$normalizedCategoryId], $normalizedProductIds);
 
     $startedTransaction = false;
     if (!$pdo->inTransaction()) {
@@ -527,14 +623,50 @@ function assignCategoryToProducts(array $productIds, $categoryId) {
     }
 
     try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
+        $updatedCount = 0;
+        $placeholders = implode(', ', array_fill(0, count($normalizedProductIds), '?'));
+
+        if ($action === 'remove') {
+            if ($normalizedCategoryId === null) {
+                // Remove all categories
+                $stmt = $pdo->prepare("DELETE FROM product_categories WHERE product_id IN ($placeholders)");
+                $stmt->execute($normalizedProductIds);
+                
+                $stmtProd = $pdo->prepare("UPDATE products SET category_id = NULL WHERE id IN ($placeholders)");
+                $stmtProd->execute($normalizedProductIds);
+                $updatedCount = count($normalizedProductIds);
+            } else {
+                // Remove specific category
+                $sql = "DELETE FROM product_categories WHERE category_id = ? AND product_id IN ($placeholders)";
+                $params = array_merge([$normalizedCategoryId], $normalizedProductIds);
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                
+                $sqlProd = "UPDATE products SET category_id = NULL WHERE category_id = ? AND id IN ($placeholders)";
+                $stmtProd = $pdo->prepare($sqlProd);
+                $stmtProd->execute($params);
+                $updatedCount = count($normalizedProductIds);
+            }
+        } elseif ($action === 'add') {
+            if ($normalizedCategoryId !== null) {
+                $stmt = $pdo->prepare("INSERT OR IGNORE INTO product_categories (product_id, category_id) VALUES (?, ?)");
+                foreach ($normalizedProductIds as $pid) {
+                    $stmt->execute([$pid, $normalizedCategoryId]);
+                }
+                
+                $sqlProd = "UPDATE products SET category_id = ? WHERE category_id IS NULL AND id IN ($placeholders)";
+                $params = array_merge([$normalizedCategoryId], $normalizedProductIds);
+                $stmtProd = $pdo->prepare($sqlProd);
+                $stmtProd->execute($params);
+                $updatedCount = count($normalizedProductIds);
+            }
+        }
 
         if ($startedTransaction) {
             $pdo->commit();
         }
 
-        return (int)$stmt->rowCount();
+        return $updatedCount;
     } catch (Throwable $e) {
         if ($startedTransaction && $pdo->inTransaction()) {
             $pdo->rollBack();
@@ -614,7 +746,18 @@ function deleteGlobalVariation($id) {
 function getProductBySku($sku) {
     ensureProductsSchema();
     global $pdo;
-    $stmt = $pdo->prepare("SELECT * FROM products WHERE sku = ? LIMIT 1");
+    $stmt = $pdo->prepare("
+        SELECT p.*,
+               GROUP_CONCAT(c.name, ', ') as category_name,
+               GROUP_CONCAT(c.id, ',') as category_ids,
+               MIN(c.slug) as category_slug
+        FROM products p
+        LEFT JOIN product_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id
+        WHERE p.sku = ?
+        GROUP BY p.id
+        LIMIT 1
+    ");
     $stmt->execute([trim((string)$sku)]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }

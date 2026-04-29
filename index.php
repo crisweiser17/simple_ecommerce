@@ -825,6 +825,7 @@ switch ($path) {
 
         $productIds = $_POST['product_ids'] ?? [];
         $categoryId = $_POST['category_id'] ?? '';
+        $bulkAction = $_POST['bulk_action'] ?? 'add';
         $redirectQuery = trim((string)($_POST['redirect_query'] ?? ''));
         $redirectUrl = '/admin' . ($redirectQuery !== '' ? '?' . ltrim($redirectQuery, '?') : '');
 
@@ -850,8 +851,8 @@ switch ($path) {
         }
 
         try {
-            $updatedCount = assignCategoryToProducts($normalizedProductIds, $categoryId);
-            $messageKey = ($categoryId === '' || $categoryId === null)
+            $updatedCount = assignCategoryToProducts($normalizedProductIds, $categoryId, $bulkAction);
+            $messageKey = ($bulkAction === 'remove')
                 ? __('Category removed from %d product(s).')
                 : __('Category associated with %d product(s).');
 
@@ -1177,6 +1178,10 @@ switch ($path) {
         $variations = json_decode($data['variations_json'] ?? '[]', true) ?: [];
         $data['variations_json'] = json_encode($variations);
 
+        if (isset($_POST['category_ids_present']) && !isset($data['category_ids'])) {
+            $data['category_ids'] = [];
+        }
+
         // Save custom variations to global if requested
         foreach ($variations as $var) {
             if (!empty($var['save_global'])) {
@@ -1192,8 +1197,12 @@ switch ($path) {
         global $pdo;
         $productId = 0;
         if (empty($data['id'])) {
-            createProduct($data);
-            $productId = (int)$pdo->lastInsertId();
+            $newId = createProduct($data);
+            if ($newId) {
+                $productId = $newId;
+            } else {
+                $productId = (int)$pdo->lastInsertId();
+            }
         } else {
             $productId = (int)$data['id'];
             updateProduct($productId, $data);

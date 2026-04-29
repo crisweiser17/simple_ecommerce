@@ -138,15 +138,27 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700"><?php echo __('Category'); ?></label>
-                                    <select name="category_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                        <option value=""><?php echo __('Select Category'); ?></option>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo __('Categories'); ?></label>
+                                    <?php
+                                    $selectedCategories = [];
+                                    if (!empty($product['category_ids'])) {
+                                        $selectedCategories = explode(',', $product['category_ids']);
+                                    } elseif (!empty($product['category_id'])) {
+                                        $selectedCategories = [(string)$product['category_id']];
+                                    }
+                                    ?>
+                                    <input type="hidden" name="category_ids_present" value="1">
+                                    <div class="mt-1 max-h-48 overflow-y-auto border border-gray-300 rounded-md shadow-sm p-3 bg-white space-y-2">
                                         <?php foreach ($categories as $cat): ?>
-                                            <option value="<?php echo $cat['id']; ?>" <?php echo (isset($product['category_id']) && $product['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($cat['name']); ?>
-                                            </option>
+                                            <div class="flex items-center">
+                                                <input type="checkbox" name="category_ids[]" value="<?php echo $cat['id']; ?>" id="cat_<?php echo $cat['id']; ?>" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" <?php echo in_array((string)$cat['id'], $selectedCategories, true) ? 'checked' : ''; ?>>
+                                                <label for="cat_<?php echo $cat['id']; ?>" class="ml-2 block text-sm text-gray-900">
+                                                    <?php echo htmlspecialchars($cat['name']); ?>
+                                                </label>
+                                            </div>
                                         <?php endforeach; ?>
-                                    </select>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500"><?php echo __('Select one or more categories.'); ?></p>
                                 </div>
                             </div>
                         </div>

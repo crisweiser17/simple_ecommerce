@@ -237,14 +237,18 @@
                         <p class="text-xs text-gray-500"><?php echo __('Choose a category and apply it to all selected products on this page.'); ?></p>
                     </div>
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <select name="bulk_action" class="min-w-[120px] border border-gray-300 rounded-md shadow-sm p-2 text-sm">
+                            <option value="add"><?php echo __('Add'); ?></option>
+                            <option value="remove"><?php echo __('Remove'); ?></option>
+                        </select>
                         <select name="category_id" class="min-w-[220px] border border-gray-300 rounded-md shadow-sm p-2 text-sm">
-                            <option value=""><?php echo __('Remove category'); ?></option>
+                            <option value=""><?php echo __('All Categories'); ?></option>
                             <?php foreach ($categories as $bulkCategory): ?>
                                 <option value="<?php echo (int)$bulkCategory['id']; ?>"><?php echo htmlspecialchars($bulkCategory['name'] ?? ''); ?></option>
                             <?php endforeach; ?>
                         </select>
                         <button type="submit" id="bulk-category-submit" disabled class="bg-indigo-600 text-white px-4 py-2 text-sm rounded hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed">
-                            <?php echo __('Apply category'); ?>
+                            <?php echo __('Apply'); ?>
                         </button>
                     </div>
                 </div>
