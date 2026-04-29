@@ -101,22 +101,25 @@ function ensureProductsSchema() {
         $pdo->exec("ALTER TABLE products ADD COLUMN variations_json TEXT");
     }
 
-    $rows = $pdo->query("SELECT id, name, sku, slug FROM products ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
-    $usedSlugs = [];
-    $updateSlugStmt = $pdo->prepare("UPDATE products SET slug = ? WHERE id = ?");
-    foreach ($rows as $row) {
-        $currentSlug = trim((string)($row['slug'] ?? ''));
-        $seed = $currentSlug !== '' ? $currentSlug : ((string)($row['name'] ?? '') !== '' ? $row['name'] : ($row['sku'] ?? 'product'));
-        $baseSlug = normalizeProductSlug($seed);
-        $slug = $baseSlug;
-        $suffix = 2;
-        while (isset($usedSlugs[$slug])) {
-            $slug = $baseSlug . '-' . $suffix;
-            $suffix++;
-        }
-        $usedSlugs[$slug] = true;
-        if ($currentSlug !== $slug) {
-            $updateSlugStmt->execute([$slug, (int)$row['id']]);
+    $missingSlugs = (int)$pdo->query("SELECT COUNT(*) FROM products WHERE slug IS NULL OR slug = ''")->fetchColumn();
+    if ($missingSlugs > 0) {
+        $rows = $pdo->query("SELECT id, name, sku, slug FROM products ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $usedSlugs = [];
+        $updateSlugStmt = $pdo->prepare("UPDATE products SET slug = ? WHERE id = ?");
+        foreach ($rows as $row) {
+            $currentSlug = trim((string)($row['slug'] ?? ''));
+            $seed = $currentSlug !== '' ? $currentSlug : ((string)($row['name'] ?? '') !== '' ? $row['name'] : ($row['sku'] ?? 'product'));
+            $baseSlug = normalizeProductSlug($seed);
+            $slug = $baseSlug;
+            $suffix = 2;
+            while (isset($usedSlugs[$slug])) {
+                $slug = $baseSlug . '-' . $suffix;
+                $suffix++;
+            }
+            $usedSlugs[$slug] = true;
+            if ($currentSlug !== $slug) {
+                $updateSlugStmt->execute([$slug, (int)$row['id']]);
+            }
         }
     }
 
