@@ -1482,9 +1482,8 @@
     </div>
 
     <script>
-        function getBulkCategoryFormState(scope) {
-            const root = scope && scope.closest ? (scope.closest('#bulkCategoryForm') || document) : document;
-            const form = root.querySelector ? root.querySelector('#bulkCategoryForm') : document.getElementById('bulkCategoryForm');
+        function getBulkCategoryFormState() {
+            const form = document.getElementById('bulkCategoryForm');
             if (!form) {
                 return null;
             }
@@ -1492,14 +1491,14 @@
             return {
                 form: form,
                 checkboxes: form.querySelectorAll('input[name="product_ids[]"]'),
-                counter: form.querySelector('#bulk-selection-counter'),
-                submitButton: form.querySelector('#bulk-category-submit'),
-                selectAll: form.querySelector('#select-all-products')
+                counter: document.getElementById('bulk-selection-counter'),
+                submitButton: document.getElementById('bulk-category-submit'),
+                selectAll: document.getElementById('select-all-products')
             };
         }
 
-        function updateBulkCategorySelectionState(scope) {
-            const state = getBulkCategoryFormState(scope);
+        function updateBulkCategorySelectionState() {
+            const state = getBulkCategoryFormState();
             if (!state) {
                 return;
             }
@@ -1529,7 +1528,7 @@
         }
 
         function toggleAllProductSelections(source) {
-            const state = getBulkCategoryFormState(source);
+            const state = getBulkCategoryFormState();
             if (!state) {
                 return;
             }
@@ -1538,15 +1537,15 @@
                 checkbox.checked = !!source.checked;
             });
 
-            updateBulkCategorySelectionState(source);
+            updateBulkCategorySelectionState();
         }
 
         function syncBulkCategorySelectionState(source) {
-            updateBulkCategorySelectionState(source);
+            updateBulkCategorySelectionState();
         }
 
         function confirmBulkCategoryAssignment(form) {
-            const state = getBulkCategoryFormState(form);
+            const state = getBulkCategoryFormState();
             if (!state) {
                 return true;
             }
@@ -1563,7 +1562,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             let debounceTimer;
             const searchInputs = document.querySelectorAll('.search-input');
-            updateBulkCategorySelectionState(document);
+            updateBulkCategorySelectionState();
             
             searchInputs.forEach(input => {
                 input.addEventListener('input', function(e) {
@@ -1600,7 +1599,7 @@
                                 if (newTable && tableContainer) {
                                     tableContainer.innerHTML = newTable.innerHTML;
                                     tableContainer.style.opacity = '1';
-                                    updateBulkCategorySelectionState(tableContainer);
+                                    updateBulkCategorySelectionState();
                                 }
                             });
                         
