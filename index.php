@@ -1,7 +1,34 @@
 <?php
 
+function getSessionStoragePath() {
+    $envPath = getenv('R2_SESSION_PATH');
+    if ($envPath !== false && trim($envPath) !== '') {
+        return $envPath;
+    }
+
+    return __DIR__ . '/sessions';
+}
+
+function getPublicUploadsBaseDir() {
+    $envPath = getenv('R2_PUBLIC_UPLOADS_DIR');
+    if ($envPath !== false && trim($envPath) !== '') {
+        return rtrim($envPath, '/');
+    }
+
+    return __DIR__ . '/public/uploads';
+}
+
+function getDigitalStorageDir() {
+    $envPath = getenv('R2_STORAGE_DIGITAL_DIR');
+    if ($envPath !== false && trim($envPath) !== '') {
+        return rtrim($envPath, '/');
+    }
+
+    return __DIR__ . '/storage/digital';
+}
+
 // Configure session directory and lifetime to 24 hours (86400 seconds)
-$sessionPath = __DIR__ . '/sessions';
+$sessionPath = getSessionStoragePath();
 if (!is_dir($sessionPath)) {
     mkdir($sessionPath, 0777, true);
 }
@@ -31,8 +58,9 @@ if (php_sapi_name() === 'cli-server') {
     }
 
     if (strpos($decodedPath, '/uploads/') === 0) {
-        $uploadsBaseDir = realpath(__DIR__ . '/public/uploads');
-        $publicFilePath = realpath(__DIR__ . '/public' . $decodedPath);
+        $uploadsBaseDir = realpath(getPublicUploadsBaseDir());
+        $relativeUploadPath = ltrim(substr($decodedPath, strlen('/uploads/')), '/');
+        $publicFilePath = realpath(getPublicUploadsBaseDir() . '/' . $relativeUploadPath);
         if ($uploadsBaseDir && $publicFilePath && strpos($publicFilePath, $uploadsBaseDir) === 0 && is_file($publicFilePath)) {
             $mimeType = function_exists('mime_content_type') ? (string)mime_content_type($publicFilePath) : 'application/octet-stream';
             header('Content-Type: ' . $mimeType);
@@ -93,7 +121,7 @@ function uploadProductImages($files) {
     $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
     $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     $maxSizeBytes = 5 * 1024 * 1024;
-    $uploadDir = __DIR__ . '/public/uploads/products/';
+    $uploadDir = getPublicUploadsBaseDir() . '/products/';
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
@@ -133,10 +161,6 @@ function uploadProductImages($files) {
         }
     }
 
-    if ($finfo) {
-        finfo_close($finfo);
-    }
-
     return $uploadedUrls;
 }
 
@@ -166,7 +190,6 @@ function uploadSingleImageFile($file, $uploadDir, $publicBasePath, $filePrefix, 
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         if ($finfo) {
             $mimeType = finfo_file($finfo, $tmpName) ?: '';
-            finfo_close($finfo);
             // Allow bypassing strict mime type check for fonts because PHP finfo often misidentifies font mimes
             if (!in_array($mimeType, $allowedMimeTypes, true) && !in_array($ext, ['ttf', 'otf', 'woff', 'woff2'], true)) {
                 return '';
@@ -899,7 +922,7 @@ switch ($path) {
         $brandLogoUrl = isset($_POST['brand_logo_url']) ? trim($_POST['brand_logo_url']) : '';
         $uploadedBrandLogo = uploadSingleImageFile(
             $_FILES['brand_logo_file'] ?? null,
-            __DIR__ . '/public/uploads/branding/',
+            getPublicUploadsBaseDir() . '/branding/',
             '/uploads/branding',
             'logo_',
             ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'],
@@ -984,7 +1007,7 @@ switch ($path) {
         
         $uploadedCustomFont1 = uploadSingleImageFile(
             $_FILES['custom_font_1_file'] ?? null,
-            __DIR__ . '/public/uploads/fonts/',
+            getPublicUploadsBaseDir() . '/fonts/',
             '/uploads/fonts',
             'font_',
             ['ttf', 'otf', 'woff', 'woff2'],
@@ -1112,7 +1135,7 @@ switch ($path) {
         $bannerImageUrl = $_POST['banner_image_url'] ?? '';
         $uploadedBannerImage = uploadSingleImageFile(
             $_FILES['banner_image_file'] ?? null,
-            __DIR__ . '/public/uploads/banners/',
+            getPublicUploadsBaseDir() . '/banners/',
             '/uploads/banners',
             'banner_'
         );
@@ -1132,7 +1155,7 @@ switch ($path) {
         $bannerRightImageUrl = $_POST['banner_right_image_url'] ?? '';
         $uploadedBannerRightImage = uploadSingleImageFile(
             $_FILES['banner_right_image_file'] ?? null,
-            __DIR__ . '/public/uploads/banners/',
+            getPublicUploadsBaseDir() . '/banners/',
             '/uploads/banners',
             'right_'
         );
@@ -1151,28 +1174,30 @@ switch ($path) {
 
     case '/admin/save-product':
         if (!isAdmin()) die(__('Access Denied'));
-        $data = $_POST;
-        
-        // Handle PDF Upload
-        $uploadedPdf = uploadSingleImageFile(
-            $_FILES['pdf_file'] ?? null,
-            __DIR__ . '/public/uploads/pdfs/',
-            '/uploads/pdfs',
-            'pdf_',
-            ['pdf'],
-            ['application/pdf'],
-            10485760 // 10MB limit
+        $data = prepareProductAssetPayload(
+            $_POST,
+            $_FILES,
+            function ($file) {
+                return uploadSingleImageFile(
+                    $file,
+                    getPublicUploadsBaseDir() . '/pdfs/',
+                    '/uploads/pdfs',
+                    'pdf_',
+                    ['pdf'],
+                    ['application/pdf'],
+                    10485760 // 10MB limit
+                );
+            },
+            function ($file) {
+                $fileUploader = new FileUploader();
+                return $fileUploader->upload($file);
+            },
+            function ($files) {
+                return uploadProductImages($files);
+            }
         );
-        if ($uploadedPdf !== '') {
-            $data['pdf_url'] = $uploadedPdf;
-        }
-
-        // Handle Digital File Upload
-        $fileUploader = new FileUploader();
-        $uploadedDigitalFile = $fileUploader->upload($_FILES['digital_file'] ?? null);
-        if ($uploadedDigitalFile !== '') {
-            $data['file_url'] = $uploadedDigitalFile;
-        }
+        $newUploadedImages = $data['new_uploaded_images'] ?? [];
+        unset($data['new_uploaded_images']);
 
         // Handle variations
         $variations = json_decode($data['variations_json'] ?? '[]', true) ?: [];
@@ -1210,7 +1235,6 @@ switch ($path) {
 
         if ($productId > 0) {
             $existingImages = normalizeImageUrlsFromForm($_POST['existing_images'] ?? []);
-            $newUploadedImages = uploadProductImages($_FILES['product_images'] ?? []);
             $persistedImageUrl = trim((string)($data['image_url'] ?? ''));
 
             $allImages = $existingImages;
@@ -1335,7 +1359,7 @@ switch ($path) {
         
         $uploadedImage = uploadSingleImageFile(
             $_FILES['image_file'] ?? null,
-            __DIR__ . '/public/uploads/blog/',
+            getPublicUploadsBaseDir() . '/blog/',
             '/uploads/blog',
             'blog_',
             ['jpg', 'jpeg', 'png', 'webp'],

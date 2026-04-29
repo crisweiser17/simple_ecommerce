@@ -7,7 +7,7 @@ class FileUploader {
     private int $maxFileSize;
 
     public function __construct(
-        string $uploadDir = __DIR__ . '/../storage/digital/',
+        ?string $uploadDir = null,
         array $allowedExtensions = ['pdf', 'zip', 'mp4', 'docx'],
         array $allowedMimeTypes = [
             'application/pdf',
@@ -17,6 +17,13 @@ class FileUploader {
         ],
         int $maxFileSize = 26214400 // 25MB in bytes
     ) {
+        $envUploadDir = getenv('R2_STORAGE_DIGITAL_DIR');
+        if ($uploadDir === null || trim($uploadDir) === '') {
+            $uploadDir = ($envUploadDir !== false && trim($envUploadDir) !== '')
+                ? $envUploadDir
+                : __DIR__ . '/../storage/digital/';
+        }
+
         $this->uploadDir = $uploadDir;
         $this->allowedExtensions = $allowedExtensions;
         $this->allowedMimeTypes = $allowedMimeTypes;

@@ -12,6 +12,73 @@ function normalizeProductSlug($value) {
     return $slug;
 }
 
+function hasSuccessfulUpload($file) {
+    if (!is_array($file)) {
+        return false;
+    }
+
+    return isset($file['error'])
+        && (int)$file['error'] === UPLOAD_ERR_OK
+        && trim((string)($file['tmp_name'] ?? '')) !== ''
+        && trim((string)($file['name'] ?? '')) !== '';
+}
+
+function hasSuccessfulUploads($files) {
+    if (!is_array($files) || !isset($files['error']) || !is_array($files['error'])) {
+        return false;
+    }
+
+    foreach ($files['error'] as $index => $error) {
+        if ((int)$error !== UPLOAD_ERR_OK) {
+            continue;
+        }
+
+        $tmpName = trim((string)($files['tmp_name'][$index] ?? ''));
+        $originalName = trim((string)($files['name'][$index] ?? ''));
+        if ($tmpName !== '' && $originalName !== '') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function prepareProductAssetPayload(array $data, array $files, callable $uploadPdf, callable $uploadDigitalFile, callable $uploadImages) {
+    $preparedData = $data;
+    $preparedData['new_uploaded_images'] = [];
+
+    $pdfFile = $files['pdf_file'] ?? null;
+    if (hasSuccessfulUpload($pdfFile)) {
+        $uploadedPdf = trim((string)$uploadPdf($pdfFile));
+        if ($uploadedPdf !== '') {
+            $preparedData['pdf_url'] = $uploadedPdf;
+        }
+    }
+
+    $digitalFile = $files['digital_file'] ?? null;
+    if (hasSuccessfulUpload($digitalFile)) {
+        $uploadedDigitalFile = trim((string)$uploadDigitalFile($digitalFile));
+        if ($uploadedDigitalFile !== '') {
+            $preparedData['file_url'] = $uploadedDigitalFile;
+        }
+    }
+
+    $productImages = $files['product_images'] ?? null;
+    if (hasSuccessfulUploads($productImages)) {
+        $uploadedImages = $uploadImages($productImages);
+        if (is_array($uploadedImages)) {
+            foreach ($uploadedImages as $uploadedImage) {
+                $uploadedImage = trim((string)$uploadedImage);
+                if ($uploadedImage !== '' && !in_array($uploadedImage, $preparedData['new_uploaded_images'], true)) {
+                    $preparedData['new_uploaded_images'][] = $uploadedImage;
+                }
+            }
+        }
+    }
+
+    return $preparedData;
+}
+
 function getUniqueProductSlug($value, $excludeId = null) {
     global $pdo;
 
