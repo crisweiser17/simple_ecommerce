@@ -66,20 +66,19 @@ if ($primaryImage === '') {
             return sku;
         },
         get currentImage() {
-            let img = this.selectedImage || '<?php echo htmlspecialchars($product['image_url'] ?? ''); ?>';
-            let variationImgFound = false;
-            for (const v of this.variations) {
-                const selected = this.selectedOptions[v.name];
-                if (selected) {
+            return this.selectedImage || '<?php echo htmlspecialchars($product['image_url'] ?? 'https://placehold.co/600x600?text=Sem+Imagem'); ?>';
+        },
+        updateImageFromVariation(variationName) {
+            const selected = this.selectedOptions[variationName];
+            if (selected) {
+                const v = this.variations.find(v => v.name === variationName);
+                if (v) {
                     const opt = v.options.find(o => o.name === selected);
                     if (opt && opt.image_url) {
-                        img = opt.image_url;
-                        variationImgFound = true;
+                        this.selectedImage = opt.image_url;
                     }
                 }
             }
-            // Only return variation image if one exists, else selected image
-            return variationImgFound ? img : (this.selectedImage || 'https://placehold.co/600x600?text=Sem+Imagem');
         },
         formatMoney(amount) {
             return new Intl.NumberFormat('<?php echo htmlspecialchars($_SESSION['lang'] ?? 'pt'); ?>-BR', { style: 'currency', currency: '<?php echo htmlspecialchars(getSetting('store_currency', 'BRL')); ?>' }).format(amount);
@@ -102,6 +101,7 @@ if ($primaryImage === '') {
             for (const v of this.variations) {
                 if (v.options && v.options.length > 0) {
                     this.selectedOptions[v.name] = v.options[0].name;
+                    this.updateImageFromVariation(v.name);
                 }
             }
         }
@@ -144,7 +144,7 @@ if ($primaryImage === '') {
                         <template x-for="v in variations" :key="v.name">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1" x-text="v.name"></label>
-                                <select x-model="selectedOptions[v.name]" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md border">
+                                <select x-model="selectedOptions[v.name]" @change="updateImageFromVariation(v.name)" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md border">
                                     <template x-for="opt in v.options" :key="opt.name">
                                         <option :value="opt.name" x-text="opt.name + (parseFloat(opt.price) > 0 ? ' (' + formatMoney(parseFloat(opt.price)) + ')' : '')"></option>
                                     </template>
