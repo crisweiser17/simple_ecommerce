@@ -1234,7 +1234,20 @@ switch ($path) {
             }
         }
 
-        header('Location: /admin/product-form?id=' . $productId . '&saved=1');
+        $redirectUrl = '/admin/product-form?id=' . $productId . '&saved=1';
+        $expectsJson = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']))
+            || (isset($_SERVER['HTTP_ACCEPT']) && strpos((string)$_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+        if ($expectsJson) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'product_id' => $productId,
+                'redirect_url' => $redirectUrl,
+            ]);
+            exit;
+        }
+
+        header('Location: ' . $redirectUrl);
         exit;
         break;
 

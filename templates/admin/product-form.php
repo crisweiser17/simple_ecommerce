@@ -87,11 +87,9 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                 <div class="flex justify-between items-center mb-6">
                     <div class="flex items-center">
                         <h1 class="text-2xl font-bold"><?php echo isset($product['id']) ? __('Edit Product') : __('Add New Product'); ?></h1>
-                        <?php if (isset($_GET['saved']) && $_GET['saved'] == '1'): ?>
-                            <span class="ml-4 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-400">
-                                <?php echo __('Saved successfully!'); ?>
-                            </span>
-                        <?php endif; ?>
+                        <span id="saveSuccessMessage" class="ml-4 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-400 <?php echo (isset($_GET['saved']) && $_GET['saved'] == '1') ? '' : 'hidden'; ?>">
+                            <?php echo __('Saved successfully!'); ?>
+                        </span>
                     </div>
                     <div class="flex items-center gap-4">
                         <?php if (isset($product['slug'])): ?>
@@ -107,6 +105,7 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
 
                 <div class="bg-white rounded shadow overflow-x-auto p-4 sm:p-6">
                     <form action="/admin/save-product" method="POST" id="productForm" enctype="multipart/form-data">
+                        <div id="saveErrorMessage" class="hidden mb-6 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700"></div>
                         <?php if (isset($product['id'])): ?>
                             <input type="hidden" name="id" value="<?php echo htmlspecialchars($product['id']); ?>">
                         <?php endif; ?>
@@ -428,8 +427,8 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                             <a href="/admin" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none mr-3">
                                 <?php echo __('Cancel'); ?>
                             </a>
-                            <button type="submit" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none">
-                                <?php echo __('Save Product'); ?>
+                            <button type="submit" id="saveProductButton" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
+                                <span id="saveProductButtonLabel"><?php echo __('Save Product'); ?></span>
                             </button>
                         </div>
                     </form>
@@ -548,9 +547,92 @@ $currentPrimaryImage = trim((string)($product['primary_image_url'] ?? $product['
                 });
             }
 
-            form.addEventListener('submit', function(e) {
+            var submitButton = document.getElementById('saveProductButton');
+            var submitButtonLabel = document.getElementById('saveProductButtonLabel');
+            var successMessage = document.getElementById('saveSuccessMessage');
+            var errorMessage = document.getElementById('saveErrorMessage');
+            var defaultSubmitLabel = submitButtonLabel ? submitButtonLabel.textContent : '';
+            var savingSubmitLabel = '<?php echo addslashes(__('Saving...')); ?>';
+            var savedSuccessLabel = '<?php echo addslashes(__('Saved successfully!')); ?>';
+            var genericSaveErrorLabel = '<?php echo addslashes(__('Unable to save right now. Please try again.')); ?>';
+
+            var syncEditorsToInputs = function() {
                 document.getElementById('short_desc_input').value = shortQuill.root.innerHTML;
                 document.getElementById('long_desc_input').value = longQuill.root.innerHTML;
+            };
+
+            var setSavingState = function(isSaving) {
+                if (!submitButton || !submitButtonLabel) {
+                    return;
+                }
+                submitButton.disabled = isSaving;
+                submitButtonLabel.textContent = isSaving ? savingSubmitLabel : defaultSubmitLabel;
+            };
+
+            var showSaveSuccess = function() {
+                if (successMessage) {
+                    successMessage.textContent = savedSuccessLabel;
+                    successMessage.classList.remove('hidden');
+                }
+                if (errorMessage) {
+                    errorMessage.textContent = '';
+                    errorMessage.classList.add('hidden');
+                }
+            };
+
+            var showSaveError = function(message) {
+                if (errorMessage) {
+                    errorMessage.textContent = message || genericSaveErrorLabel;
+                    errorMessage.classList.remove('hidden');
+                }
+            };
+
+            form.addEventListener('submit', function(e) {
+                syncEditorsToInputs();
+
+                if (!window.fetch || !window.FormData) {
+                    return;
+                }
+
+                var productIdInput = form.querySelector('input[name="id"]');
+                var isEditingExistingProduct = !!(productIdInput && productIdInput.value.trim() !== '');
+                if (!isEditingExistingProduct) {
+                    return;
+                }
+
+                e.preventDefault();
+                setSavingState(true);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'fetch'
+                    }
+                })
+                    .then(function(response) {
+                        return response.json().catch(function() {
+                            throw new Error(genericSaveErrorLabel);
+                        }).then(function(payload) {
+                            if (!response.ok || !payload.success) {
+                                throw new Error(payload.message || genericSaveErrorLabel);
+                            }
+                            return payload;
+                        });
+                    })
+                    .then(function(payload) {
+                        showSaveSuccess();
+                        if (payload.redirect_url) {
+                            window.history.replaceState({}, '', payload.redirect_url);
+                        }
+                    })
+                    .catch(function(error) {
+                        showSaveError(error && error.message ? error.message : genericSaveErrorLabel);
+                    })
+                    .finally(function() {
+                        setSavingState(false);
+                    });
             });
 
             // Initialize Sortable for image grid
