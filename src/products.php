@@ -29,13 +29,14 @@ function getUniqueProductSlug($value, $excludeId = null) {
     }
     
     $existingSlugs = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $existingSlugsMap = array_flip($existingSlugs);
     
-    if (!in_array($baseSlug, $existingSlugs, true)) {
+    if (!isset($existingSlugsMap[$baseSlug])) {
         return $baseSlug;
     }
     
     $suffix = 2;
-    while (in_array($baseSlug . '-' . $suffix, $existingSlugs, true)) {
+    while (isset($existingSlugsMap[$baseSlug . '-' . $suffix])) {
         $suffix++;
     }
     
@@ -111,21 +112,28 @@ function ensureProductsSchema() {
     if ($missingSlugs > 0) {
         $rows = $pdo->query("SELECT id, name, sku, slug FROM products ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
         $usedSlugs = [];
-        $updateSlugStmt = $pdo->prepare("UPDATE products SET slug = ? WHERE id = ?");
-        foreach ($rows as $row) {
-            $currentSlug = trim((string)($row['slug'] ?? ''));
-            $seed = $currentSlug !== '' ? $currentSlug : ((string)($row['name'] ?? '') !== '' ? $row['name'] : ($row['sku'] ?? 'product'));
-            $baseSlug = normalizeProductSlug($seed);
-            $slug = $baseSlug;
-            $suffix = 2;
-            while (isset($usedSlugs[$slug])) {
-                $slug = $baseSlug . '-' . $suffix;
-                $suffix++;
+        
+        $pdo->beginTransaction();
+        try {
+            $updateSlugStmt = $pdo->prepare("UPDATE products SET slug = ? WHERE id = ?");
+            foreach ($rows as $row) {
+                $currentSlug = trim((string)($row['slug'] ?? ''));
+                $seed = $currentSlug !== '' ? $currentSlug : ((string)($row['name'] ?? '') !== '' ? $row['name'] : ($row['sku'] ?? 'product'));
+                $baseSlug = normalizeProductSlug($seed);
+                $slug = $baseSlug;
+                $suffix = 2;
+                while (isset($usedSlugs[$slug])) {
+                    $slug = $baseSlug . '-' . $suffix;
+                    $suffix++;
+                }
+                $usedSlugs[$slug] = true;
+                if ($currentSlug !== $slug) {
+                    $updateSlugStmt->execute([$slug, (int)$row['id']]);
+                }
             }
-            $usedSlugs[$slug] = true;
-            if ($currentSlug !== $slug) {
-                $updateSlugStmt->execute([$slug, (int)$row['id']]);
-            }
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
         }
     }
 
