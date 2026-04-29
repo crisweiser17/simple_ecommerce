@@ -741,6 +741,8 @@ switch ($path) {
         
         $productsCsvReport = $_SESSION['products_csv_report'] ?? null;
         unset($_SESSION['products_csv_report']);
+        $bulkCategoryResult = $_SESSION['bulk_category_result'] ?? null;
+        unset($_SESSION['bulk_category_result']);
         
         require __DIR__ . '/templates/admin/dashboard.php';
         break;
@@ -812,6 +814,65 @@ switch ($path) {
         $categories = getAllCategories();
         $global_variations = getGlobalVariations();
         require __DIR__ . '/templates/admin/product-form.php';
+        break;
+
+    case '/admin/products/bulk-category':
+        if (!isAdmin()) die(__('Access Denied'));
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /admin');
+            exit;
+        }
+
+        $productIds = $_POST['product_ids'] ?? [];
+        $categoryId = $_POST['category_id'] ?? '';
+        $redirectQuery = trim((string)($_POST['redirect_query'] ?? ''));
+        $redirectUrl = '/admin' . ($redirectQuery !== '' ? '?' . ltrim($redirectQuery, '?') : '');
+
+        if (!is_array($productIds)) {
+            $productIds = [];
+        }
+
+        $normalizedProductIds = [];
+        foreach ($productIds as $productId) {
+            $productId = (int)$productId;
+            if ($productId > 0 && !in_array($productId, $normalizedProductIds, true)) {
+                $normalizedProductIds[] = $productId;
+            }
+        }
+
+        if (empty($normalizedProductIds)) {
+            $_SESSION['bulk_category_result'] = [
+                'success' => false,
+                'message' => __('Select at least one product.')
+            ];
+            header('Location: ' . $redirectUrl);
+            exit;
+        }
+
+        try {
+            $updatedCount = assignCategoryToProducts($normalizedProductIds, $categoryId);
+            $messageKey = ($categoryId === '' || $categoryId === null)
+                ? __('Category removed from %d product(s).')
+                : __('Category associated with %d product(s).');
+
+            $_SESSION['bulk_category_result'] = [
+                'success' => true,
+                'message' => sprintf($messageKey, $updatedCount)
+            ];
+        } catch (InvalidArgumentException $e) {
+            $_SESSION['bulk_category_result'] = [
+                'success' => false,
+                'message' => __('Invalid category selected.')
+            ];
+        } catch (Throwable $e) {
+            $_SESSION['bulk_category_result'] = [
+                'success' => false,
+                'message' => __('Unable to update categories in bulk.')
+            ];
+        }
+
+        header('Location: ' . $redirectUrl);
+        exit;
         break;
 
     case '/admin/save-settings':

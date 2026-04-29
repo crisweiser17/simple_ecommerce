@@ -486,6 +486,63 @@ function updateProduct($id, $data) {
     ]);
 }
 
+function assignCategoryToProducts(array $productIds, $categoryId) {
+    ensureProductsSchema();
+    global $pdo;
+
+    $normalizedProductIds = [];
+    foreach ($productIds as $productId) {
+        $productId = (int)$productId;
+        if ($productId > 0 && !in_array($productId, $normalizedProductIds, true)) {
+            $normalizedProductIds[] = $productId;
+        }
+    }
+
+    if (empty($normalizedProductIds)) {
+        return 0;
+    }
+
+    $normalizedCategoryId = null;
+    if ($categoryId !== null && $categoryId !== '') {
+        $normalizedCategoryId = (int)$categoryId;
+        if ($normalizedCategoryId < 1) {
+            throw new InvalidArgumentException('Invalid category id.');
+        }
+
+        $categoryCheck = $pdo->prepare("SELECT COUNT(*) FROM categories WHERE id = ?");
+        $categoryCheck->execute([$normalizedCategoryId]);
+        if ((int)$categoryCheck->fetchColumn() < 1) {
+            throw new InvalidArgumentException('Category not found.');
+        }
+    }
+
+    $placeholders = implode(', ', array_fill(0, count($normalizedProductIds), '?'));
+    $sql = "UPDATE products SET category_id = ? WHERE id IN ($placeholders)";
+    $params = array_merge([$normalizedCategoryId], $normalizedProductIds);
+
+    $startedTransaction = false;
+    if (!$pdo->inTransaction()) {
+        $pdo->beginTransaction();
+        $startedTransaction = true;
+    }
+
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        if ($startedTransaction) {
+            $pdo->commit();
+        }
+
+        return (int)$stmt->rowCount();
+    } catch (Throwable $e) {
+        if ($startedTransaction && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+}
+
 function updateProductImageUrl($id, $imageUrl) {
     ensureProductsSchema();
     global $pdo;

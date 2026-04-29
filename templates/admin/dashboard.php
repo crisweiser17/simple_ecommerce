@@ -216,11 +216,45 @@
                     </div>
                 <?php endif; ?>
 
+                <?php if (!empty($bulkCategoryResult)): ?>
+                    <div class="mb-4 rounded border px-4 py-3 <?php echo !empty($bulkCategoryResult['success']) ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'; ?>">
+                        <?php echo htmlspecialchars($bulkCategoryResult['message'] ?? ''); ?>
+                    </div>
+                <?php endif; ?>
+
                 <div id="products-table-container">
+                <form id="bulkCategoryForm" action="/admin/products/bulk-category" method="POST" onsubmit="return confirmBulkCategoryAssignment(this);">
+                <input type="hidden" name="redirect_query" value="<?php echo htmlspecialchars($_SERVER['QUERY_STRING'] ?? ''); ?>">
+                <div class="mb-4 flex flex-col gap-3 rounded border border-gray-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <p id="bulk-selection-counter"
+                           class="text-sm font-medium text-gray-700"
+                           data-zero-label="<?php echo htmlspecialchars(__('No products selected.')); ?>"
+                           data-singular-label="<?php echo htmlspecialchars(__('1 product selected.')); ?>"
+                           data-plural-label="<?php echo htmlspecialchars(__('%d products selected.')); ?>">
+                            <?php echo __('No products selected.'); ?>
+                        </p>
+                        <p class="text-xs text-gray-500"><?php echo __('Choose a category and apply it to all selected products on this page.'); ?></p>
+                    </div>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <select name="category_id" class="min-w-[220px] border border-gray-300 rounded-md shadow-sm p-2 text-sm">
+                            <option value=""><?php echo __('Remove category'); ?></option>
+                            <?php foreach ($categories as $bulkCategory): ?>
+                                <option value="<?php echo (int)$bulkCategory['id']; ?>"><?php echo htmlspecialchars($bulkCategory['name'] ?? ''); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit" id="bulk-category-submit" disabled class="bg-indigo-600 text-white px-4 py-2 text-sm rounded hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed">
+                            <?php echo __('Apply category'); ?>
+                        </button>
+                    </div>
+                </div>
                 <div class="bg-white rounded shadow overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <input type="checkbox" id="select-all-products" onchange="toggleAllProductSelections(this)" aria-label="<?php echo htmlspecialchars(__('Select all products on this page')); ?>">
+                                </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Image'); ?></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Name'); ?></th>
@@ -235,6 +269,9 @@
                             <?php $adminImageUrl = getProductPrimaryImageUrl($p); ?>
                             <?php if ($adminImageUrl === '') $adminImageUrl = 'https://placehold.co/100x100?text=No+Image'; ?>
                             <tr>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <input type="checkbox" name="product_ids[]" value="<?php echo (int)($p['id'] ?? 0); ?>" class="product-row-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" onchange="syncBulkCategorySelectionState(this)">
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#<?php echo htmlspecialchars($p['id'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <img src="<?php echo htmlspecialchars($adminImageUrl ?? ''); ?>" class="h-10 w-10 object-contain rounded">
@@ -260,6 +297,11 @@
                                 </td>
                             </tr>
                             <?php endforeach; ?>
+                            <?php if (empty($products)): ?>
+                            <tr>
+                                <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500"><?php echo __('No products found.'); ?></td>
+                            </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
 
@@ -312,6 +354,7 @@
                     </div>
                     <?php endif; ?>
                 </div>
+                </form>
                 </div>
             </div>
 
@@ -1439,9 +1482,88 @@
     </div>
 
     <script>
+        function getBulkCategoryFormState(scope) {
+            const root = scope && scope.closest ? (scope.closest('#bulkCategoryForm') || document) : document;
+            const form = root.querySelector ? root.querySelector('#bulkCategoryForm') : document.getElementById('bulkCategoryForm');
+            if (!form) {
+                return null;
+            }
+
+            return {
+                form: form,
+                checkboxes: form.querySelectorAll('input[name="product_ids[]"]'),
+                counter: form.querySelector('#bulk-selection-counter'),
+                submitButton: form.querySelector('#bulk-category-submit'),
+                selectAll: form.querySelector('#select-all-products')
+            };
+        }
+
+        function updateBulkCategorySelectionState(scope) {
+            const state = getBulkCategoryFormState(scope);
+            if (!state) {
+                return;
+            }
+
+            const checkedCount = Array.from(state.checkboxes).filter(checkbox => checkbox.checked).length;
+            const totalCount = state.checkboxes.length;
+
+            if (state.counter) {
+                if (checkedCount === 0) {
+                    state.counter.textContent = state.counter.dataset.zeroLabel || 'No products selected.';
+                } else if (checkedCount === 1) {
+                    state.counter.textContent = state.counter.dataset.singularLabel || '1 product selected.';
+                } else {
+                    const pluralLabel = state.counter.dataset.pluralLabel || '%d products selected.';
+                    state.counter.textContent = pluralLabel.replace('%d', checkedCount);
+                }
+            }
+
+            if (state.submitButton) {
+                state.submitButton.disabled = checkedCount === 0;
+            }
+
+            if (state.selectAll) {
+                state.selectAll.checked = totalCount > 0 && checkedCount === totalCount;
+                state.selectAll.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+            }
+        }
+
+        function toggleAllProductSelections(source) {
+            const state = getBulkCategoryFormState(source);
+            if (!state) {
+                return;
+            }
+
+            state.checkboxes.forEach(checkbox => {
+                checkbox.checked = !!source.checked;
+            });
+
+            updateBulkCategorySelectionState(source);
+        }
+
+        function syncBulkCategorySelectionState(source) {
+            updateBulkCategorySelectionState(source);
+        }
+
+        function confirmBulkCategoryAssignment(form) {
+            const state = getBulkCategoryFormState(form);
+            if (!state) {
+                return true;
+            }
+
+            const checkedCount = Array.from(state.checkboxes).filter(checkbox => checkbox.checked).length;
+            if (checkedCount === 0) {
+                alert('<?php echo __('Select at least one product.'); ?>');
+                return false;
+            }
+
+            return confirm('<?php echo __('Are you sure you want to update the category for the selected products?'); ?>');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             let debounceTimer;
             const searchInputs = document.querySelectorAll('.search-input');
+            updateBulkCategorySelectionState(document);
             
             searchInputs.forEach(input => {
                 input.addEventListener('input', function(e) {
@@ -1478,6 +1600,7 @@
                                 if (newTable && tableContainer) {
                                     tableContainer.innerHTML = newTable.innerHTML;
                                     tableContainer.style.opacity = '1';
+                                    updateBulkCategorySelectionState(tableContainer);
                                 }
                             });
                         
