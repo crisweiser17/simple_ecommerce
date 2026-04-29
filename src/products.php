@@ -56,6 +56,40 @@ function getProductUrl($product) {
     return '/product';
 }
 
+function productsSchemaFastPathLooksReady(PDO $pdo) {
+    $requiredObjects = [
+        'products' => 'table',
+        'product_images' => 'table',
+        'global_variations' => 'table',
+        'idx_products_slug_unique' => 'index',
+        'idx_products_sku' => 'index',
+        'idx_products_category_id' => 'index',
+        'idx_product_images_product_id' => 'index',
+        'idx_product_images_primary' => 'index',
+    ];
+
+    $placeholders = implode(', ', array_fill(0, count($requiredObjects), '?'));
+    $stmt = $pdo->prepare("SELECT name, type FROM sqlite_master WHERE name IN ($placeholders)");
+    $stmt->execute(array_keys($requiredObjects));
+
+    $existingObjects = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $existingObjects[$row['name']] = $row['type'];
+    }
+
+    foreach ($requiredObjects as $name => $type) {
+        if (($existingObjects[$name] ?? null) !== $type) {
+            return false;
+        }
+    }
+
+    $pdo->query("SELECT category_id, pdf_label, pdf_active, slug, variations_json FROM products LIMIT 0");
+    $pdo->query("SELECT product_id, image_url, is_primary, sort_order FROM product_images LIMIT 0");
+    $pdo->query("SELECT name, options_json FROM global_variations LIMIT 0");
+
+    return true;
+}
+
 function ensureProductsSchema() {
     static $checked = false;
     if ($checked) {
@@ -63,6 +97,15 @@ function ensureProductsSchema() {
     }
 
     global $pdo;
+
+    try {
+        if (productsSchemaFastPathLooksReady($pdo)) {
+            $checked = true;
+            return;
+        }
+    } catch (Throwable) {
+        // Fall back to the full schema bootstrap when the fast path cannot prove integrity.
+    }
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -109,6 +152,8 @@ function ensureProductsSchema() {
     }
 
     $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_products_slug_unique ON products(slug)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id)");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS product_images (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -168,6 +213,36 @@ function saveProductImages($productId, array $imageUrls, $primaryImageUrl = null
     $selectedPrimary = trim((string)$primaryImageUrl);
     if ($selectedPrimary === '' || !in_array($selectedPrimary, $normalizedUrls, true)) {
         $selectedPrimary = $normalizedUrls[0] ?? '';
+    }
+
+    $existingStmt = $pdo->prepare("
+        SELECT image_url, is_primary, sort_order
+        FROM product_images
+        WHERE product_id = ?
+        ORDER BY sort_order ASC, id ASC
+    ");
+    $existingStmt->execute([(int)$productId]);
+    $existingImages = $existingStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $imagesChanged = count($existingImages) !== count($normalizedUrls);
+    if (!$imagesChanged) {
+        foreach ($existingImages as $index => $existingImage) {
+            $expectedUrl = $normalizedUrls[$index];
+            $expectedIsPrimary = $expectedUrl === $selectedPrimary ? 1 : 0;
+
+            if (
+                (string)$existingImage['image_url'] !== $expectedUrl ||
+                (int)$existingImage['is_primary'] !== $expectedIsPrimary ||
+                (int)$existingImage['sort_order'] !== $index
+            ) {
+                $imagesChanged = true;
+                break;
+            }
+        }
+    }
+
+    if (!$imagesChanged) {
+        return $selectedPrimary;
     }
 
     $pdo->beginTransaction();
@@ -381,7 +456,12 @@ function updateProduct($id, $data) {
     if (trim($requestedSlug) === '') {
         $requestedSlug = (string)($data['name'] ?? '');
     }
-    $slug = getUniqueProductSlug($requestedSlug, (int)$id);
+    $normalizedRequestedSlug = normalizeProductSlug($requestedSlug);
+    if ($existingSlug !== '' && $normalizedRequestedSlug === $existingSlug) {
+        $slug = $existingSlug;
+    } else {
+        $slug = getUniqueProductSlug($requestedSlug, (int)$id);
+    }
 
     $stmt = $pdo->prepare("UPDATE products SET name=?, sku=?, slug=?, price=?, image_url=?, category_id=?, short_desc=?, long_desc=?, pdf_url=?, pdf_label=?, pdf_active=?, type=?, digital_delivery=?, download_limit=?, download_expiry_days=?, file_url=?, variations_json=? WHERE id=?");
     return $stmt->execute([

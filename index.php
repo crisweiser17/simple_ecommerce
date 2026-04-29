@@ -1141,7 +1141,7 @@ switch ($path) {
         if ($productId > 0) {
             $existingImages = normalizeImageUrlsFromForm($_POST['existing_images'] ?? []);
             $newUploadedImages = uploadProductImages($_FILES['product_images'] ?? []);
-            $manualImageUrl = trim((string)($data['image_url'] ?? ''));
+            $persistedImageUrl = trim((string)($data['image_url'] ?? ''));
 
             $allImages = $existingImages;
             foreach ($newUploadedImages as $uploadedImage) {
@@ -1159,7 +1159,9 @@ switch ($path) {
             }
 
             $primaryImageUrl = saveProductImages($productId, $allImages, $primaryImageUrl);
-            updateProductImageUrl($productId, $primaryImageUrl);
+            if ($persistedImageUrl !== $primaryImageUrl) {
+                updateProductImageUrl($productId, $primaryImageUrl);
+            }
         }
 
         header('Location: /admin/product-form?id=' . $productId . '&saved=1');
