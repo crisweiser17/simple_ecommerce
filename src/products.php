@@ -16,24 +16,30 @@ function getUniqueProductSlug($value, $excludeId = null) {
     global $pdo;
 
     $baseSlug = normalizeProductSlug($value);
-    $slug = $baseSlug;
-    $suffix = 2;
     $excludeId = $excludeId !== null ? (int)$excludeId : null;
 
-    while (true) {
-        if ($excludeId !== null) {
-            $stmt = $pdo->prepare("SELECT id FROM products WHERE slug = ? AND id != ? LIMIT 1");
-            $stmt->execute([$slug, $excludeId]);
-        } else {
-            $stmt = $pdo->prepare("SELECT id FROM products WHERE slug = ? LIMIT 1");
-            $stmt->execute([$slug]);
-        }
-        if (!$stmt->fetchColumn()) {
-            return $slug;
-        }
-        $slug = $baseSlug . '-' . $suffix;
+    $likeSlug = $baseSlug . '-%';
+    
+    if ($excludeId !== null) {
+        $stmt = $pdo->prepare("SELECT slug FROM products WHERE (slug = ? OR slug LIKE ?) AND id != ?");
+        $stmt->execute([$baseSlug, $likeSlug, $excludeId]);
+    } else {
+        $stmt = $pdo->prepare("SELECT slug FROM products WHERE slug = ? OR slug LIKE ?");
+        $stmt->execute([$baseSlug, $likeSlug]);
+    }
+    
+    $existingSlugs = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    if (!in_array($baseSlug, $existingSlugs, true)) {
+        return $baseSlug;
+    }
+    
+    $suffix = 2;
+    while (in_array($baseSlug . '-' . $suffix, $existingSlugs, true)) {
         $suffix++;
     }
+    
+    return $baseSlug . '-' . $suffix;
 }
 
 function getProductUrl($product) {
