@@ -79,4 +79,20 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS product_images (
 $pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_images_product_id ON product_images(product_id)");
 $pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_images_primary ON product_images(product_id, is_primary, sort_order)");
 
+echo "Creating product_categories table...\n";
+$pdo->exec("CREATE TABLE IF NOT EXISTS product_categories (
+    product_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    PRIMARY KEY (product_id, category_id)
+)");
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_categories_product_id ON product_categories(product_id)");
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_categories_category_id ON product_categories(category_id)");
+
+echo "Migrating product categories to pivot table...\n";
+$pdo->exec("
+    INSERT OR IGNORE INTO product_categories (product_id, category_id)
+    SELECT id, category_id FROM products 
+    WHERE category_id IS NOT NULL AND category_id > 0
+");
+
 echo "Database update complete!\n";

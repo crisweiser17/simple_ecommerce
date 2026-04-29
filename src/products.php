@@ -185,13 +185,6 @@ function ensureProductsSchema() {
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_categories_product_id ON product_categories(product_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_categories_category_id ON product_categories(category_id)");
 
-    // Migration script to copy products.category_id to product_categories
-    $pdo->exec("
-        INSERT OR IGNORE INTO product_categories (product_id, category_id)
-        SELECT id, category_id FROM products 
-        WHERE category_id IS NOT NULL AND category_id > 0
-    ");
-
     $checked = true;
 }
 
