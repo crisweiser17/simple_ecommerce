@@ -196,6 +196,7 @@ return [
     'External URL' => 'URL Externa',
     'Type' => 'Tipo',
     'Save Page' => 'Salvar Página',
+    'Drag and drop rows to reorder pages.' => 'Arraste e solte as linhas para reordenar as páginas.',
     'Customer' => 'Cliente',
     'Status / Actions' => 'Status / Ações',
     'View Order' => 'Ver Pedido',

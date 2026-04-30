@@ -31,13 +31,26 @@ function ensurePagesSchema() {
     if (!in_array('external_url', $columns, true)) {
         $pdo->exec("ALTER TABLE pages ADD COLUMN external_url TEXT");
     }
+    if (!in_array('sort_order', $columns, true)) {
+        $pdo->exec("ALTER TABLE pages ADD COLUMN sort_order INTEGER DEFAULT 0");
+    }
 }
 
 function getAllPages() {
     ensurePagesSchema();
     global $pdo;
-    $stmt = $pdo->query("SELECT * FROM pages ORDER BY title ASC");
+    $stmt = $pdo->query("SELECT * FROM pages ORDER BY sort_order ASC, id ASC");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function updatePagesOrder($orderedIds) {
+    ensurePagesSchema();
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE pages SET sort_order = ? WHERE id = ?");
+    foreach ($orderedIds as $index => $id) {
+        $stmt->execute([$index, (int)$id]);
+    }
+    return true;
 }
 
 function getPage($id) {

@@ -200,6 +200,7 @@ return [
     'External URL' => 'External URL',
     'Type' => 'Type',
     'Save Page' => 'Save Page',
+    'Drag and drop rows to reorder pages.' => 'Drag and drop rows to reorder pages.',
     'Customer' => 'Customer',
     'Status / Actions' => 'Status / Actions',
     'View Order' => 'View Order',

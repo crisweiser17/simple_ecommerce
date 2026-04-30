@@ -1406,6 +1406,30 @@ switch ($path) {
         exit;
         break;
 
+    case '/admin/pages/reorder':
+        if (!isAdmin()) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Access Denied']);
+            exit;
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $orderedIds = $input['orderedIds'] ?? [];
+            if (!empty($orderedIds) && is_array($orderedIds)) {
+                updatePagesOrder($orderedIds);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
+            } else {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Invalid data']);
+            }
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+        }
+        exit;
+        break;
+
     case '/admin/order/update':
         if (!isAdmin()) {
             header('Content-Type: application/json');

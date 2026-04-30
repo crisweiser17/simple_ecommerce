@@ -6,6 +6,7 @@
     <title><?php echo __('Admin Dashboard'); ?> - <?php echo htmlspecialchars(getSetting('store_name', 'R2 Research Labs')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Quill CSS -->
@@ -87,6 +88,41 @@
             });
     }
 }">
+
+<script>
+function pagesReorder() {
+    return {
+        sortable: null,
+        init() {
+            this.$nextTick(() => {
+                const el = document.getElementById('pages-sortable-list');
+                if (!el) return;
+                this.sortable = new Sortable(el, {
+                    animation: 150,
+                    handle: 'tr',
+                    ghostClass: 'bg-blue-50',
+                    onEnd: (evt) => {
+                        const rows = el.querySelectorAll('tr[data-id]');
+                        const orderedIds = Array.from(rows).map(row => parseInt(row.dataset.id));
+                        fetch('/admin/pages/reorder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ orderedIds })
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (!data.success) {
+                                console.error('Reorder failed:', data.message);
+                            }
+                        })
+                        .catch(err => console.error('Reorder error:', err));
+                    }
+                });
+            });
+        }
+    };
+}
+</script>
 
     <div class="flex flex-1 overflow-hidden relative">
         <!-- Mobile Sidebar Overlay -->
@@ -432,7 +468,7 @@
             </div>
 
             <!-- Pages Tab -->
-            <div x-show="tab === 'pages'" style="display: none;">
+            <div x-show="tab === 'pages'" style="display: none;" x-data="pagesReorder()">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-2xl font-bold"><?php echo __('Pages'); ?></h1>
                     <button @click="pageModalOpen = true; editPage = {title:'', title_pt:'', content:'', content_pt:'', page_type:'internal', external_url:''}; setTimeout(() => { initQuills(); if(this.quillEn) this.quillEn.root.innerHTML = ''; if(this.quillPt) this.quillPt.root.innerHTML = ''; }, 100);" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Page'); ?></button>
@@ -442,15 +478,19 @@
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-2 py-3 w-10"></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Title'); ?></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Type'); ?></th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Actions'); ?></th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-gray-200" id="pages-sortable-list">
                             <?php foreach ($pages as $pg): ?>
-                            <tr>
+                            <tr data-id="<?php echo $pg['id']; ?>" class="cursor-move hover:bg-gray-50 transition-colors group">
+                                <td class="px-2 py-4 text-center text-gray-400">
+                                    <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($pg['title'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($pg['slug'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($pg['page_type'] === 'external' ? __('External') : __('Internal')); ?></td>
@@ -463,6 +503,7 @@
                         </tbody>
                     </table>
                 </div>
+                <p class="text-xs text-gray-500 mt-2"><?php echo __('Drag and drop rows to reorder pages.'); ?></p>
             </div>
 
             <!-- Orders Tab -->
