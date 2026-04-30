@@ -272,15 +272,21 @@
                 <a href="/" class="<?php echo $isHome ? $activeClass : $inactiveClass; ?>"><?php echo __('All Products'); ?></a>
                 <a href="/blog" class="<?php echo $isBlog ? $activeClass : $inactiveClass; ?>"><?php echo __('Blog'); ?></a>
                 
-                <?php foreach ($navPages as $navPage): 
-                    $pageSlug = '/' . $navPage['slug'];
-                    $isActive = (isset($path) && $path === $pageSlug);
+                <?php foreach ($navPages as $navPage):
                     $navLang = $_SESSION['lang'] ?? 'en';
                     $navTitle = ($navLang === 'pt' && !empty($navPage['title_pt'])) ? $navPage['title_pt'] : __($navPage['title']);
-                ?>
-                    <a href="<?php echo htmlspecialchars($pageSlug); ?>" class="<?php echo $isActive ? $activeClass : $inactiveClass; ?>">
-                        <?php echo htmlspecialchars($navTitle); ?>
-                    </a>
+                    if (($navPage['page_type'] ?? 'internal') === 'external' && !empty($navPage['external_url'])): ?>
+                        <a href="<?php echo htmlspecialchars($navPage['external_url']); ?>" target="_blank" rel="noopener noreferrer" class="<?php echo $inactiveClass; ?>">
+                            <?php echo htmlspecialchars($navTitle); ?>
+                        </a>
+                    <?php else:
+                        $pageSlug = '/' . $navPage['slug'];
+                        $isActive = (isset($path) && $path === $pageSlug);
+                    ?>
+                        <a href="<?php echo htmlspecialchars($pageSlug); ?>" class="<?php echo $isActive ? $activeClass : $inactiveClass; ?>">
+                            <?php echo htmlspecialchars($navTitle); ?>
+                        </a>
+                    <?php endif; ?>
                 <?php endforeach; ?>
                 <a href="/contact" class="<?php echo $isContact ? $activeClass : $inactiveClass; ?>"><?php echo __('Contact Us'); ?></a>
             </nav>
@@ -305,9 +311,52 @@
     </div>
 
     <!-- Footer -->
-    <div class="w-full bg-black h-[35px] flex items-center justify-center shrink-0">
-        <span class="text-white text-xs"><?php echo htmlspecialchars(getSetting('store_footer_text', 'R2 Research Labs - All Rights Reserved.')); ?></span>
-    </div>
+    <footer class="w-full bg-[#0f1115] border-t border-gray-800">
+        <div class="container mx-auto px-4 py-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                <!-- Brand -->
+                <div class="text-center md:text-left">
+                    <h3 class="text-white font-bold text-lg mb-2"><?php echo htmlspecialchars($storeName); ?></h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        <?php echo htmlspecialchars(getSetting('store_footer_text', 'R2 Research Labs - All Rights Reserved.')); ?>
+                    </p>
+                </div>
+
+                <!-- USA Office -->
+                <div class="text-center">
+                    <div class="flex items-center justify-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <h4 class="text-white font-semibold text-sm uppercase tracking-wider">USA</h4>
+                    </div>
+                    <address class="not-italic text-gray-400 text-sm leading-relaxed">
+                        500 Westover Dr #1234<br>
+                        Sanford, NC 27330<br>
+                        United States
+                    </address>
+                </div>
+
+                <!-- UK Office -->
+                <div class="text-center md:text-right">
+                    <div class="flex items-center justify-center md:justify-end gap-2 mb-3">
+                        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <h4 class="text-white font-semibold text-sm uppercase tracking-wider">United Kingdom</h4>
+                    </div>
+                    <address class="not-italic text-gray-400 text-sm leading-relaxed">
+                        120 High Road, East Finchley<br>
+                        London, N2 9ED<br>
+                        United Kingdom
+                    </address>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="w-full bg-black py-3">
+            <div class="container mx-auto px-4 text-center">
+                <span class="text-gray-500 text-xs">&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($storeName); ?>. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
 
     <!-- Alpine Cart Store -->
     <script>
