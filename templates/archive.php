@@ -135,44 +135,6 @@ $overlayEnabled = getSetting('banner_overlay_enabled', '1');
         <!-- Main Column (Title + Products) -->
         <div class="flex-1">
             
-            <!-- Section Title & Mobile Categories -->
-            <div class="mb-6 border-b pb-4 border-gray-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h2 class="text-2xl font-bold text-gray-800">
-                    <?php 
-                    if ($searchQuery !== '') {
-                        echo sprintf(__('Search results for "%s"'), htmlspecialchars($searchQuery));
-                    } elseif (isset($_GET['category']) && !empty($_GET['category'])) {
-                        // Find category name
-                        $currentCat = array_filter($sidebarCategories, function($c) { return $c['slug'] === $_GET['category']; });
-                        if (!empty($currentCat)) {
-                            echo htmlspecialchars(__(reset($currentCat)['name']));
-                        } else {
-                            echo __('Products');
-                        }
-                    } else {
-                        echo __('Popular Peptides');
-                    }
-                    ?>
-                </h2>
-                
-                <!-- Mobile Category Selector -->
-                <div class="md:hidden">
-                    <select onchange="window.location.href=this.value" class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm bg-white focus:ring-orange-500 focus:border-orange-500">
-                        <option value="/"><?php echo __('All Products'); ?></option>
-                        <?php 
-                        if (function_exists('getAllCategories')) {
-                            foreach ($sidebarCategories as $cat) {
-                                $isActive = isset($_GET['category']) && $_GET['category'] === $cat['slug'];
-                                $url = '/?category=' . htmlspecialchars($cat['slug']) . ($searchQuery !== '' ? '&q=' . urlencode($searchQuery) : '');
-                                $selected = $isActive ? 'selected' : '';
-                                echo "<option value=\"$url\" $selected>" . htmlspecialchars(__($cat['name'])) . "</option>";
-                            }
-                        }
-                        ?>
-                    </select>
-                </div>
-            </div>
-
             <!-- Product Grid -->
             <?php if (empty($products)): ?>
                 <div class="text-center py-12 text-gray-500">
