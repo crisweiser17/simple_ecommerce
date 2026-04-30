@@ -1,9 +1,110 @@
 <?php $searchQuery = trim((string)($_GET['q'] ?? '')); ?>
+
+<!-- Hero Banner (Full Width) -->
+<?php
+$overlayColor1 = getSetting('banner_overlay_color1', '#111827');
+$overlayColor2 = getSetting('banner_overlay_color2', '#1f2937');
+$overlayEnabled = getSetting('banner_overlay_enabled', '1');
+?>
+<div class="relative w-full h-[350px] overflow-hidden shadow-lg bg-gray-900">
+    <!-- Fallback Background Color -->
+    <div class="absolute inset-0" style="background: linear-gradient(to right, <?php echo $overlayColor1; ?>, <?php echo $overlayColor2; ?>);"></div>
+
+    <!-- Background Image -->
+    <div class="absolute inset-0 bg-[url('<?php echo htmlspecialchars(getSetting('banner_image_url', 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')); ?>')] bg-cover bg-center"></div>
+    
+    <!-- Overlay Gradient -->
+    <?php if ($overlayEnabled): ?>
+    <?php 
+    $opacityValue = (int)getSetting('banner_overlay_opacity', '30');
+    $opacityDecimal = $opacityValue / 100;
+    ?>
+    <div class="absolute inset-0" style="background: linear-gradient(to right, <?php echo $overlayColor1; ?>, <?php echo $overlayColor2; ?>); opacity: <?php echo $opacityDecimal; ?>"></div>
+    <?php endif; ?>
+    
+    <div class="absolute inset-0 flex items-center">
+        <div class="container mx-auto px-6 md:px-12 flex justify-between items-center">
+            <div class="max-w-lg z-10">
+                <?php 
+                $bannerTitle = getSetting('banner_title', 'Lab-Grade Peptides & Peptide Blends');
+                if (!empty($bannerTitle)): 
+                ?>
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
+                    <?php echo __($bannerTitle); ?>
+                </h1>
+                <?php endif; ?>
+
+                <?php 
+                $bannerSubtitle = getSetting('banner_subtitle', 'Strict internal assessments ensure our peptides meet the highest standards of purity and potency.');
+                if (!empty($bannerSubtitle)):
+                ?>
+                <p class="text-gray-300 mb-8 text-sm md:text-base max-w-md">
+                    <?php echo __($bannerSubtitle); ?>
+                </p>
+                <?php endif; ?>
+
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <?php 
+                    $btn1Text = getSetting('banner_button_text');
+                    $btn1Link = getSetting('banner_button_link');
+                    if (!empty($btn1Text)):
+                    ?>
+                    <a href="<?php echo htmlspecialchars($btn1Link); ?>" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 sm:px-8 rounded shadow-lg transition-transform transform hover:scale-105 uppercase text-sm text-center">
+                        <?php echo __($btn1Text); ?>
+                    </a>
+                    <?php endif; ?>
+
+                    <?php 
+                    $btn2Text = getSetting('banner_button2_text');
+                    $btn2Link = getSetting('banner_button2_link');
+                    if (!empty($btn2Text)):
+                    ?>
+                    <a href="<?php echo htmlspecialchars($btn2Link); ?>" class="bg-transparent border border-gray-500 hover:border-white text-white font-bold py-3 px-6 sm:px-8 rounded transition-colors uppercase text-sm text-center">
+                        <?php echo __($btn2Text); ?>
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <!-- Hero Image (Right) -->
+            <?php 
+            $rightImage = getSetting('banner_right_image_url', 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+            if (!empty($rightImage)): 
+            ?>
+            <div class="hidden lg:block relative z-10">
+                 <img src="<?php echo htmlspecialchars($rightImage); ?>" alt="Banner Image" class="w-80 h-auto object-contain drop-shadow-2xl rounded-lg opacity-90 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<!-- About / Mission Section (Full Width) -->
+<section class="py-8 px-4 md:px-0 text-center bg-white border-y border-gray-200">
+    <div class="container mx-auto">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+            <?php echo __('Buy Lab-Grade Peptides for Scientific Research'); ?>
+        </h2>
+        <div class="text-gray-600 text-sm leading-relaxed max-w-4xl mx-auto space-y-3">
+            <p>
+                <?php echo __('R2 Research Labs™ delivers high-quality, laboratory-certified peptides, produced under strict standards for purity, stability, and consistency. Our products are manufactured in GMP-certified laboratories, ensuring reliability and reproducibility for scientific applications.'); ?>
+            </p>
+            <p>
+                <?php echo __('We provide research-grade peptides suitable for a wide range of fields, including biotechnology, cell biology, and oncology research. Each product undergoes rigorous testing to guarantee accuracy, safety, and performance.'); ?>
+            </p>
+            <p>
+                <?php echo __('Our mission is to support scientific advancement by offering dependable materials for experimentation, innovation, and development. With a strong commitment to quality control and precision, R2 Research Labs™ helps researchers achieve consistent and reliable results.'); ?>
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content: Categories + Product Grid -->
 <div class="container mx-auto px-4 py-6">
     <div class="flex flex-col md:flex-row gap-6">
         
-        <!-- Sidebar -->
-        <aside class="hidden md:block w-64 flex-shrink-0 space-y-8">
+        <!-- Sidebar (Categories) -->
+        <aside class="w-full md:w-64 flex-shrink-0 space-y-8">
             <!-- Categories -->
             <div class="bg-[#1a1d21] rounded-lg overflow-hidden text-gray-300">
                 <div class="p-4 bg-[#23272b] border-b border-gray-700">
@@ -31,88 +132,9 @@
             </div>
         </aside>
 
-        <!-- Main Column -->
+        <!-- Main Column (Title + Products) -->
         <div class="flex-1">
             
-            <!-- Hero Banner -->
-            <?php
-            $overlayColor1 = getSetting('banner_overlay_color1', '#111827');
-            $overlayColor2 = getSetting('banner_overlay_color2', '#1f2937');
-            $overlayEnabled = getSetting('banner_overlay_enabled', '1');
-            ?>
-            <div class="relative w-full h-[350px] rounded-lg overflow-hidden mb-8 shadow-lg bg-gray-900">
-                <!-- Fallback Background Color -->
-                <div class="absolute inset-0" style="background: linear-gradient(to right, <?php echo $overlayColor1; ?>, <?php echo $overlayColor2; ?>);"></div>
-
-                <!-- Background Image -->
-                <div class="absolute inset-0 bg-[url('<?php echo htmlspecialchars(getSetting('banner_image_url', 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')); ?>')] bg-cover bg-center"></div>
-                
-                <!-- Overlay Gradient -->
-                <?php if ($overlayEnabled): ?>
-                <?php 
-                $opacityValue = (int)getSetting('banner_overlay_opacity', '30');
-                $opacityDecimal = $opacityValue / 100;
-                ?>
-                <div class="absolute inset-0" style="background: linear-gradient(to right, <?php echo $overlayColor1; ?>, <?php echo $overlayColor2; ?>); opacity: <?php echo $opacityDecimal; ?>;"></div>
-                <?php endif; ?>
-                
-                <div class="absolute inset-0 flex items-center">
-                    <div class="container mx-auto px-6 md:px-12 flex justify-between items-center">
-                        <div class="max-w-lg z-10">
-                            <?php 
-                            $bannerTitle = getSetting('banner_title', 'Lab-Grade Peptides & Peptide Blends');
-                            if (!empty($bannerTitle)): 
-                            ?>
-                            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
-                                <?php echo __($bannerTitle); ?>
-                            </h1>
-                            <?php endif; ?>
-
-                            <?php 
-                            $bannerSubtitle = getSetting('banner_subtitle', 'Strict internal assessments ensure our peptides meet the highest standards of purity and potency.');
-                            if (!empty($bannerSubtitle)):
-                            ?>
-                            <p class="text-gray-300 mb-8 text-sm md:text-base max-w-md">
-                                <?php echo __($bannerSubtitle); ?>
-                            </p>
-                            <?php endif; ?>
-
-                            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                                <?php 
-                                $btn1Text = getSetting('banner_button_text');
-                                $btn1Link = getSetting('banner_button_link');
-                                if (!empty($btn1Text)):
-                                ?>
-                                <a href="<?php echo htmlspecialchars($btn1Link); ?>" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 sm:px-8 rounded shadow-lg transition-transform transform hover:scale-105 uppercase text-sm text-center">
-                                    <?php echo __($btn1Text); ?>
-                                </a>
-                                <?php endif; ?>
-
-                                <?php 
-                                $btn2Text = getSetting('banner_button2_text');
-                                $btn2Link = getSetting('banner_button2_link');
-                                if (!empty($btn2Text)):
-                                ?>
-                                <a href="<?php echo htmlspecialchars($btn2Link); ?>" class="bg-transparent border border-gray-500 hover:border-white text-white font-bold py-3 px-6 sm:px-8 rounded transition-colors uppercase text-sm text-center">
-                                    <?php echo __($btn2Text); ?>
-                                </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <!-- Hero Image (Right) -->
-                        <?php 
-                        $rightImage = getSetting('banner_right_image_url', 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
-                        if (!empty($rightImage)): 
-                        ?>
-                        <div class="hidden lg:block relative z-10">
-                             <img src="<?php echo htmlspecialchars($rightImage); ?>" alt="Banner Image" class="w-80 h-auto object-contain drop-shadow-2xl rounded-lg opacity-90 transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-
             <!-- Section Title & Mobile Categories -->
             <div class="mb-6 border-b pb-4 border-gray-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 class="text-2xl font-bold text-gray-800">
