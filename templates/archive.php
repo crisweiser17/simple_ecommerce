@@ -102,22 +102,22 @@ $overlayEnabled = getSetting('banner_overlay_enabled', '1');
         <!-- Sidebar (Categories) -->
         <aside class="w-full md:w-64 flex-shrink-0 space-y-8">
             <!-- Categories -->
-            <div class="bg-[#1a1d21] rounded-lg overflow-hidden text-gray-300">
-                <div class="p-4 bg-gray-100 border-b border-gray-200">
-                    <h2 class="font-bold text-black uppercase text-sm tracking-wider"><?php echo __('Categories'); ?></h2>
+            <div class="bg-gray-100 rounded-lg overflow-hidden text-gray-700 border border-gray-200">
+                <div class="p-4 bg-gray-200 border-b border-gray-300">
+                    <h2 class="font-bold text-gray-900 uppercase text-sm tracking-wider"><?php echo __('Categories'); ?></h2>
                 </div>
                 <ul class="text-sm">
-                    <?php 
+                    <?php
                     if (function_exists('getAllCategories')) {
                         $sidebarCategories = getAllCategories();
                         foreach ($sidebarCategories as $cat) {
                             $isActive = isset($_GET['category']) && $_GET['category'] === $cat['slug'];
-                            $activeClass = $isActive ? 'bg-[#2c3036] text-white border-orange-500' : 'border-transparent';
+                            $activeClass = $isActive ? 'bg-gray-300 text-gray-900 border-gray-500' : 'border-transparent';
                     ?>
                     <li>
-                        <a href="/?category=<?php echo htmlspecialchars($cat['slug']); ?><?php echo $searchQuery !== '' ? '&q=' . urlencode($searchQuery) : ''; ?>" class="block px-4 py-3 hover:bg-[#2c3036] hover:text-white transition-colors border-l-2 <?php echo $activeClass; ?> hover:border-orange-500 flex justify-between items-center group">
+                        <a href="/?category=<?php echo htmlspecialchars($cat['slug']); ?><?php echo $searchQuery !== '' ? '&q=' . urlencode($searchQuery) : ''; ?>" class="block px-4 py-3 hover:bg-gray-200 hover:text-gray-900 transition-colors border-l-2 <?php echo $activeClass; ?> hover:border-gray-400 flex justify-between items-center group">
                             <span><?php echo htmlspecialchars(__($cat['name'])); ?></span>
-                            <svg class="w-3 h-3 text-gray-500 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            <svg class="w-3 h-3 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </a>
                     </li>
                     <?php 
