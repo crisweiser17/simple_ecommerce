@@ -103,8 +103,8 @@ $overlayEnabled = getSetting('banner_overlay_enabled', '1');
         <aside class="w-full md:w-64 flex-shrink-0 space-y-8">
             <!-- Categories -->
             <div class="bg-[#1a1d21] rounded-lg overflow-hidden text-gray-300">
-                <div class="p-4 bg-[#23272b] border-b border-gray-700">
-                    <h2 class="font-bold text-white uppercase text-sm tracking-wider"><?php echo __('Categories'); ?></h2>
+                <div class="p-4 bg-gray-100 border-b border-gray-200">
+                    <h2 class="font-bold text-black uppercase text-sm tracking-wider"><?php echo __('Categories'); ?></h2>
                 </div>
                 <ul class="text-sm">
                     <?php 
