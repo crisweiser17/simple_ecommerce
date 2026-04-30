@@ -80,19 +80,17 @@ $overlayEnabled = getSetting('banner_overlay_enabled', '1');
 </div>
 
 <!-- About / Mission Section (Full Width) -->
-<section class="py-8 px-4 md:px-0 text-center bg-white border-y border-gray-200">
-    <div class="container mx-auto">
+<section class="py-8 px-4 md:px-0 bg-white border-y border-gray-200">
+    <div class="container mx-auto px-4">
         <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-3">
-            <?php echo __('Buy Lab-Grade Peptides for Scientific Research'); ?>
+            <?php echo __('Lab-Grade Peptides for Scientific Research'); ?>
         </h2>
-        <div class="text-gray-600 text-sm leading-relaxed max-w-4xl mx-auto space-y-3">
+        <div class="text-gray-600 text-sm leading-relaxed space-y-3 text-justify">
             <p>
                 <?php echo __('R2 Research Labs™ delivers high-quality, laboratory-certified peptides, produced under strict standards for purity, stability, and consistency. Our products are manufactured in GMP-certified laboratories, ensuring reliability and reproducibility for scientific applications.'); ?>
-            </p>
-            <p>
+           
                 <?php echo __('We provide research-grade peptides suitable for a wide range of fields, including biotechnology, cell biology, and oncology research. Each product undergoes rigorous testing to guarantee accuracy, safety, and performance.'); ?>
-            </p>
-            <p>
+            
                 <?php echo __('Our mission is to support scientific advancement by offering dependable materials for experimentation, innovation, and development. With a strong commitment to quality control and precision, R2 Research Labs™ helps researchers achieve consistent and reliable results.'); ?>
             </p>
         </div>

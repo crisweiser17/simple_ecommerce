@@ -435,7 +435,7 @@
             <div x-show="tab === 'pages'" style="display: none;">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-2xl font-bold"><?php echo __('Pages'); ?></h1>
-                    <button @click="pageModalOpen = true; editPage = {title:'', title_pt:'', content:'', content_pt:''}; setTimeout(() => { initQuills(); if(this.quillEn) this.quillEn.root.innerHTML = ''; if(this.quillPt) this.quillPt.root.innerHTML = ''; }, 100);" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Page'); ?></button>
+                    <button @click="pageModalOpen = true; editPage = {title:'', title_pt:'', content:'', content_pt:'', page_type:'internal', external_url:''}; setTimeout(() => { initQuills(); if(this.quillEn) this.quillEn.root.innerHTML = ''; if(this.quillPt) this.quillPt.root.innerHTML = ''; }, 100);" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Page'); ?></button>
                 </div>
 
                 <div class="bg-white rounded shadow overflow-x-auto">
@@ -444,6 +444,7 @@
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Title'); ?></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Type'); ?></th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Actions'); ?></th>
                             </tr>
                         </thead>
@@ -452,6 +453,7 @@
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900"><?php echo htmlspecialchars($pg['title'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($pg['slug'] ?? ''); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($pg['page_type'] === 'external' ? __('External') : __('Internal')); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <button @click="pageModalOpen = true; editPage = <?php echo htmlspecialchars(json_encode($pg)); ?>; setTimeout(() => { initQuills(); if(this.quillEn) this.quillEn.root.innerHTML = editPage.content || ''; if(this.quillPt) this.quillPt.root.innerHTML = editPage.content_pt || ''; }, 100);" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></button>
                                     <a href="/admin/delete-page?id=<?php echo $pg['id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('<?php echo __('Are you sure?'); ?>')"><?php echo __('Delete'); ?></a>
@@ -1364,10 +1366,17 @@
             <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl w-full">
                 <form action="/admin/save-page" method="POST" class="p-6">
                     <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" x-text="editPage.id ? 'Edit Page' : 'Add New Page'"></h3>
-                    
+
                     <input type="hidden" name="id" :value="editPage.id">
 
                     <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700"><?php echo __('Page Type'); ?></label>
+                            <select name="page_type" x-model="editPage.page_type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                <option value="internal"><?php echo __('Internal'); ?></option>
+                                <option value="external"><?php echo __('External'); ?></option>
+                            </select>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Title (English)</label>
@@ -1378,7 +1387,11 @@
                                 <input type="text" name="title_pt" x-model="editPage.title_pt" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div x-show="editPage.page_type === 'external'">
+                            <label class="block text-sm font-medium text-gray-700"><?php echo __('External URL'); ?></label>
+                            <input type="url" name="external_url" x-model="editPage.external_url" placeholder="https://..." class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        </div>
+                        <div x-show="editPage.page_type === 'internal'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Content (English)</label>
                                 <input type="hidden" name="content" id="pageContent" x-model="editPage.content">
@@ -1394,10 +1407,10 @@
 
                     <div class="mt-5 sm:mt-6 flex gap-3 justify-end">
                         <button type="button" @click="pageModalOpen = false" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
-                            Cancel
+                            <?php echo __('Cancel'); ?>
                         </button>
                         <button type="submit" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none">
-                            Save Page
+                            <?php echo __('Save Page'); ?>
                         </button>
                     </div>
                 </form>

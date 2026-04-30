@@ -1726,9 +1726,13 @@ switch ($path) {
         // Handle sub-pages if necessary, but here simple slugs
         $page = getPageBySlug($slug);
         if ($page) {
-             $template = __DIR__ . '/templates/page.php';
-             require __DIR__ . '/templates/layout.php';
-             break;
+            if (($page['page_type'] ?? 'internal') === 'external' && !empty($page['external_url'])) {
+                header('Location: ' . $page['external_url'], true, 302);
+                exit;
+            }
+            $template = __DIR__ . '/templates/page.php';
+            require __DIR__ . '/templates/layout.php';
+            break;
         }
 
         http_response_code(404);

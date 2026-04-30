@@ -25,6 +25,12 @@ function ensurePagesSchema() {
     if (!in_array('content_pt', $columns, true)) {
         $pdo->exec("ALTER TABLE pages ADD COLUMN content_pt TEXT");
     }
+    if (!in_array('page_type', $columns, true)) {
+        $pdo->exec("ALTER TABLE pages ADD COLUMN page_type TEXT DEFAULT 'internal'");
+    }
+    if (!in_array('external_url', $columns, true)) {
+        $pdo->exec("ALTER TABLE pages ADD COLUMN external_url TEXT");
+    }
 }
 
 function getAllPages() {
@@ -56,11 +62,13 @@ function createPage($data) {
     $title = $data['title'];
     $title_pt = $data['title_pt'] ?? '';
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
-    $content = $data['content'];
+    $content = $data['content'] ?? '';
     $content_pt = $data['content_pt'] ?? '';
-    
-    $stmt = $pdo->prepare("INSERT INTO pages (title, title_pt, slug, content, content_pt) VALUES (?, ?, ?, ?, ?)");
-    return $stmt->execute([$title, $title_pt, $slug, $content, $content_pt]);
+    $page_type = ($data['page_type'] ?? '') === 'external' ? 'external' : 'internal';
+    $external_url = trim($data['external_url'] ?? '');
+
+    $stmt = $pdo->prepare("INSERT INTO pages (title, title_pt, slug, content, content_pt, page_type, external_url) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    return $stmt->execute([$title, $title_pt, $slug, $content, $content_pt, $page_type, $external_url]);
 }
 
 function updatePage($id, $data) {
@@ -69,11 +77,13 @@ function updatePage($id, $data) {
     $title = $data['title'];
     $title_pt = $data['title_pt'] ?? '';
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
-    $content = $data['content'];
+    $content = $data['content'] ?? '';
     $content_pt = $data['content_pt'] ?? '';
-    
-    $stmt = $pdo->prepare("UPDATE pages SET title = ?, title_pt = ?, slug = ?, content = ?, content_pt = ? WHERE id = ?");
-    return $stmt->execute([$title, $title_pt, $slug, $content, $content_pt, (int)$id]);
+    $page_type = ($data['page_type'] ?? '') === 'external' ? 'external' : 'internal';
+    $external_url = trim($data['external_url'] ?? '');
+
+    $stmt = $pdo->prepare("UPDATE pages SET title = ?, title_pt = ?, slug = ?, content = ?, content_pt = ?, page_type = ?, external_url = ? WHERE id = ?");
+    return $stmt->execute([$title, $title_pt, $slug, $content, $content_pt, $page_type, $external_url, (int)$id]);
 }
 
 function deletePage($id) {
