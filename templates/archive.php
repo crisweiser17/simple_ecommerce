@@ -85,12 +85,14 @@ $overlayEnabled = getSetting('banner_overlay_enabled', '1');
         <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-3">
             <?php echo __('Lab-Grade Peptides for Scientific Research'); ?>
         </h2>
-        <div class="text-gray-600 text-sm leading-relaxed space-y-3 text-justify">
-            <p>
+        <div class="text-gray-600 text-sm leading-relaxed space-y-3">
+            <p class="text-justify">
                 <?php echo __('R2 Research Labs™ delivers high-quality, laboratory-certified peptides, produced under strict standards for purity, stability, and consistency. Our products are manufactured in GMP-certified laboratories, ensuring reliability and reproducibility for scientific applications.'); ?>
-           
+            </p>
+            <p class="text-justify">
                 <?php echo __('We provide research-grade peptides suitable for a wide range of fields, including biotechnology, cell biology, and oncology research. Each product undergoes rigorous testing to guarantee accuracy, safety, and performance.'); ?>
-            
+            </p>
+            <p class="text-justify">
                 <?php echo __('Our mission is to support scientific advancement by offering dependable materials for experimentation, innovation, and development. With a strong commitment to quality control and precision, R2 Research Labs™ helps researchers achieve consistent and reliable results.'); ?>
             </p>
         </div>
