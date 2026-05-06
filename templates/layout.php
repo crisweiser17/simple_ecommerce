@@ -148,7 +148,7 @@
 <body class="font-sans" x-data="{ cartOpen: false, mobileSearchOpen: false }" style="background-color: <?php echo htmlspecialchars($themePageBg); ?>; color: <?php echo htmlspecialchars($themeTextColor); ?>;">
 
     <!-- Top Bar -->
-    <div class="text-white border-b border-gray-800" style="background-color: <?php echo htmlspecialchars($themeHeaderBg); ?>;">
+    <div class="bg-white text-black border-b border-gray-200">
         <div class="container mx-auto px-4 py-3">
             <div class="flex items-center justify-between">
                 <!-- Logo -->
@@ -156,7 +156,7 @@
                     <?php if ($brandMode === 'image' && !empty($brandLogoUrl)): ?>
                         <img src="<?php echo htmlspecialchars($brandLogoUrl); ?>" alt="<?php echo htmlspecialchars($storeName); ?>" style="width: <?php echo $brandLogoWidth; ?>px; height: <?php echo $brandLogoHeight; ?>px;" class="object-contain">
                     <?php else: ?>
-                        <span class="text-xl md:text-2xl font-bold tracking-tight text-white"><?php echo htmlspecialchars($storeName); ?></span>
+                        <span class="text-xl md:text-2xl font-bold tracking-tight text-black"><?php echo htmlspecialchars($storeName); ?></span>
                     <?php endif; ?>
                 </a>
 
@@ -166,33 +166,33 @@
                         <?php if (!empty($_GET['category'])): ?>
                             <input type="hidden" name="category" value="<?php echo htmlspecialchars((string)$_GET['category']); ?>">
                         <?php endif; ?>
-                        <input id="top-search-input" name="q" type="text" value="<?php echo htmlspecialchars((string)($_GET['q'] ?? '')); ?>" placeholder="<?php echo __('Search item...'); ?>" autocomplete="off" class="w-full bg-[#1a1d21] border border-gray-700 text-gray-300 rounded-sm px-4 py-2 pr-10 focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none placeholder-gray-500">
-                        <button type="submit" class="absolute right-3 top-2.5 text-gray-500 hover:text-white">
+                        <input id="top-search-input" name="q" type="text" value="<?php echo htmlspecialchars((string)($_GET['q'] ?? '')); ?>" placeholder="<?php echo __('Search item...'); ?>" autocomplete="off" class="w-full bg-gray-100 border border-gray-300 text-gray-800 rounded-sm px-4 py-2 pr-10 focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none placeholder-gray-400">
+                        <button type="submit" class="absolute right-3 top-2.5 text-gray-500 hover:text-black">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 4 4 0 0114 0z"></path></svg>
                         </button>
-                        <div id="top-search-suggestions" class="hidden absolute z-50 mt-1 w-full bg-[#1a1d21] border border-gray-700 rounded-sm shadow-xl overflow-hidden"></div>
+                        <div id="top-search-suggestions" class="hidden absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-sm shadow-xl overflow-hidden"></div>
                     </form>
                 </div>
 
                 <!-- Language Switcher (Desktop) -->
                 <?php if ($isMultilangEnabled): ?>
-                    <div class="hidden md:flex items-center gap-4 text-sm text-gray-400 mr-6">
-                        <a href="<?php $q = $_GET; $q['lang'] = 'en'; echo '?' . http_build_query($q); ?>" class="<?php echo $_SESSION['lang'] === 'en' ? 'text-white font-bold' : 'hover:text-white'; ?>">EN</a>
-                        <span class="text-gray-600">|</span>
-                        <a href="<?php $q = $_GET; $q['lang'] = 'pt'; echo '?' . http_build_query($q); ?>" class="<?php echo $_SESSION['lang'] === 'pt' ? 'text-white font-bold' : 'hover:text-white'; ?>">PT</a>
+                    <div class="hidden md:flex items-center gap-4 text-sm text-gray-500 mr-6">
+                        <a href="<?php $q = $_GET; $q['lang'] = 'en'; echo '?' . http_build_query($q); ?>" class="<?php echo $_SESSION['lang'] === 'en' ? 'text-black font-bold' : 'hover:text-black'; ?>">EN</a>
+                        <span class="text-gray-300">|</span>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'pt'; echo '?' . http_build_query($q); ?>" class="<?php echo $_SESSION['lang'] === 'pt' ? 'text-black font-bold' : 'hover:text-black'; ?>">PT</a>
                     </div>
                 <?php endif; ?>
 
                 <!-- User & Cart -->
                 <div class="flex items-center gap-4 md:gap-6 text-sm">
                     <!-- Mobile Search Toggle -->
-                    <button @click="mobileSearchOpen = !mobileSearchOpen" class="md:hidden text-gray-300 hover:text-white p-1">
+                    <button @click="mobileSearchOpen = !mobileSearchOpen" class="md:hidden text-gray-600 hover:text-black p-1">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 4 4 0 0114 0z"></path></svg>
                     </button>
 
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center gap-1 md:gap-2 hover:text-orange-500 transition-colors p-1">
+                            <button @click="open = !open" class="flex items-center gap-1 md:gap-2 text-gray-600 hover:text-orange-500 transition-colors p-1">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                 <span class="hidden sm:inline"><?php echo __('Account'); ?></span>
                             </button>
@@ -205,14 +205,14 @@
                             </div>
                         </div>
                     <?php else: ?>
-                        <a href="/login" class="flex items-center gap-1 md:gap-2 hover:text-orange-500 transition-colors p-1">
+                        <a href="/login" class="flex items-center gap-1 md:gap-2 text-gray-600 hover:text-orange-500 transition-colors p-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             <span class="hidden sm:inline"><?php echo __('Sign in'); ?></span>
                         </a>
                     <?php endif; ?>
 
                     <?php if ($storeMode !== 'informational'): ?>
-                    <a href="/cart" class="relative hover:text-orange-500 transition-colors flex items-center gap-1 md:gap-2 p-1">
+                    <a href="/cart" class="relative text-gray-600 hover:text-orange-500 transition-colors flex items-center gap-1 md:gap-2 p-1">
                         <div class="relative">
                             <?php if ($storeMode === 'catalog'): ?>
                                 <!-- Clipboard / List Icon -->
@@ -235,16 +235,16 @@
                     <?php if (!empty($_GET['category'])): ?>
                         <input type="hidden" name="category" value="<?php echo htmlspecialchars((string)$_GET['category']); ?>">
                     <?php endif; ?>
-                    <input name="q" type="text" value="<?php echo htmlspecialchars((string)($_GET['q'] ?? '')); ?>" placeholder="<?php echo __('Search item...'); ?>" class="w-full bg-[#1a1d21] border border-gray-700 text-gray-300 rounded-md px-4 py-3 pr-10 focus:ring-1 focus:ring-orange-500 outline-none">
+                    <input name="q" type="text" value="<?php echo htmlspecialchars((string)($_GET['q'] ?? '')); ?>" placeholder="<?php echo __('Search item...'); ?>" class="w-full bg-gray-100 border border-gray-300 text-gray-800 rounded-md px-4 py-3 pr-10 focus:ring-1 focus:ring-orange-500 outline-none">
                     <button type="submit" class="absolute right-3 top-3 text-gray-500">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 4 4 0 0114 0z"></path></svg>
                     </button>
                 </form>
-                
+
                 <?php if ($isMultilangEnabled): ?>
-                    <div class="flex items-center justify-center gap-6 text-sm text-gray-400 border-t border-gray-800 pt-3">
-                        <a href="<?php $q = $_GET; $q['lang'] = 'en'; echo '?' . http_build_query($q); ?>" class="px-4 py-1 rounded-full <?php echo $_SESSION['lang'] === 'en' ? 'bg-gray-800 text-white font-medium' : 'hover:text-white'; ?>">EN</a>
-                        <a href="<?php $q = $_GET; $q['lang'] = 'pt'; echo '?' . http_build_query($q); ?>" class="px-4 py-1 rounded-full <?php echo $_SESSION['lang'] === 'pt' ? 'bg-gray-800 text-white font-medium' : 'hover:text-white'; ?>">PT</a>
+                    <div class="flex items-center justify-center gap-6 text-sm text-gray-500 border-t border-gray-200 pt-3">
+                        <a href="<?php $q = $_GET; $q['lang'] = 'en'; echo '?' . http_build_query($q); ?>" class="px-4 py-1 rounded-full <?php echo $_SESSION['lang'] === 'en' ? 'bg-gray-200 text-black font-medium' : 'hover:text-black'; ?>">EN</a>
+                        <a href="<?php $q = $_GET; $q['lang'] = 'pt'; echo '?' . http_build_query($q); ?>" class="px-4 py-1 rounded-full <?php echo $_SESSION['lang'] === 'pt' ? 'bg-gray-200 text-black font-medium' : 'hover:text-black'; ?>">PT</a>
                     </div>
                 <?php endif; ?>
             </div>
@@ -409,7 +409,7 @@
                         .replace(/'/g, '&#039;');
                     const safeSlug = encodeURIComponent(String(item.slug || '').trim());
                     const url = safeSlug ? `/product/${safeSlug}` : `/product?id=${encodeURIComponent(String(item.id || ''))}`;
-                    return `<a href="${url}" class="block px-4 py-2 text-sm text-gray-200 hover:bg-[#2c3036]">${safeName}</a>`;
+                    return `<a href="${url}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">${safeName}</a>`;
                 }).join('');
 
                 suggestionsBox.classList.remove('hidden');
