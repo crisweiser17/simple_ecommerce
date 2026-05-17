@@ -41,31 +41,13 @@
     sidebarOpen: false,
     tab: localStorage.getItem('admin_tab') || 'products', 
     categoryModalOpen: false,
-    pageModalOpen: false,
     variationModalOpen: false,
     editCategory: {},
-    editPage: {},
     editVariation: { name: '', options: [] },
     testEmail: 'e@crisweiser.com',
     smtpTesting: false,
     smtpTestMessage: '',
     smtpTestSuccess: null,
-    initQuills() {
-        if (!this.quillEn) {
-            this.quillEn = new Quill('#editor_en', { theme: 'snow' });
-            this.quillEn.on('text-change', () => {
-                this.editPage.content = this.quillEn.root.innerHTML;
-                document.getElementById('pageContent').value = this.quillEn.root.innerHTML;
-            });
-        }
-        if (!this.quillPt) {
-            this.quillPt = new Quill('#editor_pt', { theme: 'snow' });
-            this.quillPt.on('text-change', () => {
-                this.editPage.content_pt = this.quillPt.root.innerHTML;
-                document.getElementById('pageContentPt').value = this.quillPt.root.innerHTML;
-            });
-        }
-    },
     init() {
         this.$watch('tab', value => localStorage.setItem('admin_tab', value));
     },
@@ -122,6 +104,97 @@ function pagesReorder() {
         }
     };
 }
+
+function topPicksManager() {
+    return {
+        sortable: null,
+        saveTimer: null,
+        init() {
+            this.$nextTick(() => {
+                const el = document.getElementById('topPicksSortable');
+                if (!el || !window.Sortable) return;
+                this.sortable = new Sortable(el, {
+                    animation: 150,
+                    handle: '.top-pick-card',
+                    ghostClass: 'opacity-40',
+                    dragClass: 'cursor-grabbing',
+                    onEnd: () => this.persistOrder()
+                });
+            });
+        },
+        persistOrder() {
+            const el = document.getElementById('topPicksSortable');
+            if (!el) return;
+            const orderedIds = Array.from(el.querySelectorAll('.top-pick-card'))
+                .map(card => parseInt(card.dataset.id, 10))
+                .filter(id => id > 0);
+
+            const status = document.getElementById('topPicksSaveStatus');
+            if (status) {
+                status.textContent = '<?php echo __('Saving…'); ?>';
+                status.classList.remove('hidden', 'text-green-600', 'text-red-600');
+                status.classList.add('text-gray-500');
+            }
+
+            fetch('/admin/top-picks/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderedIds })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!status) return;
+                if (data.success) {
+                    status.textContent = '<?php echo __('Order saved'); ?>';
+                    status.classList.remove('text-gray-500', 'text-red-600');
+                    status.classList.add('text-green-600');
+                } else {
+                    status.textContent = '<?php echo __('Save failed'); ?>';
+                    status.classList.remove('text-gray-500', 'text-green-600');
+                    status.classList.add('text-red-600');
+                }
+                clearTimeout(this.saveTimer);
+                this.saveTimer = setTimeout(() => status.classList.add('hidden'), 2000);
+            })
+            .catch(() => {
+                if (!status) return;
+                status.textContent = '<?php echo __('Save failed'); ?>';
+                status.classList.remove('text-gray-500', 'text-green-600');
+                status.classList.add('text-red-600');
+            });
+        }
+    };
+}
+
+function removeTopPick(productId, buttonEl) {
+    if (!confirm('<?php echo __('Remove this product from Top Picks?'); ?>')) return;
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/products/bulk-bestseller';
+    form.style.display = 'none';
+
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'bestseller_action';
+    actionInput.value = 'unmark';
+    form.appendChild(actionInput);
+
+    const redirectInput = document.createElement('input');
+    redirectInput.type = 'hidden';
+    redirectInput.name = 'redirect_query';
+    redirectInput.value = window.location.search.replace(/^\?/, '');
+    form.appendChild(redirectInput);
+
+    const idInput = document.createElement('input');
+    idInput.type = 'hidden';
+    idInput.name = 'product_ids[]';
+    idInput.value = productId;
+    form.appendChild(idInput);
+
+    document.body.appendChild(form);
+    form.submit();
+}
 </script>
 
     <div class="flex flex-1 overflow-hidden relative">
@@ -153,6 +226,9 @@ function pagesReorder() {
                 </button>
                 <a href="/admin/blog" class="block w-full text-left px-4 py-2 text-gray-400 hover:text-white rounded">
                     <?php echo __('Blog'); ?>
+                </a>
+                <a href="/admin/qc-certificates" class="block w-full text-left px-4 py-2 text-gray-400 hover:text-white rounded">
+                    <?php echo __('QC Certificates'); ?>
                 </a>
                 <div class="border-t border-gray-800 my-1"></div>
                 <button @click="tab = 'orders'; sidebarOpen = false;" :class="tab === 'orders' ? 'bg-gray-700 text-white font-semibold border border-gray-600' : 'text-gray-400 hover:text-white'" class="w-full text-left px-4 py-2 rounded">
@@ -258,6 +334,65 @@ function pagesReorder() {
                     </div>
                 <?php endif; ?>
 
+                <?php if (!empty($bulkBestsellerResult)): ?>
+                    <div class="mb-4 rounded border px-4 py-3 <?php echo !empty($bulkBestsellerResult['success']) ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'; ?>">
+                        <?php echo htmlspecialchars($bulkBestsellerResult['message'] ?? ''); ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Top Picks Manager -->
+                <div class="mb-6 bg-white rounded-lg shadow border border-gray-200 overflow-hidden" x-data="topPicksManager()" x-init="init()">
+                    <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-star text-yellow-500"></i>
+                            <h3 class="font-semibold text-gray-900"><?php echo __('Top Picks'); ?></h3>
+                            <span class="text-xs text-gray-500"><?php echo __('Drag cards to reorder how they appear on the homepage slider.'); ?></span>
+                        </div>
+                        <span id="topPicksSaveStatus" class="text-xs text-gray-500 hidden"></span>
+                    </div>
+
+                    <?php if (empty($topPicks)): ?>
+                        <div class="px-6 py-10 text-center text-sm text-gray-500">
+                            <p class="mb-1"><?php echo __('No Top Picks yet.'); ?></p>
+                            <p class="text-xs"><?php echo __('Select products in the table below and click "Mark Top Pick" to feature them on the homepage.'); ?></p>
+                        </div>
+                    <?php else: ?>
+                        <div class="overflow-x-auto px-3 py-3">
+                            <div id="topPicksSortable" class="flex gap-3 min-w-min">
+                                <?php foreach ($topPicks as $tp): ?>
+                                    <?php
+                                    $tpImg = getProductPrimaryImageUrl($tp);
+                                    if ($tpImg === '') $tpImg = 'https://placehold.co/200x200?text=No+Image';
+                                    ?>
+                                    <div class="top-pick-card flex-shrink-0 w-36 bg-white border border-gray-200 rounded-md shadow-sm hover:shadow-md transition cursor-move group relative" data-id="<?php echo (int)$tp['id']; ?>">
+                                        <button type="button" onclick="removeTopPick(<?php echo (int)$tp['id']; ?>, this)" class="absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-red-500 text-white text-xs opacity-0 group-hover:opacity-100 transition shadow hover:bg-red-600 flex items-center justify-center" title="<?php echo __('Remove from Top Picks'); ?>">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                        <span class="absolute top-1.5 left-1.5 z-10 inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full shadow">
+                                            <i class="fa-solid fa-star text-[8px]"></i>
+                                            <?php echo __('Hot Item'); ?>
+                                        </span>
+                                        <div class="aspect-square bg-gray-50 rounded-t-md flex items-center justify-center overflow-hidden">
+                                            <img src="<?php echo htmlspecialchars($tpImg); ?>" alt="<?php echo htmlspecialchars($tp['name'] ?? ''); ?>" class="max-h-full max-w-full object-contain p-2">
+                                        </div>
+                                        <div class="px-2 py-1.5 border-t border-gray-100">
+                                            <p class="text-xs font-semibold text-gray-900 leading-tight truncate" title="<?php echo htmlspecialchars($tp['name'] ?? ''); ?>">
+                                                <?php echo htmlspecialchars($tp['name'] ?? ''); ?>
+                                            </p>
+                                            <?php if (isset($tp['price']) && $tp['price'] !== null && $tp['price'] !== ''): ?>
+                                                <p class="text-[11px] text-gray-600 mt-0.5"><?php echo formatMoney($tp['price']); ?></p>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="absolute bottom-1 right-1 text-[10px] text-gray-400">
+                                            <i class="fa-solid fa-grip-vertical"></i>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
                 <div id="products-table-container">
                 <form id="bulkCategoryForm" action="/admin/products/bulk-category" method="POST" onsubmit="return confirmBulkCategoryAssignment(this);">
                 <input type="hidden" name="redirect_query" value="<?php echo htmlspecialchars($_SERVER['QUERY_STRING'] ?? ''); ?>">
@@ -286,6 +421,14 @@ function pagesReorder() {
                         <button type="submit" id="bulk-category-submit" disabled class="bg-indigo-600 text-white px-4 py-2 text-sm rounded hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed">
                             <?php echo __('Apply'); ?>
                         </button>
+                        <button type="button" id="bulk-bestseller-mark" disabled onclick="submitBulkBestseller('mark')" class="bg-yellow-500 text-white px-4 py-2 text-sm rounded hover:bg-yellow-600 disabled:bg-yellow-200 disabled:cursor-not-allowed inline-flex items-center gap-1">
+                            <i class="fa-solid fa-star"></i>
+                            <span><?php echo __('Mark Top Pick'); ?></span>
+                        </button>
+                        <button type="button" id="bulk-bestseller-unmark" disabled onclick="submitBulkBestseller('unmark')" class="bg-gray-500 text-white px-4 py-2 text-sm rounded hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed inline-flex items-center gap-1">
+                            <i class="fa-regular fa-star"></i>
+                            <span><?php echo __('Unmark'); ?></span>
+                        </button>
                     </div>
                 </div>
                 <div class="bg-white rounded shadow overflow-x-auto">
@@ -301,6 +444,9 @@ function pagesReorder() {
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" title="<?php echo __('Top Pick'); ?>">
+                                    <i class="fa-solid fa-star text-yellow-500"></i>
+                                </th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo __('Actions'); ?></th>
                             </tr>
                         </thead>
@@ -329,6 +475,13 @@ function pagesReorder() {
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($p['sku'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo formatMoney($p['price']); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($p['category_name'] ?? __('Uncategorized')); ?></td>
+                                <td class="px-3 py-4 whitespace-nowrap text-center">
+                                    <?php if (!empty($p['is_bestseller'])): ?>
+                                        <i class="fa-solid fa-star text-yellow-500" title="<?php echo __('Top Pick'); ?>"></i>
+                                    <?php else: ?>
+                                        <i class="fa-regular fa-star text-gray-300"></i>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <a href="/product/<?php echo $p['slug']; ?>" target="_blank" class="text-blue-600 hover:text-blue-900 mr-4" title="<?php echo __('View Product'); ?>"><i class="fa-solid fa-up-right-from-square"></i></a>
                                     <a href="/produto/<?php echo $p['slug']; ?>/single" target="_blank" class="text-green-600 hover:text-green-900 mr-4" title="<?php echo __('Single Checkout Page'); ?>">Single</a>
@@ -339,7 +492,7 @@ function pagesReorder() {
                             <?php endforeach; ?>
                             <?php if (empty($products)): ?>
                             <tr>
-                                <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500"><?php echo __('No products found.'); ?></td>
+                                <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500"><?php echo __('No products found.'); ?></td>
                             </tr>
                             <?php endif; ?>
                         </tbody>
@@ -471,7 +624,7 @@ function pagesReorder() {
             <div x-show="tab === 'pages'" style="display: none;" x-data="pagesReorder()">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-2xl font-bold"><?php echo __('Pages'); ?></h1>
-                    <button @click="pageModalOpen = true; editPage = {title:'', title_pt:'', content:'', content_pt:'', page_type:'internal', external_url:''}; setTimeout(() => { initQuills(); if(this.quillEn) this.quillEn.root.innerHTML = ''; if(this.quillPt) this.quillPt.root.innerHTML = ''; }, 100);" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Page'); ?></button>
+                    <a href="/admin/page-form" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><?php echo __('Add Page'); ?></a>
                 </div>
 
                 <div class="bg-white rounded shadow overflow-x-auto">
@@ -495,7 +648,7 @@ function pagesReorder() {
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($pg['slug'] ?? ''); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500"><?php echo htmlspecialchars($pg['page_type'] === 'external' ? __('External') : __('Internal')); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button @click="pageModalOpen = true; editPage = <?php echo htmlspecialchars(json_encode($pg)); ?>; setTimeout(() => { initQuills(); if(this.quillEn) this.quillEn.root.innerHTML = editPage.content || ''; if(this.quillPt) this.quillPt.root.innerHTML = editPage.content_pt || ''; }, 100);" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></button>
+                                    <a href="/admin/page-form?id=<?php echo (int)$pg['id']; ?>" class="text-indigo-600 hover:text-indigo-900 mr-4"><?php echo __('Edit'); ?></a>
                                     <a href="/admin/delete-page?id=<?php echo $pg['id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('<?php echo __('Are you sure?'); ?>')"><?php echo __('Delete'); ?></a>
                                 </td>
                             </tr>
@@ -879,6 +1032,17 @@ function pagesReorder() {
                                         <option value="en" <?php echo $defaultLang === 'en' ? 'selected' : ''; ?>>English</option>
                                         <option value="pt" <?php echo $defaultLang === 'pt' ? 'selected' : ''; ?>><?php echo __('Portuguese'); ?></option>
                                     </select>
+                                </div>
+                            </div>
+
+                            <div class="border-b pb-4 mb-4">
+                                <h3 class="text-lg font-semibold mb-3"><?php echo __('Security'); ?></h3>
+                                <div class="mb-4">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="force_https" value="1" <?php echo getSetting('force_https', '0') === '1' ? 'checked' : ''; ?> class="form-checkbox h-5 w-5 text-blue-600">
+                                        <span class="ml-2 text-gray-700 text-sm font-bold"><?php echo __('Force HTTPS (SSL)'); ?></span>
+                                    </label>
+                                    <p class="text-gray-500 text-xs mt-1 ml-7"><?php echo __('Redirects every HTTP request to HTTPS. Make sure your SSL certificate is installed before enabling.'); ?></p>
                                 </div>
                             </div>
 
@@ -1395,70 +1559,6 @@ function pagesReorder() {
         </div>
     </div>
 
-    <!-- Page Modal -->
-    <div x-show="pageModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75" @click="pageModalOpen = false"></div>
-            </div>
-
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl w-full">
-                <form action="/admin/save-page" method="POST" class="p-6">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" x-text="editPage.id ? 'Edit Page' : 'Add New Page'"></h3>
-
-                    <input type="hidden" name="id" :value="editPage.id">
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700"><?php echo __('Page Type'); ?></label>
-                            <select name="page_type" x-model="editPage.page_type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                <option value="internal"><?php echo __('Internal'); ?></option>
-                                <option value="external"><?php echo __('External'); ?></option>
-                            </select>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Title (English)</label>
-                                <input type="text" name="title" x-model="editPage.title" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Title (Portuguese)</label>
-                                <input type="text" name="title_pt" x-model="editPage.title_pt" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                            </div>
-                        </div>
-                        <div x-show="editPage.page_type === 'external'">
-                            <label class="block text-sm font-medium text-gray-700"><?php echo __('External URL'); ?></label>
-                            <input type="url" name="external_url" x-model="editPage.external_url" placeholder="https://..." class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                        </div>
-                        <div x-show="editPage.page_type === 'internal'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Content (English)</label>
-                                <input type="hidden" name="content" id="pageContent" x-model="editPage.content">
-                                <div id="editor_en" class="h-64 bg-white"></div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Content (Portuguese)</label>
-                                <input type="hidden" name="content_pt" id="pageContentPt" x-model="editPage.content_pt">
-                                <div id="editor_pt" class="h-64 bg-white"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 sm:mt-6 flex gap-3 justify-end">
-                        <button type="button" @click="pageModalOpen = false" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
-                            <?php echo __('Cancel'); ?>
-                        </button>
-                        <button type="submit" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none">
-                            <?php echo __('Save Page'); ?>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <!-- Quill JS -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
@@ -1579,6 +1679,11 @@ function pagesReorder() {
                 state.submitButton.disabled = checkedCount === 0;
             }
 
+            const markBtn = document.getElementById('bulk-bestseller-mark');
+            const unmarkBtn = document.getElementById('bulk-bestseller-unmark');
+            if (markBtn) markBtn.disabled = checkedCount === 0;
+            if (unmarkBtn) unmarkBtn.disabled = checkedCount === 0;
+
             if (state.selectAll) {
                 state.selectAll.checked = totalCount > 0 && checkedCount === totalCount;
                 state.selectAll.indeterminate = checkedCount > 0 && checkedCount < totalCount;
@@ -1600,6 +1705,50 @@ function pagesReorder() {
 
         function syncBulkCategorySelectionState(source) {
             updateBulkCategorySelectionState();
+        }
+
+        function submitBulkBestseller(action) {
+            const state = getBulkCategoryFormState();
+            if (!state) return;
+
+            const checked = Array.from(state.checkboxes).filter(cb => cb.checked);
+            if (checked.length === 0) {
+                alert('<?php echo __('Select at least one product.'); ?>');
+                return;
+            }
+
+            const confirmMsg = action === 'unmark'
+                ? '<?php echo __('Remove Top Pick status from selected products?'); ?>'
+                : '<?php echo __('Mark selected products as Top Picks?'); ?>';
+            if (!confirm(confirmMsg)) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/admin/products/bulk-bestseller';
+            form.style.display = 'none';
+
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'bestseller_action';
+            actionInput.value = action;
+            form.appendChild(actionInput);
+
+            const redirectInput = document.createElement('input');
+            redirectInput.type = 'hidden';
+            redirectInput.name = 'redirect_query';
+            redirectInput.value = window.location.search.replace(/^\?/, '');
+            form.appendChild(redirectInput);
+
+            checked.forEach(cb => {
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'product_ids[]';
+                idInput.value = cb.value;
+                form.appendChild(idInput);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
         }
 
         function confirmBulkCategoryAssignment(form) {

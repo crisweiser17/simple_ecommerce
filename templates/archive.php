@@ -129,8 +129,98 @@ $overlayEnabled = getSetting('banner_overlay_enabled', '1');
         </aside>
 
         <!-- Main Column (Title + Products) -->
-        <div class="flex-1">
-            
+        <div class="flex-1 min-w-0">
+
+            <!-- Bestsellers Slider -->
+            <?php if (!empty($bestsellerProducts)): ?>
+            <section class="mb-8" x-data="bestsellersSlider()" x-init="init()">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.367 2.446c-.784.57-1.838-.197-1.539-1.118l1.286-3.957a1 1 0 00-.363-1.118L2.65 9.154c-.784-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.286-3.957z"></path></svg>
+                            <?php echo __('Top Picks'); ?>
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="prev()" :disabled="!canPrev" class="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition" aria-label="<?php echo __('Previous'); ?>">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button type="button" @click="next()" :disabled="!canNext" class="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition" aria-label="<?php echo __('Next'); ?>">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-hidden" x-ref="viewport">
+                    <div class="flex gap-4 transition-transform duration-300 ease-out" :style="`transform: translateX(${offset}px)`" x-ref="track">
+                        <?php foreach ($bestsellerProducts as $bestseller): ?>
+                            <?php
+                            $bsImage = getProductPrimaryImageUrl($bestseller);
+                            if ($bsImage === '') $bsImage = 'https://placehold.co/400x400?text=No+Image';
+                            $bsUrl = getProductUrl($bestseller);
+                            ?>
+                            <a href="<?php echo htmlspecialchars($bsUrl); ?>" class="bestseller-slide flex-shrink-0 w-[220px] sm:w-[240px] bg-white rounded-lg shadow-sm hover:shadow-lg border border-gray-200 p-3 group transition-all relative">
+                                <span class="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shadow">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.367 2.446c-.784.57-1.838-.197-1.539-1.118l1.286-3.957a1 1 0 00-.363-1.118L2.65 9.154c-.784-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.286-3.957z"></path></svg>
+                                    <?php echo __('Hot Item'); ?>
+                                </span>
+                                <div class="aspect-square bg-gray-50 rounded-md flex items-center justify-center overflow-hidden mb-3">
+                                    <img src="<?php echo htmlspecialchars($bsImage); ?>" alt="<?php echo htmlspecialchars($bestseller['name']); ?>" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300">
+                                </div>
+                                <h3 class="font-bold text-gray-900 text-sm leading-tight mb-1 font-product-title line-clamp-2 group-hover:text-orange-600 transition-colors">
+                                    <?php echo htmlspecialchars($bestseller['name']); ?>
+                                </h3>
+                                <?php if ($storeMode === 'ecommerce' && isset($bestseller['price']) && $bestseller['price'] !== null && $bestseller['price'] !== ''): ?>
+                                    <div class="font-bold text-gray-900 text-base font-prices">
+                                        <?php echo formatMoney($bestseller['price']); ?>
+                                    </div>
+                                <?php endif; ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </section>
+            <script>
+                function bestsellersSlider() {
+                    return {
+                        offset: 0,
+                        canPrev: false,
+                        canNext: true,
+                        step: 0,
+                        maxOffset: 0,
+                        init() {
+                            this.$nextTick(() => this.recompute());
+                            window.addEventListener('resize', () => this.recompute());
+                        },
+                        recompute() {
+                            const track = this.$refs.track;
+                            const viewport = this.$refs.viewport;
+                            if (!track || !viewport) return;
+                            const slide = track.querySelector('.bestseller-slide');
+                            const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || '16') || 16;
+                            const slideWidth = slide ? slide.getBoundingClientRect().width : 240;
+                            const visibleSlides = Math.max(1, Math.floor((viewport.clientWidth + gap) / (slideWidth + gap)));
+                            this.step = (slideWidth + gap) * visibleSlides;
+                            this.maxOffset = Math.min(0, viewport.clientWidth - track.scrollWidth);
+                            if (this.offset < this.maxOffset) this.offset = this.maxOffset;
+                            this.updateButtons();
+                        },
+                        updateButtons() {
+                            this.canPrev = this.offset < 0;
+                            this.canNext = this.offset > this.maxOffset;
+                        },
+                        next() {
+                            this.offset = Math.max(this.maxOffset, this.offset - this.step);
+                            this.updateButtons();
+                        },
+                        prev() {
+                            this.offset = Math.min(0, this.offset + this.step);
+                            this.updateButtons();
+                        }
+                    };
+                }
+            </script>
+            <?php endif; ?>
+
             <!-- Product Grid -->
             <?php if (empty($products)): ?>
                 <div class="text-center py-12 text-gray-500">

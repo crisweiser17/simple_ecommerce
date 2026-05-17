@@ -81,7 +81,10 @@ function createPage($data) {
     $external_url = trim($data['external_url'] ?? '');
 
     $stmt = $pdo->prepare("INSERT INTO pages (title, title_pt, slug, content, content_pt, page_type, external_url) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    return $stmt->execute([$title, $title_pt, $slug, $content, $content_pt, $page_type, $external_url]);
+    if ($stmt->execute([$title, $title_pt, $slug, $content, $content_pt, $page_type, $external_url])) {
+        return (int)$pdo->lastInsertId();
+    }
+    return false;
 }
 
 function updatePage($id, $data) {

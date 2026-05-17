@@ -85,9 +85,26 @@ require_once __DIR__ . '/src/products_csv.php';
 require_once __DIR__ . '/src/payments.php';
 require_once __DIR__ . '/src/payment_engine.php';
 require_once __DIR__ . '/src/FileUploader.php';
+require_once __DIR__ . '/src/qc_certificates.php';
 
 tryAutoLogin();
 ensureSettingsSchema();
+
+if (getSetting('force_https', '0') === '1' && php_sapi_name() !== 'cli' && php_sapi_name() !== 'cli-server') {
+    $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (strtolower($forwardedProto) === 'https')
+        || ((int)($_SERVER['SERVER_PORT'] ?? 0) === 443);
+    if (!$isHttps) {
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        if ($host !== '') {
+            header('Location: https://' . $host . $uri, true, 301);
+            exit;
+        }
+    }
+}
+
 ensureUsersSchema();
 ensureCategoriesSchema();
 ensureProductsSchema();
@@ -228,7 +245,8 @@ switch ($path) {
         $products = getAllProducts($categorySlug, $limit, $offset, $searchTerm);
         $totalProducts = countProducts($categorySlug, $searchTerm);
         $totalPages = ceil($totalProducts / $limit);
-        
+        $bestsellerProducts = getBestsellerProducts(12);
+
         $template = __DIR__ . '/templates/archive.php';
         require __DIR__ . '/templates/layout.php';
         break;
@@ -269,6 +287,16 @@ switch ($path) {
              $user = getUser($_SESSION['user_id']) ?: [];
         }
         $template = __DIR__ . '/templates/cart.php';
+        require __DIR__ . '/templates/layout.php';
+        break;
+
+    case '/qc-verify':
+        $qcCode = isset($_GET['id']) ? trim((string)$_GET['id']) : '';
+        $qcCertificate = $qcCode !== '' ? getQcCertificateByCode($qcCode) : false;
+        if (!empty($qcCertificate['product_id'])) {
+            $qcCertificate['linked_product'] = getProduct((int)$qcCertificate['product_id']) ?: null;
+        }
+        $template = __DIR__ . '/templates/qc-verify.php';
         require __DIR__ . '/templates/layout.php';
         break;
 
@@ -766,7 +794,10 @@ switch ($path) {
         unset($_SESSION['products_csv_report']);
         $bulkCategoryResult = $_SESSION['bulk_category_result'] ?? null;
         unset($_SESSION['bulk_category_result']);
-        
+        $bulkBestsellerResult = $_SESSION['bulk_bestseller_result'] ?? null;
+        unset($_SESSION['bulk_bestseller_result']);
+        $topPicks = getBestsellerProducts(50);
+
         require __DIR__ . '/templates/admin/dashboard.php';
         break;
 
@@ -899,6 +930,86 @@ switch ($path) {
         exit;
         break;
 
+    case '/admin/products/bulk-bestseller':
+        if (!isAdmin()) die(__('Access Denied'));
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /admin');
+            exit;
+        }
+
+        $productIds = $_POST['product_ids'] ?? [];
+        $bestsellerAction = $_POST['bestseller_action'] ?? 'mark';
+        $redirectQuery = trim((string)($_POST['redirect_query'] ?? ''));
+        $redirectUrl = '/admin' . ($redirectQuery !== '' ? '?' . ltrim($redirectQuery, '?') : '');
+
+        if (!is_array($productIds)) {
+            $productIds = [];
+        }
+
+        $normalizedProductIds = [];
+        foreach ($productIds as $productId) {
+            $productId = (int)$productId;
+            if ($productId > 0 && !in_array($productId, $normalizedProductIds, true)) {
+                $normalizedProductIds[] = $productId;
+            }
+        }
+
+        if (empty($normalizedProductIds)) {
+            $_SESSION['bulk_bestseller_result'] = [
+                'success' => false,
+                'message' => __('Select at least one product.')
+            ];
+            header('Location: ' . $redirectUrl);
+            exit;
+        }
+
+        try {
+            $value = $bestsellerAction !== 'unmark';
+            $updatedCount = setProductsBestseller($normalizedProductIds, $value);
+            $messageKey = $value
+                ? __('%d product(s) marked as Top Pick.')
+                : __('%d product(s) removed from Top Picks.');
+
+            $_SESSION['bulk_bestseller_result'] = [
+                'success' => true,
+                'message' => sprintf($messageKey, $updatedCount)
+            ];
+        } catch (Throwable $e) {
+            $_SESSION['bulk_bestseller_result'] = [
+                'success' => false,
+                'message' => __('Unable to update Top Picks in bulk.')
+            ];
+        }
+
+        header('Location: ' . $redirectUrl);
+        exit;
+        break;
+
+    case '/admin/top-picks/reorder':
+        header('Content-Type: application/json');
+        if (!isAdmin()) {
+            echo json_encode(['success' => false, 'message' => 'Access Denied']);
+            exit;
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+        $input = json_decode(file_get_contents('php://input'), true);
+        $orderedIds = $input['orderedIds'] ?? [];
+        if (!is_array($orderedIds) || empty($orderedIds)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid data']);
+            exit;
+        }
+        try {
+            $updated = reorderBestsellers($orderedIds);
+            echo json_encode(['success' => true, 'updated' => $updated]);
+        } catch (Throwable $e) {
+            echo json_encode(['success' => false, 'message' => 'Reorder failed']);
+        }
+        exit;
+        break;
+
     case '/admin/save-settings':
         if (!isAdmin()) die(__('Access Denied'));
         $whatsapp = $_POST['store_whatsapp'] ?? '';
@@ -965,6 +1076,9 @@ switch ($path) {
         
         $enable_whatsapp = isset($_POST['enable_whatsapp_button']) ? '1' : '0';
         updateSetting('enable_whatsapp_button', $enable_whatsapp);
+
+        $forceHttps = isset($_POST['force_https']) ? '1' : '0';
+        updateSetting('force_https', $forceHttps);
         
         $storeMode = $_POST['store_mode'] ?? 'ecommerce';
         if (!in_array($storeMode, ['ecommerce', 'catalog', 'informational'])) {
@@ -1386,15 +1500,43 @@ switch ($path) {
         exit;
         break;
 
+    case '/admin/page-form':
+        if (!isAdmin()) {
+            if (!isLoggedIn()) {
+                header('Location: /login');
+                exit;
+            }
+            echo __('Access Denied');
+            exit;
+        }
+        $id = $_GET['id'] ?? null;
+        $page = [];
+        if ($id) {
+            $page = getPage($id);
+            if (!$page) {
+                http_response_code(404);
+                echo __('Page not found');
+                exit;
+            }
+        }
+        require __DIR__ . '/templates/admin/page-form.php';
+        break;
+
     case '/admin/save-page':
         if (!isAdmin()) die(__('Access Denied'));
         $data = $_POST;
         if (empty($data['id'])) {
-            createPage($data);
+            $newId = createPage($data);
+            $redirectId = $newId ?: null;
         } else {
             updatePage($data['id'], $data);
+            $redirectId = (int)$data['id'];
         }
-        header('Location: /admin');
+        if ($redirectId) {
+            header('Location: /admin/page-form?id=' . $redirectId . '&saved=1');
+        } else {
+            header('Location: /admin');
+        }
         exit;
         break;
 
@@ -1403,6 +1545,77 @@ switch ($path) {
         $id = $_GET['id'];
         deletePage($id);
         header('Location: /admin');
+        exit;
+        break;
+
+    case '/admin/qc-certificates':
+        if (!isAdmin()) {
+            if (!isLoggedIn()) { header('Location: /login'); exit; }
+            echo __('Access Denied');
+            exit;
+        }
+        $qcCertificates = getAllQcCertificates();
+        $qcImportReport = $_SESSION['qc_import_report'] ?? null;
+        unset($_SESSION['qc_import_report']);
+        $qcSaveResult = $_SESSION['qc_save_result'] ?? null;
+        unset($_SESSION['qc_save_result']);
+        $qcAllProducts = getAllProducts();
+        require __DIR__ . '/templates/admin/qc-certificates.php';
+        break;
+
+    case '/admin/qc-certificates/import':
+        if (!isAdmin()) die(__('Access Denied'));
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: /admin/qc-certificates'); exit; }
+        $importDir = __DIR__ . '/public/uploads/qc';
+        $report = importQcCertificatesFromDir($importDir, '/uploads/qc');
+        $_SESSION['qc_import_report'] = $report;
+        header('Location: /admin/qc-certificates');
+        exit;
+        break;
+
+    case '/admin/qc-certificates/save':
+        if (!isAdmin()) die(__('Access Denied'));
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: /admin/qc-certificates'); exit; }
+
+        $qcId = isset($_POST['id']) && $_POST['id'] !== '' ? (int)$_POST['id'] : null;
+        $pdfUrl = trim((string)($_POST['pdf_url'] ?? ''));
+
+        if (!empty($_FILES['pdf_file']) && (int)($_FILES['pdf_file']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/public/uploads/qc';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
+            $origName = basename($_FILES['pdf_file']['name']);
+            $safeName = preg_replace('/[^A-Za-z0-9._\-]/', '-', $origName);
+            $dest = $uploadDir . '/' . $safeName;
+            if (move_uploaded_file($_FILES['pdf_file']['tmp_name'], $dest)) {
+                $pdfUrl = '/uploads/qc/' . $safeName;
+            }
+        }
+
+        try {
+            saveQcCertificate([
+                'code' => $_POST['code'] ?? '',
+                'product_name' => $_POST['product_name'] ?? '',
+                'product_id' => $_POST['product_id'] ?? null,
+                'batch_number' => $_POST['batch_number'] ?? '',
+                'issued_at' => $_POST['issued_at'] ?? '',
+                'pdf_url' => $pdfUrl,
+                'notes' => $_POST['notes'] ?? '',
+            ], $qcId);
+            $_SESSION['qc_save_result'] = ['success' => true, 'message' => __('Certificate saved.')];
+        } catch (Throwable $e) {
+            $_SESSION['qc_save_result'] = ['success' => false, 'message' => $e->getMessage()];
+        }
+        header('Location: /admin/qc-certificates');
+        exit;
+        break;
+
+    case '/admin/qc-certificates/delete':
+        if (!isAdmin()) die(__('Access Denied'));
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id > 0) {
+            deleteQcCertificate($id);
+        }
+        header('Location: /admin/qc-certificates');
         exit;
         break;
 

@@ -153,7 +153,7 @@ function productsSchemaFastPathLooksReady(PDO $pdo) {
         }
     }
 
-    $pdo->query("SELECT category_id, pdf_label, pdf_active, slug, variations_json FROM products LIMIT 0");
+    $pdo->query("SELECT category_id, pdf_label, pdf_active, slug, variations_json, is_bestseller, bestseller_order FROM products LIMIT 0");
     $pdo->query("SELECT product_id, image_url, is_primary, sort_order FROM product_images LIMIT 0");
     $pdo->query("SELECT name, options_json FROM global_variations LIMIT 0");
     $pdo->query("SELECT product_id, category_id FROM product_categories LIMIT 0");
@@ -198,6 +198,8 @@ function ensureProductsSchema() {
         download_expiry_days INTEGER DEFAULT 0,
         file_url TEXT,
         variations_json TEXT,
+        is_bestseller INTEGER DEFAULT 0,
+        bestseller_order INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
@@ -220,6 +222,14 @@ function ensureProductsSchema() {
 
     if (!in_array('variations_json', $columns, true)) {
         $pdo->exec("ALTER TABLE products ADD COLUMN variations_json TEXT");
+    }
+
+    if (!in_array('is_bestseller', $columns, true)) {
+        $pdo->exec("ALTER TABLE products ADD COLUMN is_bestseller INTEGER DEFAULT 0");
+    }
+
+    if (!in_array('bestseller_order', $columns, true)) {
+        $pdo->exec("ALTER TABLE products ADD COLUMN bestseller_order INTEGER DEFAULT 0");
     }
 
     $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_products_slug_unique ON products(slug)");
@@ -820,6 +830,117 @@ function getProductBySku($sku) {
     ");
     $stmt->execute([trim((string)$sku)]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function getBestsellerProducts($limit = 12) {
+    ensureProductsSchema();
+    global $pdo;
+
+    $safeLimit = max(1, min((int)$limit, 50));
+    $stmt = $pdo->prepare("
+        SELECT p.*,
+               GROUP_CONCAT(c.name, ', ') as category_name,
+               GROUP_CONCAT(c.id, ',') as category_ids,
+               MIN(c.slug) as category_slug,
+               COALESCE(
+                    (
+                        SELECT pi.image_url
+                        FROM product_images pi
+                        WHERE pi.product_id = p.id
+                        ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC
+                        LIMIT 1
+                    ),
+                    p.image_url
+               ) as primary_image_url
+        FROM products p
+        LEFT JOIN product_categories pc ON p.id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.id
+        WHERE p.is_bestseller = 1
+        GROUP BY p.id
+        ORDER BY p.bestseller_order ASC, p.created_at DESC
+        LIMIT $safeLimit
+    ");
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function setProductsBestseller(array $productIds, $value) {
+    ensureProductsSchema();
+    global $pdo;
+
+    $normalizedIds = [];
+    foreach ($productIds as $id) {
+        $id = (int)$id;
+        if ($id > 0 && !in_array($id, $normalizedIds, true)) {
+            $normalizedIds[] = $id;
+        }
+    }
+    if (empty($normalizedIds)) {
+        return 0;
+    }
+
+    $placeholders = implode(', ', array_fill(0, count($normalizedIds), '?'));
+
+    if ($value) {
+        $maxStmt = $pdo->query("SELECT COALESCE(MAX(bestseller_order), 0) FROM products WHERE is_bestseller = 1");
+        $nextOrder = (int)$maxStmt->fetchColumn();
+
+        $existingStmt = $pdo->prepare("SELECT id FROM products WHERE is_bestseller = 1 AND id IN ($placeholders)");
+        $existingStmt->execute($normalizedIds);
+        $alreadyMarked = array_map('intval', $existingStmt->fetchAll(PDO::FETCH_COLUMN));
+
+        $toAdd = array_values(array_diff($normalizedIds, $alreadyMarked));
+        if (empty($toAdd)) {
+            return 0;
+        }
+
+        $insertStmt = $pdo->prepare("UPDATE products SET is_bestseller = 1, bestseller_order = ? WHERE id = ?");
+        foreach ($toAdd as $pid) {
+            $nextOrder++;
+            $insertStmt->execute([$nextOrder, $pid]);
+        }
+        return count($toAdd);
+    }
+
+    $sql = "UPDATE products SET is_bestseller = 0, bestseller_order = 0 WHERE id IN ($placeholders)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($normalizedIds);
+    return $stmt->rowCount();
+}
+
+function reorderBestsellers(array $orderedIds) {
+    ensureProductsSchema();
+    global $pdo;
+
+    $normalizedIds = [];
+    foreach ($orderedIds as $id) {
+        $id = (int)$id;
+        if ($id > 0 && !in_array($id, $normalizedIds, true)) {
+            $normalizedIds[] = $id;
+        }
+    }
+    if (empty($normalizedIds)) {
+        return 0;
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("UPDATE products SET bestseller_order = ? WHERE id = ? AND is_bestseller = 1");
+        $position = 1;
+        $updated = 0;
+        foreach ($normalizedIds as $pid) {
+            $stmt->execute([$position, $pid]);
+            $updated += $stmt->rowCount();
+            $position++;
+        }
+        $pdo->commit();
+        return $updated;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
 }
 
 function getProductAutocompleteSuggestions($searchTerm, $limit = 8) {
