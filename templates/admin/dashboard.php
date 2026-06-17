@@ -345,7 +345,7 @@ function removeTopPick(productId, buttonEl) {
                     <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-gray-200">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-star text-yellow-500"></i>
-                            <h3 class="font-semibold text-gray-900"><?php echo __('Top Picks'); ?></h3>
+                            <h3 class="font-semibold text-gray-900"><?php echo __('Popular'); ?></h3>
                             <span class="text-xs text-gray-500"><?php echo __('Drag cards to reorder how they appear on the homepage slider.'); ?></span>
                         </div>
                         <span id="topPicksSaveStatus" class="text-xs text-gray-500 hidden"></span>
