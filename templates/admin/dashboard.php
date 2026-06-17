@@ -370,7 +370,7 @@ function removeTopPick(productId, buttonEl) {
                                         </button>
                                         <span class="absolute top-1.5 left-1.5 z-10 inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full shadow">
                                             <i class="fa-solid fa-star text-[8px]"></i>
-                                            <?php echo __('Hot Item'); ?>
+                                            <?php echo __('Popular'); ?>
                                         </span>
                                         <div class="aspect-square bg-gray-50 rounded-t-md flex items-center justify-center overflow-hidden">
                                             <img src="<?php echo htmlspecialchars($tpImg); ?>" alt="<?php echo htmlspecialchars($tp['name'] ?? ''); ?>" class="max-h-full max-w-full object-contain p-2">

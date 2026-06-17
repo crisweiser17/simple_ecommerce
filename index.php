@@ -230,6 +230,11 @@ function uploadSingleImageFile($file, $uploadDir, $publicBasePath, $filePrefix, 
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
 
+// Normalize trailing slash so /qc-verify/ matches /qc-verify (but keep root "/")
+if ($path !== '/' && is_string($path) && substr($path, -1) === '/') {
+    $path = rtrim($path, '/');
+}
+
 // Simple Router
 switch ($path) {
     case '/':
