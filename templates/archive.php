@@ -136,7 +136,7 @@ $overlayEnabled = getSetting('banner_overlay_enabled', '1');
             <section class="mb-8" x-data="bestsellersSlider()" x-init="init()">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
-                        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow">
+                        <span class="inline-flex items-center gap-2 bg-gray-100 text-gray-600 text-xs font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full border border-gray-200">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.367 2.446c-.784.57-1.838-.197-1.539-1.118l1.286-3.957a1 1 0 00-.363-1.118L2.65 9.154c-.784-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.286-3.957z"></path></svg>
                             <?php echo __('Popular'); ?>
                         </span>
@@ -159,10 +159,6 @@ $overlayEnabled = getSetting('banner_overlay_enabled', '1');
                             $bsUrl = getProductUrl($bestseller);
                             ?>
                             <a href="<?php echo htmlspecialchars($bsUrl); ?>" class="bestseller-slide flex-shrink-0 w-[220px] sm:w-[240px] bg-white rounded-lg shadow-sm hover:shadow-lg border border-gray-200 p-3 group transition-all relative">
-                                <span class="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shadow">
-                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.367 2.446c-.784.57-1.838-.197-1.539-1.118l1.286-3.957a1 1 0 00-.363-1.118L2.65 9.154c-.784-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.286-3.957z"></path></svg>
-                                    <?php echo __('Popular'); ?>
-                                </span>
                                 <div class="aspect-square bg-gray-50 rounded-md flex items-center justify-center overflow-hidden mb-3">
                                     <img src="<?php echo htmlspecialchars($bsImage); ?>" alt="<?php echo htmlspecialchars($bestseller['name']); ?>" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300">
                                 </div>
